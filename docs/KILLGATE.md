@@ -1,9 +1,9 @@
 # Kill gate: results
 
 **Where the build is (2026-11-24):** Stage 1 (the spec) is approved. Stage 2
-(this file) is at round 3. The author's targets are met on one life and for
+(this file) is at round 4. The author's targets are met on one life and for
 the balance of the four endings; the saved setting is short of its target and
-two faults are open. The repo is scaffolded, with the kit's placeholder game
+is the one fault of substance left. The repo is scaffolded, with the kit's placeholder game
 in `src/`. A look-and-screens concept was shown to the author on a design
 canvas and liked ("yes I liked the design style"); nothing of it is in the
 repo. No screen is built and nothing of this game is in `src/` until
@@ -16,15 +16,105 @@ die-off at the end of every era, four endings that count as a win. No art, no
 words, no screen.
 
 Every number in `data.js` is tuned, not sourced. `npm run gate` reproduces
-round 3's tables (86,278 runs, about 25 minutes); `npm run gate:check` proves
+round 4's tables (91,248 runs, about 27 minutes); `npm run gate:check` proves
 the model is deterministic, that every run ended and moved its clock, and
 that every policy part and world switch changes the end state (16 parts, each
 changed 39 or 40 of 40 seeds).
 
-Round 3 is the current model and verdict. Rounds 2 and 1 are kept below as
-the record; their tables are from the model as it was then.
+Round 4 is the current model and verdict. Rounds 3, 2 and 1 are kept below
+as the record; their tables are from the model as it was then.
 
-## Round 3: the targets on one life are met; the saved setting is short
+## Round 4: the specialist was a bot fault and a wrong comparison
+
+The author, shown round 3's open faults: "Fix this one now" (the specialist
+is best nowhere).
+
+### What was wrong
+
+- **The specialist bot kept the fish jaw it started with for the whole run**,
+  through eras with almost no fish. It now picks the richest food of each
+  era. Mid-Coal, one region: 37 before, 55 after.
+- **The tables compared unequal range.** The specialist held one region and
+  was set against bodies holding two and three. More regions feed more.
+
+Round 3 said a jaw only matters against rivals. That was wrong: alone on a
+food, a lineage of 40 takes about 41% of it with no jaw for it and 69% with
+a full one.
+
+### Specialise or stay general, at the same range (1,000 seeds each)
+
+Numbers at mid-era, then survival of those who arrived.
+
+| Body, regions | Shore | Coal | Drying | Long Shadow | Triassic | | Shore | Coal | Drying | Great Dying | Triassic |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Eater, 1 | 39 | 99 | 107 | 59 | 86 | | 100% | 87% | 60% | 20% | 48% |
+| Tolerant, 1 | 21 | 46 | 95 | 83 | 84 | | 100% | 89% | 100% | 36% | 54% |
+| Specialist, 1 | 37 | 55 | 57 | 55 | 15 | | 100% | 83% | 14% | 12% | 0% |
+| Eater, 3 | 38 | 80 | 107 | 101 | 114 | | 100% | 76% | 57% | 36% | 54% |
+| Tolerant, 3 | 21 | 98 | 115 | 102 | 92 | | 100% | 99% | 100% | 45% | 59% |
+
+The eater takes whatever step feeds it most this turn. The tolerant body
+builds lungs, skin and egg first. The specialist masters the one richest food
+of each era.
+
+- **The spec's tension holds at one region.** The body built to eat out-eats
+  the tolerant one on the Shore, in the Coal Forests (99 against 46) and in
+  the Drying. The tolerant body survives the Drying (100% against 60%) and
+  the Great Dying (36% against 20%).
+- **At three regions it does not.** The tolerant body both out-eats the eater
+  in the Coal Forests (98 against 80) and the Drying, and out-survives it
+  everywhere. Tolerance opens ground, and ground is food. This is open
+  fault 2 below.
+- **The rigid one-food specialist loses to the eater in every era.** That is
+  left as it is. The eater is a specialist that chooses again each turn, and
+  one food's stock is a ceiling. The specialist does beat the tolerant body
+  on the Shore and in the Coal Forests.
+
+### Tried and rejected (300 seeds a road)
+
+| Change | Result |
+|---|---|
+| A food is worth only what the jaw can make of it (half with no jaw) | The tolerant body starved on the Shore in 45% of runs; the dinosaur road fell to 8.0% win |
+| A steeper trade-off between jaws (0.10 for 0.05) | The four roads pooled fell to 2.6% win |
+
+### The targets after round 4
+
+Rivals use the specialist bot, so fixing it moved the roads. The dinosaur
+went back to one size step and no brain, and the Great Dying from 1.7 to 1.8.
+
+| Target | Measured | Met? |
+|---|---|---|
+| About 15% on one life | 16.0%, four roads pooled (4,000 seeds a road) | Yes |
+| The four roads within 10% of each other | Dinosaur 16.9, mammal 16.2, crocodile 15.9, amphibian 15.1% (each ±0.6). Highest over lowest 1.12; spread 1.8 points against a floor of 1.6 | At the edge |
+| About 70% saved, a win within three tries an era | Amphibian 68.7, mammal 58.9, dinosaur 57.8, crocodile 42.3% (1,000 seeds each): mean 56.9%. Within six tries: mean 74.3% | No |
+
+Pooled, 4,000 runs each, floor 1.6: a list followed blind wins 2.2 to 6.9%
+by road (1,000 seeds each); warning 0, 1, 3, 5, 8 turns out gives 8.5, 9.6,
+13.2, 14.8, 19.6% win; holding 1, 2, 3 regions gives 11.1, 12.9, 14.1%;
+without rivals 42.7%, without die-offs 99.4%, without a choice of food
+12.3%, warning unheeded 6.3%. Careful survival of those arriving: Coal
+Forests 69 to 97%, the Drying 67 to 79%, the Great Dying 38 to 44%, the
+Triassic 52 to 65%.
+
+### Faults open after round 4
+
+1. **The saved setting is short and uneven**: 56.9% against about 70%, from
+   42.3% (crocodile) to 68.7% (amphibian).
+2. **With range, tolerance is free.** At three regions the tolerant body
+   eats more and dies less than the eater. It cannot win (it is no ending's
+   body), and it is alive at the end of 26.3% of one-life runs, more than
+   any road.
+3. **The crocodile list dies on the Shore** in 46.4% of runs: a prey jaw
+   where there is no prey.
+4. **The roads were levelled by changing the bodies** (the amphibian's
+   armour, the dinosaur's size). Tuned to a number, not drawn from the
+   animals.
+
+## Round 3 (the record)
+
+The tables below are round 3's own.
+
+### Round 3's verdict: the targets on one life are met; the saved setting is short
 
 The author, shown round 2: "All of them!" (fix every open fault), the four
 roads "Within 10% of each other", and, told that nearly all the danger sat in

@@ -2,10 +2,10 @@
 
 Steer a lineage from a Devonian shore to the first dinosaurs.
 
-Status: **Stage 1 spec approved 2026-11-24; Stage 2 kill gate at round 3 the
+Status: **Stage 1 spec approved 2026-11-24; Stage 2 kill gate at round 4 the
 same day.** The one-life target and the balance of the four endings are met;
-the saved setting is short of its target and two faults are open
-(`docs/KILLGATE.md`). The look is approved in concept. Rules changed by what the gate found are marked *(kill gate)*.
+the saved setting is short of its target (`docs/KILLGATE.md`). The look is
+approved in concept. Next: `docs/DESIGN.md`. Rules changed by what the gate found are marked *(kill gate)*.
 
 The author's brief, 2026-11-24: "a 2d [pixel] type game similar to spore, but
 you [evolve] your simple amphibian like animal into [one of] the first
@@ -111,9 +111,9 @@ and the rest of the era is played as that animal.
 
 A lineage that survives as none of these gets its own ending and is not a
 win. The author on their difficulty: "Within 10% of each other". *(kill
-gate)* Careful play wins 14.5 to 16.1% on one life by road (4,000 runs
-each). To level them the dinosaur also needs size and a brain and the
-amphibian armour; those were tuned, not drawn from the animals.
+gate)* Careful play wins 15.1 to 16.9% on one life by road (4,000 runs
+each). To level them the dinosaur also needs a size step and the amphibian
+armour; those were tuned, not drawn from the animals.
 
 ## 8. Difficulties and saves
 
@@ -139,9 +139,9 @@ author, asked: "Correct").
 
 | # | Question | Default if unanswered |
 |---|---|---|
-| 1 | The saved setting wins 57.5% at three tries an era against about 70%. Another round on the model, or accept it and move to `DESIGN.md`? | Move to design; a person learns between tries and the bot does not |
-| 2 | The specialist is best nowhere. Its fix changes the whole food economy. Before design, or a named risk in it? | A named risk, with its own round before the engine is built |
-| 3 | The bodies tuned to level the roads (dinosaur: size and a brain; amphibian: armour): acceptable, or level them another way? | Acceptable until the canon is checked |
+| 1 | The saved setting wins 56.9% at three tries an era against about 70%, and unevenly by road. Another round on the model, or accept it and move to `DESIGN.md`? | Move to design; a person learns between tries and the bot does not |
+| 2 | With three regions the tolerant body eats more and dies less than the body built to eat. It cannot win. A fault to fix, or what range is for? | Carry into design as a named risk |
+| 3 | The bodies tuned to level the roads (dinosaur: a size step; amphibian: armour): acceptable, or level them another way? | Acceptable until the canon is checked |
 | 4 | Names for the two settings and the title | Placeholders stay |
 
 ---
@@ -151,6 +151,7 @@ Newest first. Quote the author; give the numbers with their run counts.
 
 | Date | Decision |
 |---|---|
+| 2026-11-24 | **Kill gate round 4** (`docs/KILLGATE.md`, 91,248 runs). The specialist was a bot fault (it kept its first jaw all run) and a comparison at unequal range. At one region the body built to eat out-eats the tolerant one in three eras of five (99 against 46 in mid-Coal) and survives worse (60% against 100% of the Drying; 1,000 seeds each). Two rule changes were tried and rejected. One life: 16.0% pooled, roads 15.1 to 16.9% (4,000 seeds a road). Saved, three tries an era: 56.9% mean. |
 | 2026-11-24 | **The specialist: fix it now.** Offered the choice of fixing "the specialist is best nowhere" before design or carrying it as a named risk, the author: "Fix this one now". The other two questions put with it (accept the saved setting at 57.5% and move to design; keep the bodies tuned to level the roads) were not answered and stand at their defaults. |
 | 2026-11-24 | **Kill gate round 3** (`docs/KILLGATE.md`, 86,278 runs). Careful play wins 15.5% on one life, four roads pooled; by road 14.5 to 16.1% (4,000 seeds a road, ±0.6), highest over lowest 1.11. Saved, a win within three tries an era: 57.5% mean, 42.5 to 72.1% by road (1,000 seeds each). The Shore kills no careful run; leaving a region is cut. Open: the saved setting, the specialist. |
 | 2026-11-24 | **The saved setting: spread the danger.** Told that nearly all the risk sat in the Great Dying, so that the saved setting meant replaying one era until it fell right, and offered the alternative of spreading the danger across eras two to five, the author: "Go with your recommendation on the saved setting". The saved target is counted as a win within three tries an era. (It was first offered as two; at about 15% on one life over four dangerous eras, two tries cannot reach 70% however the danger is shared: the most is about 54%.) |

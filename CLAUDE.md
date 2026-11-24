@@ -20,6 +20,9 @@
   and reproduces it, retire the prototype; two models drift.
 - When a result surprises, check the bot before the design. The first range
   table said two regions were fatal; the bot was sending settlers to die.
+  "The specialist is best nowhere" stood for three rounds: its bot kept its
+  first jaw all run, and it was compared at one region against two and three.
+  Compare bodies at the same range.
 - Two settings: one keeps a save at the start of every era, one has one life.
   Going back to an earlier save forks the run. Every balance number is
   reported for both.
