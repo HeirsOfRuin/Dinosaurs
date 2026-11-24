@@ -26,7 +26,7 @@ export function body(t, focus = null) {
   let upkeep = 1;
   for (const id in t) upkeep += TRAITS[id].cost * t[id];
   return {
-    dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg')),
+    dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg') + 0.06 * burrow),   // a burrow is damp
     lo: 0.40 - 0.10 * warm - 0.04 * size - 0.05 * burrow,
     hi: 0.65 + 0.07 * skin - 0.05 * size - 0.04 * warm + 0.04 * burrow,
     mob, eff, upkeep,

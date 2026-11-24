@@ -76,7 +76,9 @@ for (const [label, f] of [['as designed', (p) => ({ policy: p })], ['no rivals',
 }
 
 console.log('\n8. A save at every era: the era rolled again after a loss (new die-off)');
-console.log('policy          ' + ['WIN 2 tries', 'WIN 5 tries'].map((h) => h.padStart(12)).join(' ') + '  mean tries (of 5)  saves that lost 5 of 5, by era');
+// playSaved(seed, opts, k) allows k retries, so k + 1 tries an era. Rounds 2 and 3 first printed these
+// columns as "2 tries" and "5 tries"; they were 3 and 6.
+console.log('policy          ' + ['WIN 3 tries', 'WIN 6 tries'].map((h) => h.padStart(12)).join(' ') + '  mean retries (of 5)  saves that lost 6 of 6, by era');
 for (const name of roads.map((r) => r + '.plan')) {
   const two = seeds.map((seed) => playSaved(seed, { policy: POLICIES[name] }, 2)), rs = seeds.map((seed) => playSaved(seed, { policy: POLICIES[name] }, 5));
   guard(two.filter((s) => s.outcome !== 'extinct')); guard(rs.filter((s) => s.outcome !== 'extinct'));

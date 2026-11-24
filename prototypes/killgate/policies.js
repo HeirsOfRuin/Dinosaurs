@@ -11,10 +11,10 @@ const jawOf = (f) => 'jaw' + f[0].toUpperCase() + f.slice(1);
 const TOLERANT = [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['burrow', 1], ['brain', 1], ['lungs', 3], ['skin', 3], ['egg', 3], ['brain', 2], ['burrow', 2]];
 // One build order per ending. A ".list" policy follows it and reads nothing else.
 export const ROADS = {
-  dinosaur:  [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['limbs', 3], ['gait', 1], ['skin', 2], ['egg', 2], ['gait', 2], ['warm', 1], ['egg', 3], ['gait', 3], ['warm', 2], ['size', 1], ['warm', 3]],
-  crocodile: [['lungs', 2], ['jawPrey', 1], ['jawPrey', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['jawPrey', 3], ['skin', 3], ['size', 1], ['armour', 1], ['size', 2]],
-  mammal:    [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['jawInsects', 1], ['burrow', 1], ['jawInsects', 2], ['warm', 1], ['burrow', 2], ['brain', 1], ['brain', 2], ['warm', 2], ['warm', 3]],
-  amphibian: [['lungs', 2], ['jawFish', 2], ['lungs', 3], ['jawFish', 3], ['size', 1], ['size', 2], ['limbs', 2], ['brain', 1]],
+  dinosaur:  [['lungs', 2], ['limbs', 2], ['limbs', 3], ['skin', 1], ['gait', 1], ['gait', 2], ['warm', 1], ['egg', 1], ['skin', 2], ['gait', 3], ['egg', 2], ['warm', 2], ['size', 1], ['brain', 1], ['egg', 3], ['size', 2], ['warm', 3]],
+  crocodile: [['lungs', 2], ['jawPrey', 1], ['jawPrey', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['jawPrey', 3], ['skin', 3], ['size', 1], ['armour', 1], ['size', 2], ['armour', 2]],
+  mammal:    [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['jawInsects', 1], ['burrow', 1], ['jawInsects', 2], ['burrow', 2], ['brain', 1], ['brain', 2], ['warm', 1], ['warm', 2], ['warm', 3]],
+  amphibian: [['lungs', 2], ['jawFish', 2], ['lungs', 3], ['jawFish', 3], ['size', 1], ['skin', 1], ['armour', 1], ['size', 2], ['armour', 2], ['limbs', 2]],
 };
 const COUNTER = {
   cold: [['warm', 1], ['burrow', 2], ['size', 1]], drought: [['lungs', 2], ['skin', 2], ['egg', 2], ['skin', 3]],
