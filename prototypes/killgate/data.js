@@ -31,8 +31,17 @@ export const RANGE_DRAG = 0.35;             // each region held beyond the first
 export const MAX_REGIONS = 3;
 export const HALF_SAT = 20;                 // food competition: claims needed to take half a stock
 export const MIN_VIABLE = 3;                // a region's population below this dies out
-export const DINOSAUR = { limbs: 3, gait: 3, skin: 2, egg: 3, warm: 2 };
-export const DINOSAUR_FROM_TURN = 12;       // of era 5: about 230 Ma
+// The endings that count as a win. The lineage crosses into the first one its
+// body fits, from FORM_FROM_TURN of era 5 (about 230 Ma), and stays it: it
+// cannot afterwards shed below `min`. `max` is what the body must NOT have.
+export const ENDINGS = {
+  dinosaur:  { min: { limbs: 3, gait: 3, skin: 2, egg: 3, warm: 2 }, max: {} },
+  crocodile: { min: { armour: 2, size: 2, jawPrey: 3, skin: 3, egg: 2 }, max: {} },
+  mammal:    { min: { warm: 3, brain: 2, burrow: 2, jawInsects: 2, egg: 1 }, max: { size: 1 } },
+  amphibian: { min: { lungs: 3, jawFish: 3, size: 2 }, max: { egg: 0 } },
+};
+export const FORM_FROM_TURN = 12;
+export const FOCUS = { on: 1.35, off: 0.75 };   // eating mostly one food: better at it, worse at the rest
 
 // region: [id, wet, temp, insects, fish, plants, prey, predators]
 const R = (id, wet, temp, insects, fish, plants, prey, pred) => ({ id, wet, temp, food: { insects, fish, plants, prey }, pred });
@@ -45,22 +54,24 @@ export const DIEOFFS = {
   greatHot: { dWet: -0.30, dTemp: 0.40,  food: { plants: 0.3, prey: 0.4, fish: 0.3, insects: 0.6 } },
   greatDry: { dWet: -0.50, dTemp: 0.25,  food: { plants: 0.25, prey: 0.5, fish: 0.2, insects: 0.6 } },
 };
+export const HARSH = 2.6;                   // every die-off's strength, one dial
+export const SENS = [0.05, 1.5];            // how hard a die-off hits a region: the low end is a refuge
 export const DIEOFF_TURNS = 3;              // the last turns of every era (an era may say more)
 
 export const ERAS = [
   { id: 'shore', name: 'The Shore', turns: 12, dWet: 0, dTemp: 0, dieoffs: ['cold', 'collapse'], mag: 0.8,
     regions: [R('shallows', 0.95, 0.55, 40, 120, 20, 10, 0.5), R('bank', 0.8, 0.55, 90, 30, 30, 10, 0.2), R('floodplain', 0.65, 0.6, 100, 0, 60, 10, 0.1), R('upland', 0.4, 0.5, 60, 0, 80, 0, 0.05)],
     rivals: [{ traits: { lungs: 1, limbs: 1, jawFish: 2, size: 1 }, home: 'shallows', plan: 'special' }, { traits: { lungs: 2, limbs: 2, jawInsects: 1 }, home: 'bank', plan: 'greedy' }] },
-  { id: 'coal', name: 'The Coal Forests', turns: 25, dWet: -0.006, dTemp: 0, dieoffs: ['drought', 'collapse'], mag: 1,
+  { id: 'coal', name: 'The Coal Forests', turns: 25, dWet: -0.006, dTemp: 0, dieoffs: ['drought', 'collapse'], mag: 2.2,
     regions: [R('swamp', 0.9, 0.6, 130, 60, 60, 30, 0.3), R('forestFloor', 0.7, 0.6, 140, 0, 100, 40, 0.25), R('dryForest', 0.5, 0.55, 90, 0, 110, 50, 0.2), R('upland', 0.3, 0.45, 50, 0, 90, 40, 0.1)],
     rivals: [{ traits: { lungs: 2, limbs: 2, jawInsects: 2 }, home: 'swamp', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 1, jawInsects: 1, jawPrey: 1 }, home: 'forestFloor', plan: 'greedy' }] },
-  { id: 'drying', name: 'The Drying', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['heat', 'drought'], mag: 1,
+  { id: 'drying', name: 'The Drying', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['heat', 'drought'], mag: 2.2,
     regions: [R('river', 0.6, 0.65, 70, 70, 60, 50, 0.3), R('scrub', 0.4, 0.7, 60, 0, 90, 80, 0.35), R('desertEdge', 0.2, 0.8, 40, 0, 40, 50, 0.2), R('highland', 0.35, 0.4, 40, 0, 80, 50, 0.2)],
     rivals: [{ traits: { lungs: 2, limbs: 2, skin: 2, egg: 1, jawPrey: 2, size: 2 }, home: 'scrub', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 1, jawPlants: 2, size: 2 }, home: 'scrub', plan: 'greedy' }] },
-  { id: 'shadow', name: 'The Long Shadow', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['greatHot', 'greatDry'], mag: 2.2, dieoffTurns: 5,
+  { id: 'shadow', name: 'The Long Shadow', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['greatHot', 'greatDry'], mag: 4.8, dieoffTurns: 5,
     regions: [R('river', 0.55, 0.62, 60, 60, 70, 70, 0.45), R('plains', 0.4, 0.65, 50, 0, 120, 110, 0.6), R('dryBasin', 0.2, 0.75, 50, 0, 40, 50, 0.35), R('polarForest', 0.5, 0.3, 50, 0, 100, 50, 0.3)],
     rivals: [{ traits: { lungs: 2, limbs: 3, skin: 2, egg: 2, jawPrey: 3, size: 3, warm: 1 }, home: 'plains', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, jawPlants: 3, size: 3 }, home: 'plains', plan: 'special' }] },
-  { id: 'triassic', name: 'The Triassic', turns: 30, dWet: 0, dTemp: 0, dieoffs: ['heat', 'collapse'], mag: 1.2,
+  { id: 'triassic', name: 'The Triassic', turns: 30, dWet: 0, dTemp: 0, dieoffs: ['heat', 'collapse'], mag: 2.6,
     recover: 8,                               // turns for food to come back after the Great Dying
     pulse: { from: 12, to: 16, dWet: 0.25, plants: 1.6 },   // the wet episode near 233 Ma
     predRise: 0.008,

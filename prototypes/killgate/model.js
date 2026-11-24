@@ -2,14 +2,14 @@
 // two rival lineages steered by policies through the SAME functions.
 // Pure: play(seed, opts) -> end state; no Math.random, no Date.
 import { streamFor } from '../../src/engine/rng.js';
-import { FOODS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, DINOSAUR, DINOSAUR_FROM_TURN, DIEOFFS, DIEOFF_TURNS, ERAS } from './data.js';
+import { FOODS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, ENDINGS, FORM_FROM_TURN, FOCUS, HARSH, SENS, DIEOFFS, DIEOFF_TURNS, ERAS } from './data.js';
 import { decide } from './policies.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
 
 // The one derivation of what a set of traits is worth.
-export function body(t) {
+export function body(t, focus = null) {
   const size = lv(t, 'size'), warm = lv(t, 'warm'), skin = lv(t, 'skin'), burrow = lv(t, 'burrow');
   const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm - 0.08 * lv(t, 'armour') - 0.03 * size;
   const jaws = FOODS.map((f) => lv(t, 'jaw' + f[0].toUpperCase() + f.slice(1)));
@@ -20,6 +20,7 @@ export function body(t) {
     if (f === 'prey') e = e * (0.55 + 0.6 * mob) + 0.08 * size;
     if (f === 'insects') e = e * (0.8 + 0.25 * mob) - 0.08 * size;
     if (f === 'plants') e += 0.05 * size;
+    if (focus) e *= f === focus ? FOCUS.on : FOCUS.off;
     eff[f] = Math.max(0.05, e);
   });
   let upkeep = 1;
@@ -40,7 +41,8 @@ export function fit(b, r) {
 }
 
 export const dieoffTurns = (era) => era.dieoffTurns || DIEOFF_TURNS;
-export const isDinosaur = (t) => Object.entries(DINOSAUR).every(([id, n]) => lv(t, id) >= n);
+export const fits = (t, e) => Object.entries(e.min).every(([id, n]) => lv(t, id) >= n) && Object.entries(e.max).every(([id, n]) => lv(t, id) <= n);
+export const formOf = (t) => Object.keys(ENDINGS).find((id) => fits(t, ENDINGS[id])) || null;
 export const totalPop = (l) => Object.values(l.pop).reduce((a, b) => a + b, 0);
 export const held = (l) => Object.keys(l.pop).filter((id) => l.pop[id] > 0);
 export const canRaise = (t, id) => lv(t, id) < 3 && Object.entries(TRAITS[id].needs).every(([n, k]) => lv(t, n) >= k);
@@ -58,7 +60,7 @@ export function regionsNow(s) {
     const back = era.recover ? Math.min(1, 0.5 + 0.5 * s.turn / era.recover) : 1;
     const pulse = era.pulse && s.turn >= era.pulse.from && s.turn < era.pulse.to;
     if (pulse) wet += era.pulse.dWet;
-    const hit = s.opts.noDieoff ? 0 : Math.min(2.2, ramp * s.dieoff.sens[r.id] * era.mag);
+    const hit = s.opts.noDieoff ? 0 : Math.min(2.2, ramp * s.dieoff.sens[r.id] * era.mag * (s.opts.harsh ?? HARSH));
     wet += d.dWet * hit; temp += d.dTemp * hit;
     for (const f of FOODS) {
       let v = r.food[f] * back * rng.float(0.85, 1.15);
@@ -74,7 +76,8 @@ export function regionsNow(s) {
 export function warning(s) {
   const era = ERAS[s.era], toOnset = era.turns - dieoffTurns(era) - s.turn, lead = s.opts.lead ?? 5;
   if (toOnset > lead + 3) return null;
-  return { toOnset, kinds: toOnset <= lead ? [s.dieoff.type] : era.dieoffs };
+  // Named `lead` turns out, with which regions it will spare; before that, only what it might be.
+  return toOnset <= lead ? { toOnset, kinds: [s.dieoff.type], sens: s.dieoff.sens } : { toOnset, kinds: era.dieoffs, sens: null };
 }
 
 // Carrying capacity of lineage l in each region it holds, given everyone's claims.
@@ -86,7 +89,7 @@ function claims(s) {
   const t = { total: {}, mine: new Map() };
   for (const r of s.regions) t.total[r.id] = Object.fromEntries(FOODS.map((f) => [f, HALF_SAT]));
   for (const o of s.lineages) {
-    const ob = body(o.traits), m = {};
+    const ob = body(o.traits, o.focus), m = {};
     for (const r of s.regions) {
       const p = o.pop[r.id] || 0; if (!(p > 0)) continue;
       const k = p * fit(ob, r); m[r.id] = {};
@@ -98,8 +101,8 @@ function claims(s) {
   return t;
 }
 
-export function capacity(s, l, traits = l.traits) {
-  const b = body(traits), out = {}, t = claims(s), was = t.mine.get(l) || {};
+export function capacity(s, l, traits = l.traits, focus = l.focus) {
+  const b = body(traits, focus), out = {}, t = claims(s), was = t.mine.get(l) || {};
   for (const r of s.regions) {
     const p = l.pop[r.id] || 0; if (!(p > 0)) continue;
     const k = p * fit(b, r);
@@ -113,16 +116,16 @@ export function capacity(s, l, traits = l.traits) {
 function startEra(s) {
   const era = ERAS[s.era], rng = streamFor(s.seed, `${s.era}.${s.attempt}`, 'dieoff');
   s.turn = 0;
-  s.dieoff = { type: rng.pick(era.dieoffs), sens: Object.fromEntries(era.regions.map((r) => [r.id, rng.float(0.3, 1.5)])) };
+  s.dieoff = { type: rng.pick(era.dieoffs), sens: Object.fromEntries(era.regions.map((r) => [r.id, rng.float((s.opts.sens || SENS)[0], (s.opts.sens || SENS)[1])])) };
   s.lineages = s.lineages.filter((l) => l.player);
-  if (!s.opts.noRivals) era.rivals.forEach((rv, i) => s.lineages.push({ id: 'rival' + i, player: false, plan: { plan: rv.plan, regions: 2 }, traits: { ...rv.traits }, prog: {}, pop: { [rv.home]: 15 }, dino: false }));
+  if (!s.opts.noRivals) era.rivals.forEach((rv, i) => s.lineages.push({ id: 'rival' + i, player: false, plan: { plan: rv.plan, regions: 2 }, traits: { ...rv.traits }, prog: {}, pop: { [rv.home]: 15 }, focus: null, form: null }));
   s.rev = (s.rev || 0) + 1;
   s.regions = regionsNow(s);
 }
 
 export function newGame(seed, opts = {}) {
   const s = { seed, opts, era: 0, turn: 0, attempt: 0, clock: 0, ended: false, outcome: null, lineages: [], log: [], eraLog: [] };
-  s.lineages.push({ id: 'you', player: true, plan: opts.policy, traits: { ...START_TRAITS }, prog: {}, pop: { shallows: START_POP }, dino: false });
+  s.lineages.push({ id: 'you', player: true, plan: opts.policy, traits: { ...START_TRAITS }, prog: {}, pop: { shallows: START_POP }, focus: null, form: null });
   startEra(s);
   return s;
 }
@@ -134,9 +137,10 @@ function offersFor(s, l) {
 
 function apply(s, l, d, offers) {
   if (d.keep && offers.includes(d.keep)) l.traits[d.keep] = 1;
+  if (d.focus !== undefined) l.focus = FOODS.includes(d.focus) ? d.focus : null;
   const speed = 1 / (1 + RANGE_DRAG * (Math.max(1, held(l).length) - 1));
   // A dinosaur stays one: it cannot shed below what made it a dinosaur.
-  if (d.shed && l.dino && lv(l.traits, d.shed) <= (DINOSAUR[d.shed] || 0)) d = { ...d, shed: null };
+  if (d.shed && l.form && lv(l.traits, d.shed) <= (ENDINGS[l.form].min[d.shed] || 0)) d = { ...d, shed: null };
   if (d.shed && canShed(l.traits, d.shed)) {
     const k = 'shed.' + d.shed; l.prog[k] = (l.prog[k] || 0) + speed;
     if (l.prog[k] >= SHED_TURNS) { l.prog[k] = 0; l.traits[d.shed] -= 1; if (!l.traits[d.shed]) delete l.traits[d.shed]; }
@@ -149,6 +153,11 @@ function apply(s, l, d, offers) {
     const from = mine.reduce((a, b) => (l.pop[a] >= l.pop[b] ? a : b)), moved = l.pop[from] * 0.3;
     l.pop[from] -= moved;
     l.pop[d.spread] = moved * clamp01(0.3 + 0.6 * body(l.traits).mob);   // some of the settlers arrive
+  } else if (d.move && l.pop[d.move.from] > 0 && d.move.from !== d.move.to && s.regions.some((r) => r.id === d.move.to)) {
+    // Leaving a region: everyone in it walks, and some arrive.
+    const arrive = l.pop[d.move.from] * clamp01(0.3 + 0.6 * body(l.traits).mob);
+    delete l.pop[d.move.from];
+    l.pop[d.move.to] = (l.pop[d.move.to] || 0) + arrive;
   }
 }
 
@@ -174,15 +183,16 @@ export function step(s) {
   feed(s);
   s.rev += 1;
   s.lineages = s.lineages.filter((l) => l.player || totalPop(l) >= 1);
-  if (s.bodyAt == null && isDinosaur(you.traits)) s.bodyAt = s.clock;
-  if (s.era === 4 && s.turn >= DINOSAUR_FROM_TURN && !you.dino && isDinosaur(you.traits)) { you.dino = true; s.dinoAt = s.turn; }
+  const shape = formOf(you.traits);
+  if (s.bodyAt == null && shape) s.bodyAt = s.clock;
+  if (s.era === 4 && s.turn >= FORM_FROM_TURN && !you.form && shape) { you.form = shape; s.form = shape; s.formAt = s.turn; }
   const era = ERAS[s.era], pop = totalPop(you), inDieoff = s.turn >= era.turns - dieoffTurns(era);
   s.log.push({ era: s.era, turn: s.turn, pop, regions: held(you).length, upkeep: body(you.traits).upkeep });
   s.clock += 1; s.turn += 1;
   if (pop < 1) return end(s, 'extinct', inDieoff ? 'dieoff' : 'starved');
   if (s.turn < era.turns) { s.regions = regionsNow(s); s.rev += 1; return s; }
   s.eraLog.push({ era: s.era, pop, traits: { ...you.traits } });
-  if (s.era === ERAS.length - 1) return end(s, you.dino ? 'win' : 'survived', null);
+  if (s.era === ERAS.length - 1) return end(s, you.form ? 'win' : 'survived', null);
   // The survivors walk into the next world and settle where they fit best.
   s.era += 1; s.attempt = 0; startEra(s);
   const b = body(you.traits);
@@ -205,6 +215,7 @@ export function play(seed, opts = {}) {
 // with s.retries per era. The bot does not learn between tries, so this measures
 // luck only; a person would also change their play.
 export function playSaved(seed, opts = {}, maxRetries = 5) {
+  // A replayed era rolls a new die-off (the author, 2026-11-24: a replay is not a memory test).
   let s = newGame(seed, opts), save = structuredClone(s);
   const retries = [0, 0, 0, 0, 0];
   for (let guard = 0; guard < 5000; guard++) {

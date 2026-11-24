@@ -4,7 +4,8 @@
 //   3. nothing declared is decoration: every policy part and every world switch
 //      changes the end state on at least one seed in ten.
 //   node prototypes/killgate/check.js [seeds=40]
-import { play, playSaved, totalPop } from './model.js';
+import { play, playSaved, totalPop, fits } from './model.js';
+import { ENDINGS } from './data.js';
 import { POLICIES } from './policies.js';
 
 const n = Number(process.argv[2] || 40);
@@ -19,19 +20,20 @@ for (const [name, policy] of Object.entries(POLICIES)) for (const seed of seeds)
     if (!Number.isFinite(totalPop(l)) || Object.values(l.pop).some((p) => p < 0)) throw new Error(`${name} seed ${seed}: a population is not a number or is below zero`);
     if (Object.values(l.traits).some((v) => !Number.isInteger(v) || v < 1 || v > 3)) throw new Error(`${name} seed ${seed}: a trait level is outside 1..3`);
   }
-  if (a.outcome === 'win' && a.dinoAt == null) throw new Error(`${name} seed ${seed}: won without becoming a dinosaur`);
+  if (a.outcome === 'win' && !(a.form && fits(a.lineages[0].traits, ENDINGS[a.form]))) throw new Error(`${name} seed ${seed}: won without the body of its ending`);
 }
-for (const seed of seeds.slice(0, 10)) { if (snap(playSaved(seed, { policy: POLICIES.planner })) !== snap(playSaved(seed, { policy: POLICIES.planner }))) throw new Error(`saved play, seed ${seed}: two runs differ`); runs += 2; }
+for (const seed of seeds.slice(0, 10)) { if (snap(playSaved(seed, { policy: POLICIES['mammal.plan'] })) !== snap(playSaved(seed, { policy: POLICIES['mammal.plan'] }))) throw new Error(`saved play, seed ${seed}: two runs differ`); runs += 2; }
 console.log(`ok  deterministic, ended, clock moved, numbers sound: ${runs} runs`);
 
-const basePolicy = POLICIES.planner;
+const basePolicy = POLICIES['dinosaur.plan'];
 const base = seeds.map((seed) => snap(play(seed, { policy: basePolicy }).eraLog) + play(seed, { policy: basePolicy }).outcome);
 const parts = {
   'plan: none': { policy: { ...basePolicy, plan: 'none' } }, 'plan: random': { policy: { ...basePolicy, plan: 'random' } },
   'plan: special': { policy: { ...basePolicy, plan: 'special' } }, 'plan: tolerant': { policy: { ...basePolicy, plan: 'tolerant' } },
   'plan: greedy': { policy: { ...basePolicy, plan: 'greedy' } },
   'regions: 1': { policy: { ...basePolicy, regions: 1 } }, 'regions: 3': { policy: { ...basePolicy, regions: 3 } },
-  'heed: off': { policy: { ...basePolicy, heed: false } },
+  'heed: off': { policy: { ...basePolicy, heed: false } }, 'diet: off': { policy: { ...basePolicy, diet: false } }, 'never leaves': { policy: { ...basePolicy, stay: true } },
+  'road: crocodile': { policy: { ...basePolicy, road: 'crocodile' } }, 'road: mammal': { policy: { ...basePolicy, road: 'mammal' } }, 'road: amphibian': { policy: { ...basePolicy, road: 'amphibian' } },
   'warning lead 0': { policy: basePolicy, lead: 0 }, 'warning lead 8': { policy: basePolicy, lead: 8 },
   'no rivals': { policy: basePolicy, noRivals: true }, 'no die-offs': { policy: basePolicy, noDieoff: true },
 };
