@@ -1,0 +1,19 @@
+{
+  "name": "deep-time",
+  "private": true,
+  "type": "module",
+  "description": "Steer a lineage from a Devonian shore to the first dinosaurs.",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "sim": "node sim/run.js",
+    "gate": "node prototypes/killgate/gate.js 1000",
+    "gate:check": "node prototypes/killgate/check.js",
+    "build": "node tools/bundle.js",
+    "smoke": "node tools/smoke.mjs",
+    "check-bundle": "node tools/check-bundle.mjs",
+    "icons": "node tools/make-icons.mjs",
+    "check": "node --test \"test/*.test.js\" && node prototypes/killgate/check.js && node sim/run.js --runs=50 --by=policy && node tools/bundle.js && node tools/check-bundle.mjs && node tools/smoke.mjs",
+    "serve": "python3 -m http.server 8000"
+  },
+  "engines": { "node": ">=20" }
+}
