@@ -32,7 +32,7 @@ const parts = {
   'plan: special': { policy: { ...basePolicy, plan: 'special' } }, 'plan: tolerant': { policy: { ...basePolicy, plan: 'tolerant' } },
   'plan: greedy': { policy: { ...basePolicy, plan: 'greedy' } },
   'regions: 1': { policy: { ...basePolicy, regions: 1 } }, 'regions: 3': { policy: { ...basePolicy, regions: 3 } },
-  'heed: off': { policy: { ...basePolicy, heed: false } }, 'diet: off': { policy: { ...basePolicy, diet: false } }, 'never leaves': { policy: { ...basePolicy, stay: true } },
+  'heed: off': { policy: { ...basePolicy, heed: false } }, 'diet: off': { policy: { ...basePolicy, diet: false } },
   'road: crocodile': { policy: { ...basePolicy, road: 'crocodile' } }, 'road: mammal': { policy: { ...basePolicy, road: 'mammal' } }, 'road: amphibian': { policy: { ...basePolicy, road: 'amphibian' } },
   'warning lead 0': { policy: basePolicy, lead: 0 }, 'warning lead 8': { policy: basePolicy, lead: 8 },
   'no rivals': { policy: basePolicy, noRivals: true }, 'no die-offs': { policy: basePolicy, noDieoff: true },

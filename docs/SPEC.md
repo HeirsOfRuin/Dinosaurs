@@ -147,6 +147,8 @@ Newest first. Quote the author; give the numbers with their run counts.
 
 | Date | Decision |
 |---|---|
+| 2026-11-24 | **The look.** Shown the canvas concept (three phone screens and an art sheet: dark ground, the era sets the colour, a 32 by 20 pixel animal in six slots, pixel type for headings only), the author: "yes I liked the design style". The sprites on it are placeholders to be redrawn. |
+| 2026-11-24 | **Fix all the open faults; the four roads within 10% of each other.** Asked which of round 2's faults to fix before design, the author: "All of them!" Asked whether the four endings should be equally hard: "Within 10% of each other". Read as: the four roads' win rates within a tenth of one another, measured on one life. |
 | 2026-11-24 | **Kill gate round 2** (`docs/KILLGATE.md`, 73,114 runs). Careful play wins 15.8 ±0.6% on one life (four roads pooled, 4,000 runs) against the target of about 15%; 62.3% saved at five tries an era against about 70%. A list followed blind wins 0.4 to 5.8% (1,000 runs each). Warning and range now matter. Five faults open. |
 | 2026-11-24 | **Several winning endings; the three questions.** The author: "I want there to be several endings considered wins". Four: dinosaur, crocodile line, mammal line, great amphibian. On win-rate targets, fix order and replayed eras: "Recommendation" to each, so about 15% on one life and 70% saved, the first three faults fixed in the model first, and a replayed era rolls a new die-off. |
 | 2026-11-24 | **Kill gate run** (`docs/KILLGATE.md`, 1,000 seeds an arm). Three of the spec's five claims hold, two fail, and six faults are open. No screen is drawn until the author has read it. |

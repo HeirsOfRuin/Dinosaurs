@@ -28,14 +28,17 @@ for (const [name, policy] of Object.entries(POLICIES)) {
 }
 console.log(floor());
 
-console.log('\n2. The four endings: a list followed blind against the same road walked with eyes open (one life)');
-console.log('ending          ' + ['list WIN', 'plan WIN', 'gap'].map((h) => h.padStart(10)).join(' ') + '   won as (plan)');
+console.log(`\n2. The four endings (one life): a list followed blind (${n} seeds) against the road walked with eyes open (${4 * n} seeds)`);
+console.log('ending          ' + ['list WIN', 'plan WIN'].map((h) => h.padStart(10)).join(' ') + '   won as (plan)        plan WIN by face of the Great Dying, of those who met it');
+const big = Array.from({ length: 4 * n }, (_, i) => 11 + i * 7919), bigWins = [];
 for (const r of roads) {
-  const a = won(base[r + '.list']), b = won(base[r + '.plan']);
-  const as = Object.keys(ENDINGS).map((e) => [e, base[r + '.plan'].filter((s) => s.outcome === 'win' && s.form === e).length]).filter((x) => x[1]).map(([e, k]) => `${e} ${k}`).join(', ');
-  console.log(r.padEnd(16) + rate(a) + ' ' + rate(b) + ' ' + ((100 * (b - a) / n).toFixed(1) + ' pts').padStart(10) + '   ' + as);
+  const a = won(base[r + '.list']), rs = guard(big.map((seed) => play(seed, { policy: POLICIES[r + '.plan'] }))), b = won(rs);
+  bigWins.push(100 * b / rs.length);
+  const as = Object.keys(ENDINGS).map((e) => [e, rs.filter((s) => s.outcome === 'win' && s.form === e).length]).filter((x) => x[1]).map(([e, k]) => `${e} ${k}`).join(', ');
+  const faces = [...new Set(rs.map((s) => s.faceShadow).filter(Boolean))].sort().map((f) => { const m = rs.filter((s) => s.faceShadow === f && s.eraLog.length >= 3); return `${f} ${(100 * won(m) / m.length).toFixed(0)}%`; }).join(', ');
+  console.log(r.padEnd(16) + rate(a) + ' ' + rate(b, rs.length) + '   ' + as.padEnd(20) + ' ' + faces);
 }
-console.log(floor(0.15));
+console.log(`Roads: highest over lowest ${(Math.max(...bigWins) / Math.min(...bigWins)).toFixed(2)}, spread ${(Math.max(...bigWins) - Math.min(...bigWins)).toFixed(1)} points, pooled ${(bigWins.reduce((x, y) => x + y, 0) / 4).toFixed(1)}%. Floor between two roads: ${noiseFloor(0.15, 4 * n).toFixed(1)} points.`);
 
 console.log('\n3. Each era on its own: survival of those who arrived, and mean numbers at mid-era');
 console.log('policy          ' + ERAS.map((e) => e.id.padStart(10) + '   pop').join(' '));
@@ -68,7 +71,7 @@ console.log(`Floor: about ${noiseFloor(0.15, 4 * n).toFixed(1)} points (${4 * n}
 
 console.log('\n7. Parts: the plan policies with one thing taken away (pooled)');
 console.log('arm             ' + ['past Dying', 'WIN'].map((h) => h.padStart(10)).join(' '));
-for (const [label, f] of [['as designed', (p) => ({ policy: p })], ['no rivals', (p) => ({ policy: p, noRivals: true })], ['no die-offs', (p) => ({ policy: p, noDieoff: true })], ['no diet choice', (p) => ({ policy: { ...p, diet: false } })], ['never leaves', (p) => ({ policy: { ...p, stay: true } })], ['warning unheeded', (p) => ({ policy: { ...p, heed: false } })]]) {
+for (const [label, f] of [['as designed', (p) => ({ policy: p })], ['no rivals', (p) => ({ policy: p, noRivals: true })], ['no die-offs', (p) => ({ policy: p, noDieoff: true })], ['no diet choice', (p) => ({ policy: { ...p, diet: false } })], ['warning unheeded', (p) => ({ policy: { ...p, heed: false } })]]) {
   const rs = roads.flatMap((r) => runAll(f(POLICIES[r + '.plan']))); console.log(label.padEnd(16) + rate(pastDying(rs), rs.length) + ' ' + rate(won(rs), rs.length));
 }
 

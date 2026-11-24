@@ -60,7 +60,7 @@ export function regionsNow(s) {
     const back = era.recover ? Math.min(1, 0.5 + 0.5 * s.turn / era.recover) : 1;
     const pulse = era.pulse && s.turn >= era.pulse.from && s.turn < era.pulse.to;
     if (pulse) wet += era.pulse.dWet;
-    const hit = s.opts.noDieoff ? 0 : Math.min(2.2, ramp * s.dieoff.sens[r.id] * era.mag * (s.opts.harsh ?? HARSH));
+    const hit = s.opts.noDieoff ? 0 : Math.min(2.2, ramp * s.dieoff.sens[r.id] * era.mag * (era.gentle ? 1 : (s.opts.harsh ?? HARSH)));
     wet += d.dWet * hit; temp += d.dTemp * hit;
     for (const f of FOODS) {
       let v = r.food[f] * back * rng.float(0.85, 1.15);
@@ -74,7 +74,7 @@ export function regionsNow(s) {
 
 // What the die-off will be, as far as the lineage can tell this turn.
 export function warning(s) {
-  const era = ERAS[s.era], toOnset = era.turns - dieoffTurns(era) - s.turn, lead = s.opts.lead ?? 5;
+  const era = ERAS[s.era], toOnset = era.turns - dieoffTurns(era) - s.turn, lead = s.opts.lead ?? era.lead ?? 5;
   if (toOnset > lead + 3) return null;
   // Named `lead` turns out, with which regions it will spare; before that, only what it might be.
   return toOnset <= lead ? { toOnset, kinds: [s.dieoff.type], sens: s.dieoff.sens } : { toOnset, kinds: era.dieoffs, sens: null };
@@ -116,8 +116,9 @@ export function capacity(s, l, traits = l.traits, focus = l.focus) {
 function startEra(s) {
   const era = ERAS[s.era], rng = streamFor(s.seed, `${s.era}.${s.attempt}`, 'dieoff');
   s.turn = 0;
-  s.dieoff = { type: rng.pick(era.dieoffs), sens: Object.fromEntries(era.regions.map((r) => [r.id, rng.float((s.opts.sens || SENS)[0], (s.opts.sens || SENS)[1])])) };
+  s.dieoff = { type: rng.pick(era.dieoffs), sens: Object.fromEntries(era.regions.map((r) => [r.id, rng.float((s.opts.sens || era.sens || SENS)[0], (s.opts.sens || era.sens || SENS)[1])])) };
   s.lineages = s.lineages.filter((l) => l.player);
+  if (s.era === 3) s.faceShadow = s.dieoff.type;
   if (!s.opts.noRivals) era.rivals.forEach((rv, i) => s.lineages.push({ id: 'rival' + i, player: false, plan: { plan: rv.plan, regions: 2 }, traits: { ...rv.traits }, prog: {}, pop: { [rv.home]: 15 }, focus: null, form: null }));
   s.rev = (s.rev || 0) + 1;
   s.regions = regionsNow(s);
@@ -153,11 +154,6 @@ function apply(s, l, d, offers) {
     const from = mine.reduce((a, b) => (l.pop[a] >= l.pop[b] ? a : b)), moved = l.pop[from] * 0.3;
     l.pop[from] -= moved;
     l.pop[d.spread] = moved * clamp01(0.3 + 0.6 * body(l.traits).mob);   // some of the settlers arrive
-  } else if (d.move && l.pop[d.move.from] > 0 && d.move.from !== d.move.to && s.regions.some((r) => r.id === d.move.to)) {
-    // Leaving a region: everyone in it walks, and some arrive.
-    const arrive = l.pop[d.move.from] * clamp01(0.3 + 0.6 * body(l.traits).mob);
-    delete l.pop[d.move.from];
-    l.pop[d.move.to] = (l.pop[d.move.to] || 0) + arrive;
   }
 }
 
