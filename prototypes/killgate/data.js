@@ -35,7 +35,7 @@ export const MIN_VIABLE = 3;                // a region's population below this 
 // body fits, from FORM_FROM_TURN of era 5 (about 230 Ma), and stays it: it
 // cannot afterwards shed below `min`. `max` is what the body must NOT have.
 export const ENDINGS = {
-  dinosaur:  { min: { limbs: 3, gait: 3, skin: 2, egg: 3, warm: 3, size: 2, brain: 1 }, max: {} },
+  dinosaur:  { min: { limbs: 3, gait: 3, skin: 2, egg: 3, warm: 3, size: 1 }, max: {} },
   crocodile: { min: { armour: 2, size: 2, jawPrey: 3, skin: 3, egg: 2 }, max: {} },
   mammal:    { min: { warm: 3, brain: 2, burrow: 2, jawInsects: 2, egg: 1 }, max: { size: 1 } },
   amphibian: { min: { lungs: 3, jawFish: 3, size: 2, armour: 2 }, max: { egg: 0 } },
@@ -57,6 +57,7 @@ export const DIEOFFS = {
   greatCold:  { dWet: 0,   dTemp: -0.65, food: { plants: 0.2, insects: 0.25, prey: 0.4, fish: 0.5 } },
   greatWaste: { dWet: 0.05, dTemp: 0.05, food: { plants: 0.1, prey: 0.2, insects: 0.25, fish: 0.5 } },
 };
+export const JAW_CROSS = 0.05;              // each level of a jaw for one food costs this much on every other food
 export const HARSH = 2.6;                   // every die-off's strength, one dial
 export const SENS = [0.05, 1.5];            // how hard a die-off hits a region: the low end is a refuge
 export const DIEOFF_TURNS = 3;              // the last turns of every era (an era may say more)
@@ -71,7 +72,7 @@ export const ERAS = [
   { id: 'drying', name: 'The Drying', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['heat', 'drought'], mag: 1.4, dieoffTurns: 5, sens: [0.15, 1.5],
     regions: [R('river', 0.6, 0.65, 70, 70, 60, 50, 0.3), R('scrub', 0.4, 0.7, 60, 0, 90, 80, 0.35), R('desertEdge', 0.2, 0.8, 40, 0, 40, 50, 0.2), R('highland', 0.35, 0.4, 40, 0, 80, 50, 0.2)],
     rivals: [{ traits: { lungs: 2, limbs: 2, skin: 2, egg: 1, jawPrey: 2, size: 2 }, home: 'scrub', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 1, jawPlants: 2, size: 2 }, home: 'scrub', plan: 'greedy' }] },
-  { id: 'shadow', name: 'The Long Shadow', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['greatHot', 'greatDry', 'greatCold', 'greatWaste'], mag: 1.7, dieoffTurns: 5, lead: 8, sens: [0.1, 1.5],   // named earlier than the rest; and almost nowhere is spared
+  { id: 'shadow', name: 'The Long Shadow', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['greatHot', 'greatDry', 'greatCold', 'greatWaste'], mag: 1.8, dieoffTurns: 5, lead: 8, sens: [0.1, 1.5],   // named earlier than the rest; and almost nowhere is spared
     regions: [R('river', 0.55, 0.62, 60, 60, 70, 70, 0.45), R('plains', 0.4, 0.65, 50, 0, 120, 110, 0.6), R('dryBasin', 0.2, 0.75, 50, 0, 40, 50, 0.35), R('polarForest', 0.5, 0.3, 50, 0, 100, 50, 0.3)],
     rivals: [{ traits: { lungs: 2, limbs: 3, skin: 2, egg: 2, jawPrey: 3, size: 3, warm: 1 }, home: 'plains', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, jawPlants: 3, size: 3 }, home: 'plains', plan: 'special' }] },
   { id: 'triassic', name: 'The Triassic', turns: 30, dWet: 0, dTemp: 0, dieoffs: ['heat', 'collapse', 'cold'], mag: 1.3, sens: [0.2, 1.5], dieoffTurns: 5,

@@ -2,7 +2,7 @@
 // two rival lineages steered by policies through the SAME functions.
 // Pure: play(seed, opts) -> end state; no Math.random, no Date.
 import { streamFor } from '../../src/engine/rng.js';
-import { FOODS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, ENDINGS, FORM_FROM_TURN, FOCUS, HARSH, SENS, DIEOFFS, DIEOFF_TURNS, ERAS } from './data.js';
+import { FOODS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, ENDINGS, FORM_FROM_TURN, FOCUS, HARSH, SENS, JAW_CROSS, DIEOFFS, DIEOFF_TURNS, ERAS } from './data.js';
 import { decide } from './policies.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -16,7 +16,7 @@ export function body(t, focus = null) {
   const jawSum = jaws.reduce((a, b) => a + b, 0);
   const eff = {};
   FOODS.forEach((f, i) => {
-    let e = 0.35 + 0.25 * jaws[i] - 0.05 * (jawSum - jaws[i]) + 0.05 * lv(t, 'brain');
+    let e = 0.35 + 0.25 * jaws[i] - JAW_CROSS * (jawSum - jaws[i]) + 0.05 * lv(t, 'brain');
     if (f === 'prey') e = e * (0.55 + 0.6 * mob) + 0.08 * size;
     if (f === 'insects') e = e * (0.8 + 0.25 * mob) - 0.08 * size;
     if (f === 'plants') e += 0.05 * size;

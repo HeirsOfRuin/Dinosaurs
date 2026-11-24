@@ -87,5 +87,15 @@ for (const name of roads.map((r) => r + '.plan')) {
 }
 console.log(floor());
 
+console.log(`\n9. Specialise or stay general: bodies at the same range (${n} seeds each)`);
+console.log('The specialist masters the one richest food of each era. The eater takes whatever step feeds it most this turn. The tolerant body builds lungs, skin and egg first.');
+console.log('body, regions        ' + 'numbers at mid-era: ' + ERAS.map((e) => e.id.slice(0, 6).padStart(7)).join('') + '   survival of those arriving: ' + ERAS.map((e) => e.id.slice(0, 6).padStart(7)).join(''));
+for (const [label, policy] of [['specialist, 1', { plan: 'special', regions: 1 }], ['eater, 1', { plan: 'greedy', regions: 1, diet: true }], ['tolerant, 1', { plan: 'tolerant', regions: 1 }], ['eater, 3', { plan: 'greedy', regions: 3, diet: true }], ['tolerant, 3', { plan: 'tolerant', regions: 3 }]]) {
+  const rs = runAll({ policy });
+  const mid = ERAS.map((era, e) => mean(rs.map((s) => s.log.find((h) => h.era === e && h.turn === Math.floor(era.turns / 2))).filter(Boolean).map((h) => h.pop)).padStart(7));
+  const surv = ERAS.map((_, e) => { const a = rs.filter((s) => e === 0 || s.eraLog.length >= e); return (a.length ? (100 * a.filter((s) => s.eraLog.length > e).length / a.length).toFixed(0) + '%' : '-').padStart(7); });
+  console.log(label.padEnd(21) + '                    ' + mid.join('') + '                               ' + surv.join(''));
+}
+
 if (stalled) { console.error(`\n${stalled} run(s) did not end or did not move the clock`); process.exit(1); }
 console.log(`\n${total} runs ended and moved their clocks.`);

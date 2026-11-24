@@ -11,7 +11,7 @@ const jawOf = (f) => 'jaw' + f[0].toUpperCase() + f.slice(1);
 const TOLERANT = [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['burrow', 1], ['brain', 1], ['lungs', 3], ['skin', 3], ['egg', 3], ['brain', 2], ['burrow', 2]];
 // One build order per ending. A ".list" policy follows it and reads nothing else.
 export const ROADS = {
-  dinosaur:  [['lungs', 2], ['limbs', 2], ['limbs', 3], ['skin', 1], ['gait', 1], ['gait', 2], ['warm', 1], ['egg', 1], ['skin', 2], ['gait', 3], ['egg', 2], ['warm', 2], ['size', 1], ['brain', 1], ['egg', 3], ['size', 2], ['warm', 3]],
+  dinosaur:  [['lungs', 2], ['limbs', 2], ['limbs', 3], ['skin', 1], ['gait', 1], ['gait', 2], ['warm', 1], ['egg', 1], ['skin', 2], ['gait', 3], ['egg', 2], ['warm', 2], ['size', 1], ['egg', 3], ['warm', 3]],
   crocodile: [['lungs', 2], ['jawPrey', 1], ['jawPrey', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['jawPrey', 3], ['skin', 3], ['size', 1], ['armour', 1], ['size', 2], ['armour', 2]],
   mammal:    [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['jawInsects', 1], ['burrow', 1], ['jawInsects', 2], ['burrow', 2], ['brain', 1], ['brain', 2], ['warm', 1], ['warm', 2], ['warm', 3]],
   amphibian: [['lungs', 2], ['jawFish', 2], ['lungs', 3], ['jawFish', 3], ['size', 1], ['skin', 1], ['armour', 1], ['size', 2], ['armour', 2], ['limbs', 2]],
@@ -87,7 +87,10 @@ function special(s, l, offers) {
   // The richest food where the lineage lives; its jaw, then size, then brain.
   const home = held(l)[0], r = s.regions.find((x) => x.id === home);
   if (!r) return {};
-  const food = l.food && lv(l.traits, jawOf(l.food)) >= 1 ? l.food : FOODS.reduce((a, f) => (r.food[f] > r.food[a] ? f : a));
+  // The food is chosen afresh in each era: the richest where the lineage now lives. (Until round 4
+  // this bot kept the fish jaw it started with for the whole run, through eras with no fish to speak of.)
+  if (l.foodEra !== s.era) { l.food = FOODS.reduce((a, f) => (r.food[f] > r.food[a] ? f : a)); l.foodEra = s.era; }
+  const food = l.food;
   return { ...follow(l, offers, [[jawOf(food), 3], ['lungs', 2], ['skin', 1], ['egg', 1], ['size', 2], ['brain', 2], ['size', 3]]), food };
 }
 
