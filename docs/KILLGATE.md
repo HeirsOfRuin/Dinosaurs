@@ -1,25 +1,24 @@
 # Kill gate: results
 
-**Where the build is (2026-11-24):** Stage 1 (the spec) is approved. Stage 2
-(this file) is at round 5. The author's targets are met on one life and for
-the balance of the four endings. The saved setting is better and level across
-the roads, and still short: 60.7% against about 70%. The repo is scaffolded, with the kit's placeholder game
-in `src/`. A look-and-screens concept was shown to the author on a design
-canvas and liked ("yes I liked the design style"); nothing of it is in the
-repo. No screen is built and nothing of this game is in `src/` until
-`docs/DESIGN.md` is written and approved.
+**Where the build is (2026-11-24):** Stage 4. The game is built on this
+model and plays on a phone (`docs/DESIGN.md`). The author's targets are met on
+one life and for the balance of the four endings; the saved setting is level
+across the roads and short of its target, 60.7% against about 70%. Nobody has
+played it yet: the next gate is the author's.
 
-The kill gate is a numbers-only model in `prototypes/killgate/`: one lineage
-steered by a fixed policy, two rival lineages steered through the same
+The kill gate began as a numbers-only prototype. It is retired: its model is
+now the game's engine (`src/engine/model.js`, `src/data/world.data.js`,
+`src/engine/policies.js`), moved without changing a result (the fingerprint
+in `docs/DESIGN.md` section 3), and `sim/gate.js` measures the game itself.
+One lineage steered by a policy, two rival lineages steered through the same
 functions, five eras, 107 turns, four regions an era, fourteen traits, a
-die-off at the end of every era, four endings that count as a win. No art, no
-words, no screen.
+die-off at the end of every era, four endings that count as a win.
 
-Every number in `data.js` is tuned, not sourced. `npm run gate` reproduces
-round 5's tables (91,677 runs, about 27 minutes); `npm run gate:check` proves
-the model is deterministic, that every run ended and moved its clock, and
-that every policy part and world switch changes the end state (16 parts, each
-changed 39 or 40 of 40 seeds).
+Every number in `src/data/world.data.js` is tuned, not sourced. `npm run gate`
+reproduces round 5's tables (91,677 runs, about 27 minutes); `npm run
+gate:check` proves the model is deterministic, that every run ended and moved
+its clock, and that every policy part and world switch changes the end state
+(16 parts, each changed 39 or 40 of 40 seeds).
 
 Round 5 is the current model and verdict. Rounds 4 to 1 are kept below as
 the record; their tables are from the model as it was then.

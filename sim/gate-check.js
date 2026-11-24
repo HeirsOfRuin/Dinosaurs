@@ -3,10 +3,11 @@
 //   2. every run ends, moved its clock, and kept every number finite and no count below zero;
 //   3. nothing declared is decoration: every policy part and every world switch
 //      changes the end state on at least one seed in ten.
-//   node prototypes/killgate/check.js [seeds=40]
-import { play, playSaved, totalPop, fits } from './model.js';
-import { ENDINGS } from './data.js';
-import { POLICIES } from './policies.js';
+//   node sim/gate-check.js [seeds=40]
+import { play, playSaved } from './play.js';
+import { totalPop, fits } from '../src/engine/model.js';
+import { ENDINGS } from '../src/data/world.data.js';
+import { POLICIES } from '../src/engine/policies.js';
 
 const n = Number(process.argv[2] || 40);
 const seeds = Array.from({ length: n }, (_, i) => 5 + i * 6151);

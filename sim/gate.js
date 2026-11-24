@@ -1,10 +1,10 @@
-// The kill gate's tables:  node prototypes/killgate/gate.js [runs=1000]
+// The kill gate's tables:  node sim/gate.js [runs=1000]
 // Every arm plays the same seeds. Rates carry ±1 SE; a gap between two rows
 // counts when it exceeds the floor printed under each table.
-import { play, playSaved } from './model.js';
-import { POLICIES, ROADS } from './policies.js';
-import { ERAS, ENDINGS } from './data.js';
-import { seRate, noiseFloor } from '../../sim/stats.js';
+import { play, playSaved } from './play.js';
+import { POLICIES, ROADS } from '../src/engine/policies.js';
+import { ERAS, ENDINGS } from '../src/data/world.data.js';
+import { seRate, noiseFloor } from './stats.js';
 
 const n = Number(process.argv[2] || 1000);
 const seeds = Array.from({ length: n }, (_, i) => 11 + i * 7919);

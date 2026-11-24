@@ -1,26 +1,38 @@
-// The reference player. It does not need to play WELL; it needs to play
-// CONSISTENTLY, so two runs are comparable. Rules:
-//  - It acts only through what the view offers (as Imperator's bot does through
-//    act() and view()), so a choice the screen allows but the engine refuses
-//    is caught.
-//  - It answers every decision explicitly. Leaning on an engine default means a
-//    future change to that default silently retunes the reference player
-//    (Centennial Farm).
-//  - Write down what it never does: those levers are unmeasured until it does.
-//    (This bot never trades when strength is below 2.)
+// The reference player, playing through the same verbs as a person: view,
+// setPlan and advance. It asks the measured policies (src/engine/policies.js)
+// what to do, on a copy of the world with its policy attached, then gives the
+// answer to the game as orders. An order the game refuses is a bug, and throws.
+//
+// What it never does: use the 'special' or 'random' plans (they keep notes on
+// the lineage that a copy would lose), or go back to an earlier era's save by
+// choice. On the saved setting it retries the era it died in, up to `retries`.
 
-import { view } from '../src/engine/turn.js';
-import { streamFor } from '../src/engine/rng.js';
+import { advance, retry } from '../src/engine/turn.js';
+import { offersFor, warning } from '../src/engine/model.js';
+import { decide as policyDecide, POLICIES as ALL } from '../src/engine/policies.js';
 
-export const POLICIES = ['steady', 'random'];
+export const POLICIES = Object.keys(ALL).filter((k) => !['specialist', 'drifter'].includes(k));
 
-export function decide(state, policy = 'steady') {
-  const v = view(state);
-  const ok = v.actions.filter((a) => a.ok);
-  if (!ok.length) throw new Error(`no action allowed at turn ${state.turn}`);
-  if (policy === 'random') return streamFor(state.seed, state.turn, 'bot').pick(ok).id;
-  if (state.strength <= 1) return 'rest';
-  const trade = ok.find((a) => a.id === 'trade');
-  if (trade && state.strength >= 2 && v.money > trade.loss + 4) return 'trade';
-  return ok.find((a) => a.id === 'work')?.id || 'rest';
+export function decide(game, policy = 'dinosaur.plan') {
+  const s = structuredClone(game.s), you = s.lineages.find((l) => l.player);
+  you.plan = ALL[policy];
+  const d = policyDecide(s, you, offersFor(s, you), warning(s));
+  const plan = { spread: d.spread ?? null };
+  if (d.shed) plan.shed = d.shed; else { plan.shed = null; plan.press = d.press ?? null; }
+  if (d.focus !== undefined) plan.focus = d.focus;
+  return { keep: d.keep ?? null, plan };
+}
+
+export function playGame(game, policy, { retries = 0 } = {}) {
+  let g = game;
+  for (let guard = 0; guard < 5000; guard++) {
+    if (g.over) {
+      const era = g.s.diedIn;
+      if (g.outcome !== 'extinct' || g.setting !== 'saved' || g.tries[era] >= retries) break;
+      g = retry(g, era);
+      continue;
+    }
+    g = advance(g, decide(g, policy)).state;
+  }
+  return g;
 }

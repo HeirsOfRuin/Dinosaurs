@@ -2,10 +2,9 @@
 
 Steer a lineage from a Devonian shore to the first dinosaurs.
 
-Status: **Stage 1 spec approved 2026-11-24; Stage 2 kill gate at round 5 the
-same day.** The one-life target and the balance of the four endings are met;
-the saved setting is short of its target (`docs/KILLGATE.md`). The look is
-approved in concept. Next: `docs/DESIGN.md`. Rules changed by what the gate found are marked *(kill gate)*.
+Status: **built and playable, 2026-11-24** (`docs/DESIGN.md`). The spec was
+approved, the kill gate ran five rounds (`docs/KILLGATE.md`), and the game
+stands on that model unchanged. Next: the author plays it.
 
 The author's brief, 2026-11-24: "a 2d [pixel] type game similar to spore, but
 you [evolve] your simple amphibian like animal into [one of] the first
@@ -139,7 +138,7 @@ author, asked: "Correct").
 
 | # | Question | Default if unanswered |
 |---|---|---|
-| 1 | The saved setting wins 60.7% at three tries an era against about 70%, and the bot cannot reach both targets. Accept it as a floor, let one life rise to about 20%, or count the target at four tries an era? | Accept it as a floor and move to design |
+| 1 | Having played it: is it fun, is the Turn screen too dense, and is 107 turns the right length? | Nothing changes until he has played |
 | 2 | With three regions the tolerant body eats more and dies less than the body built to eat. It cannot win. A fault to fix, or what range is for? | Carry into design as a named risk |
 | 3 | The bodies tuned to level the roads (dinosaur: two size steps; amphibian: armour): acceptable, or level them another way? | Acceptable until the canon is checked |
 | 4 | Names for the two settings and the title | Placeholders stay |
@@ -151,6 +150,7 @@ Newest first. Quote the author; give the numbers with their run counts.
 
 | Date | Decision |
 |---|---|
+| 2026-11-24 | **Build it.** Offered three ways to settle the saved setting (accept 60.7% as a floor and move on; let one life rise to about 20%; count the target at four tries an era), the author: "Go with your recommendation and build this bad boy". So: 60.7% is accepted as a floor, and the game is built (`docs/DESIGN.md`). The design proposal was not put to him as a separate step; his word to build is taken as its approval. The model was moved into the engine with every result unchanged (fingerprint over 13 policies × 40 seeds and 12 saved runs, identical before and after). |
 | 2026-11-24 | **Kill gate round 5** (`docs/KILLGATE.md`, 91,677 runs). Saved, a win within three tries an era: mean 60.7%, 56.2 to 65.4% by road (1,000 seeds each), from 56.9% and 42.3 to 68.7%. One life 15.4% pooled, roads 14.6 to 16.4% (4,000 seeds a road). The two targets trade off with this bot: one life 15.3% gave saved 64.3%, one life 19.0% gave 67.3%. |
 | 2026-11-24 | **Fix the saved setting.** Offered a move to the design document with the saved setting carried as a risk, the author: "Fix the saved setting". |
 | 2026-11-24 | **Kill gate round 4** (`docs/KILLGATE.md`, 91,248 runs). The specialist was a bot fault (it kept its first jaw all run) and a comparison at unequal range. At one region the body built to eat out-eats the tolerant one in three eras of five (99 against 46 in mid-Coal) and survives worse (60% against 100% of the Drying; 1,000 seeds each). Two rule changes were tried and rejected. One life: 16.0% pooled, roads 15.1 to 16.9% (4,000 seeds a road). Saved, three tries an era: 56.9% mean. |

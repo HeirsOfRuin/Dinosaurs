@@ -1,9 +1,10 @@
-// Kill-gate model: numbers only, no screen. One lineage steered by a policy,
-// two rival lineages steered by policies through the SAME functions.
-// Pure: play(seed, opts) -> end state; no Math.random, no Date.
-import { streamFor } from '../../src/engine/rng.js';
-import { FOODS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, ENDINGS, FORM_FROM_TURN, FOCUS, HARSH, SENS, JAW_CROSS, DIEOFFS, DIEOFF_TURNS, ERAS } from './data.js';
-import { decide } from './policies.js';
+// The rules of the world. One lineage steered by the player (or, in the
+// measurement tools, by a policy) and two rival lineages steered by policies
+// through the SAME functions. Pure: no DOM, no Math.random, no Date. This file
+// was the kill-gate model (docs/KILLGATE.md); the game is built on it unchanged
+// so the measured numbers are the game's numbers.
+import { streamFor } from './rng.js';
+import { FOODS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, ENDINGS, FORM_FROM_TURN, FOCUS, HARSH, SENS, JAW_CROSS, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
@@ -113,7 +114,7 @@ export function capacity(s, l, traits = l.traits, focus = l.focus) {
   return out;
 }
 
-function startEra(s) {
+export function startEra(s) {
   const era = ERAS[s.era], rng = streamFor(s.seed, `${s.era}.${s.attempt}`, 'dieoff');
   s.turn = 0;
   s.dieoff = { type: rng.pick(era.dieoffs), sens: Object.fromEntries(era.regions.map((r) => [r.id, rng.float((s.opts.sens || era.sens || SENS)[0], (s.opts.sens || era.sens || SENS)[1])])) };
@@ -131,7 +132,7 @@ export function newGame(seed, opts = {}) {
   return s;
 }
 
-function offersFor(s, l) {
+export function offersFor(s, l) {
   const open = Object.keys(TRAITS).filter((id) => lv(l.traits, id) === 0 && canRaise(l.traits, id));
   return streamFor(s.seed, `${s.era}.${s.turn}.${s.attempt}`, 'offer.' + l.id).shuffle(open).slice(0, 3);
 }
@@ -171,9 +172,14 @@ function feed(s) {
   });
 }
 
-export function step(s) {
+// One turn. `decide` is the policy function (policies.js), passed in so that this file and that
+// one do not import each other. `mine`, when given, is the player's own decision for this turn
+// ({ keep, press, shed, spread, focus }) and the policy is not asked for the player.
+export function step(s, decide, mine) {
   const you = s.lineages.find((l) => l.player);
-  const turns = s.lineages.map((l) => { const offers = offersFor(s, l); return [l, decide(s, l, offers, warning(s)), offers]; });
+  const turns = s.lineages.map((l) => { const offers = offersFor(s, l); return [l, l.player && mine ? mine : decide(s, l, offers, warning(s)), offers]; });
+  const era0 = ERAS[s.era], before = { ...you.pop };
+  if (s.turn === era0.turns - dieoffTurns(era0)) s.onset = { ...you.pop };   // numbers as the die-off begins
   for (const [l, d, offers] of turns) apply(s, l, d, offers);
   s.rev += 1;
   feed(s);
@@ -188,6 +194,8 @@ export function step(s) {
   if (pop < 1) return end(s, 'extinct', inDieoff ? 'dieoff' : 'starved');
   if (s.turn < era.turns) { s.regions = regionsNow(s); s.rev += 1; return s; }
   s.eraLog.push({ era: s.era, pop, traits: { ...you.traits } });
+  // What the die-off did, for the end-of-era report.
+  s.lastEra = { era: s.era, kind: s.dieoff.type, onset: s.onset || before, after: { ...you.pop }, rivalsLeft: s.lineages.filter((l) => !l.player).length };
   if (s.era === ERAS.length - 1) return end(s, you.form ? 'win' : 'survived', null);
   // The survivors walk into the next world and settle where they fit best.
   s.era += 1; s.attempt = 0; startEra(s);
@@ -200,35 +208,10 @@ export function step(s) {
 
 function end(s, outcome, cause) { s.ended = true; s.outcome = outcome; s.cause = cause; s.diedIn = outcome === 'extinct' ? s.era : null; return s; }
 
-export function play(seed, opts = {}) {
-  const s = newGame(seed, opts);
-  for (let guard = 0; !s.ended && guard < 1000; guard++) step(s);
-  return s;
-}
-
-// Easy setting: a save at the start of every era. A loss goes back to that save
-// and the era is rolled again (new attempt, new die-off). Returns the end state
-// with s.retries per era. The bot does not learn between tries, so this measures
-// luck only; a person would also change their play.
-export function playSaved(seed, opts = {}, maxRetries = 5) {
-  // A replayed era rolls a new die-off (the author, 2026-11-24: a replay is not a memory test).
-  let s = newGame(seed, opts), save = structuredClone(s);
-  const retries = [0, 0, 0, 0, 0];
-  for (let guard = 0; guard < 5000; guard++) {
-    const era = s.era;
-    step(s);
-    if (s.ended && s.outcome === 'extinct') {
-      const at = save.era;
-      if (retries[at] >= maxRetries) break;
-      retries[at] += 1;
-      s = structuredClone(save); s.attempt = retries[at]; s.ended = false;
-      const you = s.lineages.find((l) => l.player), pop = { ...you.pop };
-      startEra(s); you.pop = pop; s.rev += 1;
-      continue;
-    }
-    if (s.ended) break;
-    if (s.era !== era) save = structuredClone(s);
-  }
-  s.retries = retries;
+// Roll an era again from its opening save: a new attempt number, so a new die-off and new weather.
+export function rerollEra(s, attempt) {
+  s.attempt = attempt; s.ended = false; s.outcome = null; s.cause = null; s.diedIn = null;
+  const you = s.lineages.find((l) => l.player), pop = { ...you.pop };
+  startEra(s); you.pop = pop; s.rev += 1;
   return s;
 }

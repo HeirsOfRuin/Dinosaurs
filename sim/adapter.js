@@ -1,41 +1,41 @@
-// sim/adapter.js — connects this game to the game-measure kit (sim/run.js,
-// sim/ablate.js, ...). The kit files are not edited per game; this one is.
-// Contract: see game-measure's templates/adapter.js.
+// sim/adapter.js connects this game to the game-measure kit (sim/run.js).
+// The kit files are not edited per game; this one is. These runs go through the
+// game's own verbs (advance, setPlan, retry). The gate (sim/gate.js) drives the
+// rules directly and is the place balance is measured.
 
-import { newGame, advance } from '../src/engine/turn.js';
-import { decide, POLICIES } from './bot.js';
+import { newGame } from '../src/engine/turn.js';
+import { POLICIES, playGame } from './bot.js';
 
-export const axes = { policy: POLICIES, difficulty: ['easy', 'normal', 'hard'] };
-export const defaults = { policy: 'steady', difficulty: 'normal' };
+export const axes = { policy: POLICIES, setting: ['oneLife', 'saved'] };
+export const defaults = { policy: 'dinosaur.plan', setting: 'oneLife' };
 
 export function play(seed, opts = {}) {
-  let s = newGame({ seed, difficulty: opts.difficulty || 'normal' });
-  for (let guard = 0; !s.over && guard < 10000; guard++) {
-    s = advance(s, { action: decide(s, opts.policy) }).state;
-  }
-  return s;
+  const setting = opts.setting || 'oneLife';
+  return playGame(newGame({ seed, setting }), opts.policy || 'dinosaur.plan', { retries: setting === 'saved' ? 2 : 0 });
 }
 
-export function progress(s) {
+export function progress(g) {
   const missing = [];
-  if (!s.over) missing.push('never ended');
-  if (s.history.length < 3) missing.push(`only ${s.history.length} turns played`);
+  if (!g.over) missing.push('never ended');
+  if (g.turns < 3) missing.push(`only ${g.turns} turns played`);
+  if (g.s.log.length !== g.s.clock) missing.push('the world clock and its log disagree');
   return missing;
 }
 
-export function metrics(s) {
+export function metrics(g) {
   return {
-    win: s.outcome === 'win',
-    lost: s.outcome === 'lost',
-    turns: s.history.length,
-    money: s.money,
+    win: g.outcome === 'win',
+    alive: g.outcome !== 'extinct',
+    turns: g.turns,
+    erasPassed: g.s.eraLog.length,
+    retries: g.tries.reduce((a, b) => a + b, 0),
   };
 }
 
-export function digest(s) {
-  return JSON.stringify([s.outcome, s.turn, s.money, s.strength]);
+export function digest(g) {
+  return JSON.stringify([g.outcome, g.turns, g.s.form || null, g.s.eraLog]);
 }
 
-export function trace(s) {
-  return s.history.map((h) => `turn ${String(h.turn).padStart(2)}  ${h.action.padEnd(5)}  money ${String(h.money).padStart(4)}  strength ${h.strength}  ${h.notes.join(' ')}`).join('\n') + `\n${s.outcome}`;
+export function trace(g) {
+  return g.s.log.map((h) => `era ${h.era + 1} turn ${String(h.turn + 1).padStart(2)}  numbers ${h.pop.toFixed(1).padStart(7)}  regions ${h.regions}  upkeep ${h.upkeep.toFixed(2)}`).join('\n') + `\n${g.outcome}`;
 }

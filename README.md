@@ -2,9 +2,13 @@
 
 Steer a lineage from a Devonian shore to the first dinosaurs.
 
-Status, 2026-11-24: spec approved (`docs/SPEC.md`), kill gate run once
-(`docs/KILLGATE.md`, `npm run gate`). What plays today is the scaffold's
-placeholder game, not this one.
+Status, 2026-11-24: playable. Five eras, 107 turns, two settings (a save at
+every era, or one life), four endings that count as a win. Built on the model
+the kill gate measured (`docs/KILLGATE.md`); what is built is in
+`docs/DESIGN.md`. Nobody has played it through yet.
+
+The history in it is from memory and unchecked, and the numbers are tuned for
+play. The game says so in its notes.
 
 ## Play as an app
 
@@ -33,7 +37,9 @@ Must pass before every commit.
 | Command | Question |
 |---|---|
 | `npm test` | Is it true? Invariants and the save contract |
-| `npm run sim -- --runs=200 --by=difficulty` | Is it balanced? Batch runs by cell, ±1 SE (game-measure) |
+| `npm run gate` | Is it balanced? The kill gate's tables from the game, 1,000 seeds (27 minutes) |
+| `npm run gate:check` | Can the model be believed? Deterministic, and nothing in it is decoration |
+| `npm run sim -- --runs=50 --by=policy` | Does the bot finish through the game's own verbs? |
 | `npm run sim -- --trace --seed=3` | One game, turn by turn |
 | `npm run smoke` | Does the real page work at 390px? |
 

@@ -1,38 +1,24 @@
-// New game, the save contract, and migrations.
+// The save contract and its migrations.
 //
-// The save KEY is a contract: renaming it orphans every save on every device
-// (Silk Road kept its old key after the retitle on purpose). The payload carries
-// `v`; MIGRATIONS[v] upgrades version v to v + 1. Every version that ever
-// shipped gets a fixture in test/fixtures/ that must load and play on
-// (test/save-contract.test.js). Ids and counters live IN STATE, never in module
-// variables, or one seed gives different games in a batch (Centennial Farm).
+// The save KEY is a contract: renaming it orphans every save on every device.
+// The payload carries `v`; MIGRATIONS[v] upgrades version v to v + 1. Every
+// version that ever shipped has a fixture in test/fixtures/ that must load and
+// play on (test/save-contract.test.js).
+//
+// v1 was the scaffold's placeholder game (a 24-turn trading toy), which was
+// on Pages for a day. A v1 save cannot become a lineage, so its migration
+// starts a new lineage from the same seed and says so in `note`.
 
-import { CONFIG, DIFFICULTY } from '../data/config.data.js';
+import { freshGame } from './game.js';
 
 export const SAVE_KEY = 'deep-time.save.v1'; // never rename
-export const SAVE_VERSION = 1;
+export const SHELF_KEY = 'deep-time.shelf.v1'; // lineages set aside by going back to an earlier era
+export const SAVE_VERSION = 2;
 export const CODE_PREFIX = 'DEEP1.';
-
-export function newGame({ seed = 1, difficulty = 'normal' } = {}) {
-  if (!DIFFICULTY[difficulty]) throw new Error(`unknown difficulty: ${difficulty}`);
-  return {
-    v: SAVE_VERSION,
-    seed: seed >>> 0,
-    difficulty,
-    turn: 1,
-    money: CONFIG.startMoney,
-    strength: CONFIG.startStrength,
-    ledger: [{ turn: 0, amount: CONFIG.startMoney, reason: 'start' }],
-    history: [],
-    over: false,
-    outcome: null,
-    nextId: 1,
-  };
-}
 
 /** MIGRATIONS[v](save) returns the save at version v + 1. Add one per version bump. */
 export const MIGRATIONS = {
-  // 1: (s) => ({ ...s, v: 2, newField: defaultValue }),
+  1: (old) => ({ ...freshGame({ seed: old.seed, setting: 'saved' }), note: 'A save from the first test build could not be carried over. A new lineage was begun in its place.' }),
 };
 
 export function migrate(save) {

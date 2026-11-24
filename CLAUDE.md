@@ -7,17 +7,21 @@
 - Built with the HeirsOfRuin game-building skills (`Game-Workshop/skills/`).
   Read `game-building/SKILL.md` before writing game logic. Follow its stages
   and gates; skipping a stage is allowed, skipping it silently is not.
-- The stage this repo is at is written at the top of `docs/KILLGATE.md`. No
-  screen is drawn and nothing of this game goes in `src/` until the author has
-  read the kill gate and `docs/DESIGN.md` is approved. What is in `src/` today
-  is the scaffold's placeholder game, there so every instrument has something
-  to prove.
-- The kill-gate model is `prototypes/killgate/`. Its numbers are tuned, not
-  sourced. `npm run gate` prints its tables; `npm run gate:check` proves it is
-  deterministic and that every part changes the end state. Re-run both after
-  any change to `data.js`, `model.js` or `policies.js`, and put the numbers,
-  with their run counts, in the commit message. When the real engine exists
-  and reproduces it, retire the prototype; two models drift.
+- The stage this repo is at is written at the top of `docs/KILLGATE.md`, and
+  what is built in `docs/DESIGN.md`. Read it before touching `src/`.
+- The rules are `src/engine/model.js`, their numbers `src/data/world.data.js`
+  (tuned, not sourced), and the lineages' policies `src/engine/policies.js`.
+  They were the kill-gate prototype and were moved without changing a result.
+  `npm run gate` prints the KILLGATE tables from the game (27 minutes);
+  `npm run gate:check` proves the model is deterministic and that every part
+  changes the end state. Re-run both after any change to those three files,
+  and put the numbers, with their run counts, in the commit message.
+- A person plays through `advance`, `setPlan` and `retry` in
+  `src/engine/turn.js`, and the screens show only what `view` gives them. A
+  test holds that a policy driving those verbs ends exactly as it does
+  driving the rules. Keep it true: what is measured must be what is played.
+- Words about the world go in `src/data/text.data.js`. No number is typed
+  there, and none on a screen: a number shown comes from `view`.
 - When a result surprises, check the bot before the design. The first range
   table said two regions were fatal; the bot was sending settlers to die.
   "The specialist is best nowhere" stood for three rounds: its bot kept its
@@ -38,7 +42,8 @@
 - A win rate can be right and still be a coin toss. One tuning read 27% and
   was "did the Great Dying come cold". Read the win by face of the die-off
   (the gate prints it) before believing a pooled number.
-- Every drawn part changes a number. A part that does not is not drawn.
+- Every drawn part changes a number. A part that does not is not drawn: the
+  six slots are worked out from the traits in `src/engine/parts.js`.
 - The history is from memory until checked. Dates and die-offs are checked
   before they shape a number, and the source goes beside the number.
 - The kit files in `sim/` (`run.js`, `stats.js`, `measure-lib.js`) and

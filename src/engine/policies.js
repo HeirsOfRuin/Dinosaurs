@@ -2,9 +2,9 @@
 // (check.js proves it): a plan for the body, the road it is walking, how many
 // regions to hold, whether it chooses what to eat, and whether it heeds the
 // die-off warning.
-import { FOODS, TRAITS, MAX_REGIONS, MIN_VIABLE, ENDINGS } from './data.js';
+import { FOODS, TRAITS, MAX_REGIONS, MIN_VIABLE, ENDINGS } from '../data/world.data.js';
 import { body, fits, capacity, held, canRaise, canShed } from './model.js';
-import { streamFor } from '../../src/engine/rng.js';
+import { streamFor } from './rng.js';
 
 const lv = (t, id) => t[id] || 0;
 const jawOf = (f) => 'jaw' + f[0].toUpperCase() + f.slice(1);

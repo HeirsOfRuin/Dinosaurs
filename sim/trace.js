@@ -1,7 +1,8 @@
-// One run, turn by turn:  node prototypes/killgate/trace.js planner 7
-import { play, totalPop } from './model.js';
-import { POLICIES } from './policies.js';
-import { ERAS } from './data.js';
+// One run, turn by turn:  node sim/trace.js planner 7
+import { play } from './play.js';
+import { totalPop } from '../src/engine/model.js';
+import { POLICIES } from '../src/engine/policies.js';
+import { ERAS } from '../src/data/world.data.js';
 const [name = 'planner', seed = 1] = process.argv.slice(2);
 const s = play(Number(seed), { policy: POLICIES[name] });
 let last = -1;
