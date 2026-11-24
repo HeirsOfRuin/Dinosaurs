@@ -1,9 +1,9 @@
 # Kill gate: results
 
 **Where the build is (2026-11-24):** Stage 1 (the spec) is approved. Stage 2
-(this file) is at round 4. The author's targets are met on one life and for
-the balance of the four endings; the saved setting is short of its target and
-is the one fault of substance left. The repo is scaffolded, with the kit's placeholder game
+(this file) is at round 5. The author's targets are met on one life and for
+the balance of the four endings. The saved setting is better and level across
+the roads, and still short: 60.7% against about 70%. The repo is scaffolded, with the kit's placeholder game
 in `src/`. A look-and-screens concept was shown to the author on a design
 canvas and liked ("yes I liked the design style"); nothing of it is in the
 repo. No screen is built and nothing of this game is in `src/` until
@@ -16,15 +16,81 @@ die-off at the end of every era, four endings that count as a win. No art, no
 words, no screen.
 
 Every number in `data.js` is tuned, not sourced. `npm run gate` reproduces
-round 4's tables (91,248 runs, about 27 minutes); `npm run gate:check` proves
+round 5's tables (91,677 runs, about 27 minutes); `npm run gate:check` proves
 the model is deterministic, that every run ended and moved its clock, and
 that every policy part and world switch changes the end state (16 parts, each
 changed 39 or 40 of 40 seeds).
 
-Round 4 is the current model and verdict. Rounds 3, 2 and 1 are kept below
-as the record; their tables are from the model as it was then.
+Round 5 is the current model and verdict. Rounds 4 to 1 are kept below as
+the record; their tables are from the model as it was then.
 
-## Round 4: the specialist was a bot fault and a wrong comparison
+## Round 5: the saved setting, as far as it goes
+
+The author, offered a move to design with the saved setting carried as a
+risk: "Fix the saved setting".
+
+### Against the targets (91,677 runs, ±1 SE)
+
+| Target | Round 4 | Round 5 | Met? |
+|---|---|---|---|
+| About 15% on one life | 16.0% | 15.4%, four roads pooled (4,000 seeds a road) | Yes |
+| The four roads within 10% of each other, one life | 15.1 to 16.9% | Dinosaur 16.4, crocodile 15.8, mammal 15.0, amphibian 14.6% (each ±0.6); highest over lowest 1.12 | At the edge |
+| About 70% saved, a win within three tries an era | Mean 56.9%; 42.3 to 68.7% by road | Mean 60.7%; dinosaur 65.4, mammal 61.8, amphibian 59.5, crocodile 56.2% (1,000 seeds each, ±1.6) | No |
+| The same, within six tries an era | Mean 74.3% | Mean 81.2%; 75.9 to 85.8% | |
+
+### What changed
+
+- **The bot's cautious retry is gone.** On a second try at an era it put
+  tolerance before its road. That cost the crocodile 13 points of saved wins
+  (41.3 against 54.0%, 400 seeds). A retry is played like a first try.
+- **Danger moved out of the Great Dying.** Die-off strength: Coal Forests
+  1.0 to 1.4, the Drying 1.4 to 1.7, the Great Dying 1.8 to 1.45. Careful
+  survival of those arriving is now Coal 64 to 91%, Drying 53 to 64%, Great
+  Dying 49 to 55%, Triassic 49 to 68%. A retry is worth more when no one era
+  is a wall.
+- **The roads re-levelled**: the dinosaur at warm 2 and size 2, taking skin
+  and egg before its third limb step; the amphibian with an early burrow.
+
+### Why it stops short
+
+On the way, the same bot at two tunings (2,000 seeds a road on one life, 600
+saved): one life 15.3% gave saved 64.3%; one life 19.0% gave saved 67.3%.
+Four points of one-life win buy three of saved. About 15 and about 70 are not
+both reachable with this bot.
+
+If tries were independent, the era survivals above would give about 75%
+saved. They are not: a retry starts from the body that has just failed, and
+the bot plays it the same way. A person who has lost an era changes what they
+do. The saved number is a floor, and how far above it a person lands cannot
+be measured here.
+
+### The rest, re-measured (pooled, 4,000 runs each, floor 1.6)
+
+A list followed blind wins 1.3 to 7.2% by road (1,000 seeds each). Warning 0,
+1, 3, 5, 8 turns out: 8.3, 9.1, 12.2, 14.7, 20.3% win. Holding 1, 2, 3
+regions: 9.8, 12.8, 14.7%. Without rivals 48.5%, without die-offs 99.3%,
+without a choice of food 11.8%, warning unheeded 5.8%. Win by face of the
+Great Dying, of those who met it: 22 to 34% (dinosaur), 26 to 43%
+(crocodile), 23 to 35% (mammal), 35 to 45% (amphibian). No careful run died
+on the Shore.
+
+### Faults open after round 5
+
+1. **The saved setting: 60.7% against about 70%.** See above. The choices are
+   to accept it as a floor, to let one life rise to about 20%, or to count
+   the target at four tries an era (not yet measured).
+2. **With range, tolerance is free, and it got worse.** The tolerant body at
+   three regions is alive at the end of 34.6% of one-life runs (26.3% in
+   round 4), more than twice any road, and can never win. Moving danger into
+   the eras it is best at did this.
+3. **The crocodile list dies on the Shore** in 46.4% of runs.
+4. **The roads were levelled by changing the bodies**, tuned to a number.
+
+## Round 4 (the record)
+
+The tables below are round 4's own.
+
+### Round 4's verdict: the specialist was a bot fault and a wrong comparison
 
 The author, shown round 3's open faults: "Fix this one now" (the specialist
 is best nowhere).

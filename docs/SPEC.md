@@ -2,7 +2,7 @@
 
 Steer a lineage from a Devonian shore to the first dinosaurs.
 
-Status: **Stage 1 spec approved 2026-11-24; Stage 2 kill gate at round 4 the
+Status: **Stage 1 spec approved 2026-11-24; Stage 2 kill gate at round 5 the
 same day.** The one-life target and the balance of the four endings are met;
 the saved setting is short of its target (`docs/KILLGATE.md`). The look is
 approved in concept. Next: `docs/DESIGN.md`. Rules changed by what the gate found are marked *(kill gate)*.
@@ -111,9 +111,9 @@ and the rest of the era is played as that animal.
 
 A lineage that survives as none of these gets its own ending and is not a
 win. The author on their difficulty: "Within 10% of each other". *(kill
-gate)* Careful play wins 15.1 to 16.9% on one life by road (4,000 runs
-each). To level them the dinosaur also needs a size step and the amphibian
-armour; those were tuned, not drawn from the animals.
+gate)* Careful play wins 14.6 to 16.4% on one life by road (4,000 runs
+each). To level them the dinosaur also needs two size steps and the
+amphibian armour; those were tuned, not drawn from the animals.
 
 ## 8. Difficulties and saves
 
@@ -139,9 +139,9 @@ author, asked: "Correct").
 
 | # | Question | Default if unanswered |
 |---|---|---|
-| 1 | The saved setting wins 56.9% at three tries an era against about 70%, and unevenly by road. Another round on the model, or accept it and move to `DESIGN.md`? | Move to design; a person learns between tries and the bot does not |
+| 1 | The saved setting wins 60.7% at three tries an era against about 70%, and the bot cannot reach both targets. Accept it as a floor, let one life rise to about 20%, or count the target at four tries an era? | Accept it as a floor and move to design |
 | 2 | With three regions the tolerant body eats more and dies less than the body built to eat. It cannot win. A fault to fix, or what range is for? | Carry into design as a named risk |
-| 3 | The bodies tuned to level the roads (dinosaur: a size step; amphibian: armour): acceptable, or level them another way? | Acceptable until the canon is checked |
+| 3 | The bodies tuned to level the roads (dinosaur: two size steps; amphibian: armour): acceptable, or level them another way? | Acceptable until the canon is checked |
 | 4 | Names for the two settings and the title | Placeholders stay |
 
 ---
@@ -151,6 +151,7 @@ Newest first. Quote the author; give the numbers with their run counts.
 
 | Date | Decision |
 |---|---|
+| 2026-11-24 | **Kill gate round 5** (`docs/KILLGATE.md`, 91,677 runs). Saved, a win within three tries an era: mean 60.7%, 56.2 to 65.4% by road (1,000 seeds each), from 56.9% and 42.3 to 68.7%. One life 15.4% pooled, roads 14.6 to 16.4% (4,000 seeds a road). The two targets trade off with this bot: one life 15.3% gave saved 64.3%, one life 19.0% gave 67.3%. |
 | 2026-11-24 | **Fix the saved setting.** Offered a move to the design document with the saved setting carried as a risk, the author: "Fix the saved setting". |
 | 2026-11-24 | **Kill gate round 4** (`docs/KILLGATE.md`, 91,248 runs). The specialist was a bot fault (it kept its first jaw all run) and a comparison at unequal range. At one region the body built to eat out-eats the tolerant one in three eras of five (99 against 46 in mid-Coal) and survives worse (60% against 100% of the Drying; 1,000 seeds each). Two rule changes were tried and rejected. One life: 16.0% pooled, roads 15.1 to 16.9% (4,000 seeds a road). Saved, three tries an era: 56.9% mean. |
 | 2026-11-24 | **The specialist: fix it now.** Offered the choice of fixing "the specialist is best nowhere" before design or carrying it as a named risk, the author: "Fix this one now". The other two questions put with it (accept the saved setting at 57.5% and move to design; keep the bodies tuned to level the roads) were not answered and stand at their defaults. |
