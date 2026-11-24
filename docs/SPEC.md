@@ -151,6 +151,7 @@ Newest first. Quote the author; give the numbers with their run counts.
 
 | Date | Decision |
 |---|---|
+| 2026-11-24 | **Fix the saved setting.** Offered a move to the design document with the saved setting carried as a risk, the author: "Fix the saved setting". |
 | 2026-11-24 | **Kill gate round 4** (`docs/KILLGATE.md`, 91,248 runs). The specialist was a bot fault (it kept its first jaw all run) and a comparison at unequal range. At one region the body built to eat out-eats the tolerant one in three eras of five (99 against 46 in mid-Coal) and survives worse (60% against 100% of the Drying; 1,000 seeds each). Two rule changes were tried and rejected. One life: 16.0% pooled, roads 15.1 to 16.9% (4,000 seeds a road). Saved, three tries an era: 56.9% mean. |
 | 2026-11-24 | **The specialist: fix it now.** Offered the choice of fixing "the specialist is best nowhere" before design or carrying it as a named risk, the author: "Fix this one now". The other two questions put with it (accept the saved setting at 57.5% and move to design; keep the bodies tuned to level the roads) were not answered and stand at their defaults. |
 | 2026-11-24 | **Kill gate round 3** (`docs/KILLGATE.md`, 86,278 runs). Careful play wins 15.5% on one life, four roads pooled; by road 14.5 to 16.1% (4,000 seeds a road, ±0.6), highest over lowest 1.11. Saved, a win within three tries an era: 57.5% mean, 42.5 to 72.1% by road (1,000 seeds each). The Shore kills no careful run; leaving a region is cut. Open: the saved setting, the specialist. |

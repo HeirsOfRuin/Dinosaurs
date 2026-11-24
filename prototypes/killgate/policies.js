@@ -11,10 +11,10 @@ const jawOf = (f) => 'jaw' + f[0].toUpperCase() + f.slice(1);
 const TOLERANT = [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['burrow', 1], ['brain', 1], ['lungs', 3], ['skin', 3], ['egg', 3], ['brain', 2], ['burrow', 2]];
 // One build order per ending. A ".list" policy follows it and reads nothing else.
 export const ROADS = {
-  dinosaur:  [['lungs', 2], ['limbs', 2], ['limbs', 3], ['skin', 1], ['gait', 1], ['gait', 2], ['warm', 1], ['egg', 1], ['skin', 2], ['gait', 3], ['egg', 2], ['warm', 2], ['size', 1], ['egg', 3], ['warm', 3]],
+  dinosaur:  [['lungs', 2], ['limbs', 2], ['skin', 1], ['egg', 1], ['limbs', 3], ['gait', 1], ['gait', 2], ['warm', 1], ['skin', 2], ['gait', 3], ['egg', 2], ['warm', 2], ['size', 1], ['egg', 3], ['size', 2]],
   crocodile: [['lungs', 2], ['jawPrey', 1], ['jawPrey', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['jawPrey', 3], ['skin', 3], ['size', 1], ['armour', 1], ['size', 2], ['armour', 2]],
   mammal:    [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['jawInsects', 1], ['burrow', 1], ['jawInsects', 2], ['burrow', 2], ['brain', 1], ['brain', 2], ['warm', 1], ['warm', 2], ['warm', 3]],
-  amphibian: [['lungs', 2], ['jawFish', 2], ['lungs', 3], ['jawFish', 3], ['size', 1], ['skin', 1], ['armour', 1], ['size', 2], ['armour', 2], ['limbs', 2]],
+  amphibian: [['lungs', 2], ['jawFish', 2], ['lungs', 3], ['limbs', 2], ['burrow', 1], ['jawFish', 3], ['size', 1], ['skin', 1], ['armour', 1], ['size', 2], ['armour', 2]],
 };
 const COUNTER = {
   cold: [['warm', 1], ['burrow', 2], ['size', 1]], drought: [['lungs', 2], ['skin', 2], ['egg', 2], ['skin', 3]],
@@ -114,14 +114,8 @@ export function decide(s, l, offers, warn) {
   }
   let wantRegions = Math.min(MAX_REGIONS, p.regions || 1);
   const named = p.heed && warn && warn.kinds.length === 1 && warn.sens;
-  // A second try at an era (the saved setting) is played for survival first: range at once,
-  // tolerance before the road. A person who has just lost an era does not play it the same way.
-  if (p.heed && s.attempt > 0 && !named) {
-    const c = follow(l, offers, TOLERANT, allow, 2);
-    if (c.keep) d.keep = c.keep;
-    if (c.press) { d.press = c.press; delete d.shed; }
-    wantRegions = MAX_REGIONS;
-  }
+  // A second try at an era is played the same way as the first. (Rounds 3 and 4 had the bot put
+  // tolerance before its road on a retry; that cost the crocodile 13 points of saved wins, 400 seeds.)
   if (named) {
     const c = follow(l, offers, COUNTER[warn.kinds[0]], allow, 2);
     if (c.keep) d.keep = c.keep;
