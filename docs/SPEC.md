@@ -2,9 +2,10 @@
 
 Steer a lineage from a Devonian shore to the first dinosaurs.
 
-Status: **Stage 1 spec approved 2026-11-24; Stage 2 kill gate at round 2 the
-same day.** Round 2 fixed the three faults the author asked for; five are
-open in `docs/KILLGATE.md` and wait for the author. Rules changed by what the gate found are marked *(kill gate)*.
+Status: **Stage 1 spec approved 2026-11-24; Stage 2 kill gate at round 3 the
+same day.** The one-life target and the balance of the four endings are met;
+the saved setting is short of its target and two faults are open
+(`docs/KILLGATE.md`). The look is approved in concept. Rules changed by what the gate found are marked *(kill gate)*.
 
 The author's brief, 2026-11-24: "a 2d [pixel] type game similar to spore, but
 you [evolve] your simple amphibian like animal into [one of] the first
@@ -55,7 +56,8 @@ estimate itself is not measured.
 3. The player keeps one or none, and points the lineage's selection pressure
    at one trait already under way (or at losing one).
 4. The player sets where the lineage lives (which regions it holds) and what
-   it mostly eats. Both can change every turn. *(kill gate)*
+   it mostly eats. Both can change every turn. A region cannot be walked out
+   of as an action: it was modelled and changed nothing. *(kill gate)*
 5. The turn resolves: food in, upkeep out, numbers up or down per region.
 6. The warning signs of the era's die-off are shown as they build. Eight
    turns out the game says what it might be; five turns out it names it and
@@ -108,8 +110,10 @@ and the rest of the era is played as that animal.
 | Great amphibian | Big, a fisher, at home in water | Taking the shelled egg |
 
 A lineage that survives as none of these gets its own ending and is not a
-win. *(kill gate)* Careful play wins 10 to 22% on one life depending on the
-road (1,000 runs each); the crocodile line is the hardest.
+win. The author on their difficulty: "Within 10% of each other". *(kill
+gate)* Careful play wins 14.5 to 16.1% on one life by road (4,000 runs
+each). To level them the dinosaur also needs size and a brain and the
+amphibian armour; those were tuned, not drawn from the animals.
 
 ## 8. Difficulties and saves
 
@@ -135,9 +139,9 @@ author, asked: "Correct").
 
 | # | Question | Default if unanswered |
 |---|---|---|
-| 1 | Round 2's open faults (`docs/KILLGATE.md`): fix in the model, or carry into `DESIGN.md` as named risks? | Fix the Shore and the unwinnable saves in the model; carry the rest |
-| 2 | Should the four roads be equally hard? The crocodile line wins half as often as the dinosaur. | Leave them unequal and say so in the game |
-| 3 | Is the look-and-screens concept the direction? | Yes, with the sprites redrawn |
+| 1 | The saved setting wins 57.5% at three tries an era against about 70%. Another round on the model, or accept it and move to `DESIGN.md`? | Move to design; a person learns between tries and the bot does not |
+| 2 | The specialist is best nowhere. Its fix changes the whole food economy. Before design, or a named risk in it? | A named risk, with its own round before the engine is built |
+| 3 | The bodies tuned to level the roads (dinosaur: size and a brain; amphibian: armour): acceptable, or level them another way? | Acceptable until the canon is checked |
 | 4 | Names for the two settings and the title | Placeholders stay |
 
 ---
@@ -147,6 +151,7 @@ Newest first. Quote the author; give the numbers with their run counts.
 
 | Date | Decision |
 |---|---|
+| 2026-11-24 | **Kill gate round 3** (`docs/KILLGATE.md`, 86,278 runs). Careful play wins 15.5% on one life, four roads pooled; by road 14.5 to 16.1% (4,000 seeds a road, ±0.6), highest over lowest 1.11. Saved, a win within three tries an era: 57.5% mean, 42.5 to 72.1% by road (1,000 seeds each). The Shore kills no careful run; leaving a region is cut. Open: the saved setting, the specialist. |
 | 2026-11-24 | **The saved setting: spread the danger.** Told that nearly all the risk sat in the Great Dying, so that the saved setting meant replaying one era until it fell right, and offered the alternative of spreading the danger across eras two to five, the author: "Go with your recommendation on the saved setting". The saved target is counted as a win within three tries an era. (It was first offered as two; at about 15% on one life over four dangerous eras, two tries cannot reach 70% however the danger is shared: the most is about 54%.) |
 | 2026-11-24 | **The look.** Shown the canvas concept (three phone screens and an art sheet: dark ground, the era sets the colour, a 32 by 20 pixel animal in six slots, pixel type for headings only), the author: "yes I liked the design style". The sprites on it are placeholders to be redrawn. |
 | 2026-11-24 | **Fix all the open faults; the four roads within 10% of each other.** Asked which of round 2's faults to fix before design, the author: "All of them!" Asked whether the four endings should be equally hard: "Within 10% of each other". Read as: the four roads' win rates within a tenth of one another, measured on one life. |

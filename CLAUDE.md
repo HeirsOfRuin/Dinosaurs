@@ -30,7 +30,11 @@
   The author: "I want there to be several endings considered wins". A change
   that helps one road is measured on all four.
 - The author's targets: a careful player wins about 15% on one life and about
-  70% with a save at every era. A replayed era rolls a new die-off.
+  70% with a save at every era, counted as a win within three tries an era;
+  the four roads within 10% of each other. A replayed era rolls a new die-off.
+- A win rate can be right and still be a coin toss. One tuning read 27% and
+  was "did the Great Dying come cold". Read the win by face of the die-off
+  (the gate prints it) before believing a pooled number.
 - Every drawn part changes a number. A part that does not is not drawn.
 - The history is from memory until checked. Dates and die-offs are checked
   before they shape a number, and the source goes beside the number.

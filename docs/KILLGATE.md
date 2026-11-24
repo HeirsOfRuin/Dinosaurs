@@ -1,12 +1,13 @@
 # Kill gate: results
 
 **Where the build is (2026-11-24):** Stage 1 (the spec) is approved. Stage 2
-(this file) is at round 2: the three faults the author asked to be fixed first
-are fixed in the model, and five are open. The repo is scaffolded, with the
-kit's placeholder game in `src/`. A look-and-screens concept was shown to the
-author on a design canvas the same day; nothing of it is in the repo. No
-screen is built and nothing of this game is in `src/` until the author has
-read this file and `docs/DESIGN.md` is approved.
+(this file) is at round 3. The author's targets are met on one life and for
+the balance of the four endings; the saved setting is short of its target and
+two faults are open. The repo is scaffolded, with the kit's placeholder game
+in `src/`. A look-and-screens concept was shown to the author on a design
+canvas and liked ("yes I liked the design style"); nothing of it is in the
+repo. No screen is built and nothing of this game is in `src/` until
+`docs/DESIGN.md` is written and approved.
 
 The kill gate is a numbers-only model in `prototypes/killgate/`: one lineage
 steered by a fixed policy, two rival lineages steered through the same
@@ -15,15 +16,130 @@ die-off at the end of every era, four endings that count as a win. No art, no
 words, no screen.
 
 Every number in `data.js` is tuned, not sourced. `npm run gate` reproduces
-round 2's tables (about 73,000 runs, a quarter of an hour); `npm run
-gate:check` proves the model is deterministic, that every run ended and moved
-its clock, and that every policy part and world switch changes the end state
-(17 parts, each changed 17 to 40 of 40 seeds).
+round 3's tables (86,278 runs, about 25 minutes); `npm run gate:check` proves
+the model is deterministic, that every run ended and moved its clock, and
+that every policy part and world switch changes the end state (16 parts, each
+changed 39 or 40 of 40 seeds).
 
-Round 2 is the current model and verdict. Round 1 is kept below as the record;
-its tables are from the model as it was then.
+Round 3 is the current model and verdict. Rounds 2 and 1 are kept below as
+the record; their tables are from the model as it was then.
 
-## Round 2: the three faults are fixed; five are open
+## Round 3: the targets on one life are met; the saved setting is short
+
+The author, shown round 2: "All of them!" (fix every open fault), the four
+roads "Within 10% of each other", and, told that nearly all the danger sat in
+the Great Dying, "Go with your recommendation on the saved setting" (spread
+the danger over eras two to five).
+
+"Plan" is a road walked with eyes open (chooses its food, heeds the warning,
+spreads to refuges). "List" is the same road's build order followed blind.
+86,278 runs, every arm on the same seeds, ±1 SE.
+
+### Against the author's targets
+
+| Target | Measured | Met? |
+|---|---|---|
+| A careful player wins about 15% on one life | 15.5%, four roads pooled (4,000 seeds a road) | Yes |
+| The four roads within 10% of each other | Amphibian 16.1, mammal 15.8, crocodile 15.6, dinosaur 14.5% (each ±0.6). Highest over lowest 1.11; the spread is 1.6 points, which is the floor between two roads | At the edge, inside the noise |
+| About 70% with a save at every era, a win within three tries an era | Amphibian 72.1, mammal 59.1, dinosaur 56.1, crocodile 42.5% (1,000 seeds each, ±1.6): mean 57.5%. At six tries an era: 87.4, 73.4, 72.6, 60.9, mean 73.6% | No |
+
+The saved figure is a floor: the bot plays a retried era more cautiously but
+does not learn what killed it. It is also unequal across the roads, which the
+one-life figure is not.
+
+### What was asked to be fixed
+
+| Round 2's fault | Round 3 | The number |
+|---|---|---|
+| The Shore kills | **Fixed** | No careful run of 4,000 died on the Shore (round 2: 4 to 8%). The strength dial no longer reaches the first era |
+| Leaving a region does nothing | **Cut** | It moved the win 0.3 points in round 2 (4,000 runs each). The action is gone |
+| Choosing food is worth little | **Fixed, by a side road** | Without it the win falls from 14.6 to 12.2% (4,000 runs each, floor 1.6). Nothing about the choice changed: die-offs now thin every food, so which one the lineage eats matters when they come |
+| Saves that cannot be won | **Renamed and reduced** | See below |
+| The specialist is best nowhere | **Open** | 37 in mid-Shore against the opportunist's 38, 37 against 84 in mid-Coal |
+| The crocodile road is the hard one | **Fixed** | 15.6% against the dinosaur's 14.5% |
+| Die-offs outweigh everything, in one era | **Reduced** | Careful survival of those arriving: Coal Forests 69 to 97%, the Drying 67 to 82%, the Great Dying 39 to 47%, the Triassic 42 to 66%. In round 2 the first two were near 100% and the Great Dying 17 to 26% |
+
+**On "saves that cannot be won."** Round 2 called a save that lost five times
+in five unwinnable. Two errors. The count was six tries, not five (k retries
+is k + 1 tries; the columns were mislabelled in rounds 2 and 3). And a save
+with an 18% chance loses six in a row a third of the time by arithmetic
+alone: those saves were hard, not doomed. Now 3 to 18% of saved runs lose six
+of six at the Great Dying and 9 to 15% at the Triassic.
+
+### The claims, re-measured
+
+| Claim | The number |
+|---|---|
+| The win is not a list | List against plan, one life: dinosaur 1.1 against 14.5%, crocodile 2.6 against 15.6%, mammal 7.6 against 15.8%, amphibian 4.9 against 16.1% |
+| Warning matters, and more matters more | Plan win by turns of warning, pooled: 0 turns 8.5%, 1 turn 9.4%, 3 turns 13.2%, 5 turns 14.7%, 8 turns 19.6% (4,000 runs each, floor 1.6) |
+| Holding more regions is insurance, paid for in time | Win holding 1, 2, 3 regions: 10.8, 12.5, 14.1%. The ending's body takes 42, 48, 52 turns |
+| No face of the Great Dying is a coin toss | Win by face, of those who met it: dinosaur 15 to 22%, crocodile 19 to 31%, mammal 16 to 28%, amphibian 27 to 37% |
+
+### One life: how far each gets (1,000 seeds each, ±1.6 or less)
+
+| Policy | Past Shore | Past Coal | Past Drying | Past the Great Dying | Alive at end | WIN |
+|---|---|---|---|---|---|---|
+| none | 100.0 | 63.9 | 3.5 | 0.0 | 0.0 | 0.0 |
+| drifter | 98.4 | 64.8 | 18.7 | 3.8 | 0.7 | 0.0 |
+| specialist | 100.0 | 55.7 | 5.8 | 0.7 | 0.0 | 0.0 |
+| generalist | 100.0 | 99.4 | 99.4 | 47.1 | 27.4 | 0.0 |
+| opportunist | 100.0 | 77.1 | 44.2 | 15.0 | 8.5 | 0.0 |
+| dinosaur, list | 100.0 | 70.0 | 17.1 | 4.1 | 1.1 | 1.1 |
+| dinosaur, plan | 100.0 | 93.9 | 76.8 | 29.7 | 12.6 | 12.6 |
+| crocodile, list | 53.6 | 29.3 | 10.5 | 2.9 | 2.6 | 2.6 |
+| crocodile, plan | 100.0 | 84.9 | 61.4 | 24.0 | 15.9 | 15.9 |
+| mammal, list | 100.0 | 88.1 | 48.4 | 13.7 | 7.6 | 7.6 |
+| mammal, plan | 100.0 | 97.3 | 65.4 | 25.2 | 15.6 | 15.6 |
+| amphibian, list | 100.0 | 54.9 | 28.5 | 8.2 | 4.9 | 4.9 |
+| amphibian, plan | 100.0 | 69.4 | 48.6 | 22.6 | 14.3 | 14.3 |
+
+The plan rows here are 1,000 seeds; the target table above uses 4,000.
+
+### Parts (the four plans pooled, 4,000 runs each, floor 1.6)
+
+| Arm | Past the Great Dying | WIN |
+|---|---|---|
+| As designed | 25.4 | 14.6 |
+| No rivals | 57.9 | 44.0 |
+| No die-offs | 99.4 | 99.4 |
+| No choice of food | 22.1 | 12.2 |
+| Warning unheeded | 11.0 | 6.7 |
+
+### Faults open
+
+1. **The saved setting is short and uneven.** 57.5% at three tries an era
+   against about 70%, and from 42.5% (crocodile) to 72.1% (amphibian). The
+   roads were levelled on one life; a retried era does not treat them alike.
+2. **The specialist is best nowhere.** A lineage alone on a food takes all of
+   it whatever its jaw, so a jaw only matters against rivals. A fix was tried
+   (a food is worth what the jaw can make of it) and backed out: with it,
+   heeding the warning and holding range both did worse than not. It needs
+   its own round.
+3. **The safe body is safe again.** The generalist is alive at the end of
+   27.4% of one-life runs, more than any road, and can never win.
+4. **The crocodile list dies on the Shore** in 46.4% of runs: a prey jaw
+   where there is no prey. A blind list is a bot, not a player, but a new
+   player may make the same first move; the Shore should say so.
+5. **The roads were levelled by changing the bodies.** The dinosaur now needs
+   size 2 and a brain, the amphibian armour 2. These were tuned to a number,
+   not drawn from the animals; the canon should be checked against them.
+
+### What round 3 found on the way
+
+- **A win rate that was a coin toss.** At one tuning the pooled win was 27%
+  and looked right. By face of the Great Dying: cold, 93 to 97% survived;
+  hot, dry and waste, 0% (400 seeds a road). The win was whether the die
+  came up cold. The gate now prints the win by face.
+- **One threshold for a region and for the lineage punished spreading**:
+  three regions of nine died where one of twenty-seven lived. They are two
+  numbers now.
+- **Ordinary die-offs cut two foods of four**, so a careful lineage ate
+  something else and eras two and three killed nobody (97 to 100% survival,
+  400 seeds a road). They now thin all four.
+
+## Round 2 (the record)
+
+### What round 2 fixed, and what it left open
 
 The author, shown round 1: "Recommendation" to all three questions (targets of
 about 15% on one life and 70% saved; fix the first three faults in the model
