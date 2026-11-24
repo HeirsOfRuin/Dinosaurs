@@ -26,6 +26,11 @@
 - A trait is built over several turns and rests on earlier traits. The author:
   "don't make it fly by without any room for investment." Do not add anything
   that is bought in one turn.
+- Four endings win: dinosaur, crocodile line, mammal line, great amphibian.
+  The author: "I want there to be several endings considered wins". A change
+  that helps one road is measured on all four.
+- The author's targets: a careful player wins about 15% on one life and about
+  70% with a save at every era. A replayed era rolls a new die-off.
 - Every drawn part changes a number. A part that does not is not drawn.
 - The history is from memory until checked. Dates and die-offs are checked
   before they shape a number, and the source goes beside the number.
