@@ -35,7 +35,7 @@ export const MIN_VIABLE = 3;                // a region's population below this 
 // body fits, from FORM_FROM_TURN of era 5 (about 230 Ma), and stays it: it
 // cannot afterwards shed below `min`. `max` is what the body must NOT have.
 export const ENDINGS = {
-  dinosaur:  { min: { limbs: 3, gait: 3, skin: 2, egg: 3, warm: 3 }, max: {} },
+  dinosaur:  { min: { limbs: 3, gait: 3, skin: 2, egg: 3, warm: 3, size: 1 }, max: {} },
   crocodile: { min: { armour: 1, size: 2, jawPrey: 3, skin: 3, egg: 2 }, max: {} },
   mammal:    { min: { warm: 3, brain: 2, burrow: 2, jawInsects: 2, egg: 1 }, max: { size: 1 } },
   amphibian: { min: { lungs: 3, jawFish: 3, size: 2 }, max: { egg: 0 } },
