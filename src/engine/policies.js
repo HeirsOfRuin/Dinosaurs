@@ -3,7 +3,7 @@
 // (sim/gate-check.js proves it): a plan for the body, the lineage it is making
 // for, how many regions to hold, the ways it lives, whether it heeds the
 // die-off warning, whether it braces for it, and which road it takes at a moment.
-import { TRAITS, JAWS, MAX_REGIONS, MIN_VIABLE, LINEAGES } from '../data/world.data.js';
+import { TRAITS, JAWS, MAX_REGIONS, MIN_VIABLE, WAY_SETTLE, LINEAGES } from '../data/world.data.js';
 import { body, capacity, held, totalPop, canRaise, canShed, mouthOf, waysOf } from './model.js';
 import { streamFor } from './rng.js';
 
@@ -143,7 +143,9 @@ export function decide(s, l, offers, warn) {
     if (c.keep) d.keep = c.keep;
     if (c.press) { d.press = c.press; delete d.shed; }
     if (!p.fixedRange) wantRegions = MAX_REGIONS;
-    if (p.brace) ways = [ways[0], 'fat'].filter(Boolean);   // lay down fat for what is coming
+    // Lay down fat for what is coming, but only just before it comes: fat slows breeding. (A bot that
+    // braced the moment the die-off was named came through less often with eight turns of warning than with five.)
+    if (p.brace && warn.toOnset <= WAY_SETTLE + 1) ways = [ways[0], 'fat'].filter(Boolean);
   }
   d.ways = ways;
   d.pick = p.pick ?? 0;

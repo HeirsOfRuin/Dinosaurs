@@ -55,9 +55,12 @@ for (const name of CAREFUL) console.log(name.padEnd(16) + ERAS.map((_, e) => { c
 console.log('\n5. Through, by the face of the Great Dying, of those who met it (careful play pooled)');
 for (const f of ERAS[3].dieoffs) { const m = allCareful.filter((s) => s.faces && s.faces[3] === f && s.eraLog.length >= 3); console.log(f.padEnd(16) + rate(thr(m), m.length) + `   (${m.length} runs)`); }
 
-console.log('\n6. Ways of living: the careful policy holding one way, none, or its own two');
-console.log('ways            ' + ['THROUGH', 'top three'].map((h) => h.padStart(10)).join(' ') + '  numbers mid-Coal  mid-Shadow');
-for (const [label, p] of [['none', { ways: [], brace: false }], ...WAYS.map((w) => [w, { ways: [w], brace: false }]), ['as designed', {}]]) { const rs = runAll({ policy: { ...POLICIES.careful, ...p } }); console.log(label.padEnd(16) + rate(thr(rs)) + ' ' + rate(top3(rs)) + '            ' + midPop(rs, 1) + '      ' + midPop(rs, 3)); }
+console.log('\n6. Ways of living: three bodies holding one way, none, or their own (THROUGH, then top three)');
+console.log('ways            ' + ['careful', 'mammal', 'amphibian'].map((h) => h.padStart(22)).join(''));
+const wayArms = [['none', { ways: [], brace: false }], ...WAYS.map((w) => [w, { ways: [w], brace: false }]), ['as designed', {}]];
+const wayRows = wayArms.map(([label, p]) => [label, ['careful', 'mammal.plan', 'amphibian.plan'].map((b) => { const rs = runAll({ policy: { ...POLICIES[b], ...p } }); return [thr(rs), top3(rs)]; })]);
+for (const [label, cells] of wayRows) console.log(label.padEnd(16) + cells.map(([a, b]) => rate(a) + ' ' + rate(b)).join(' '));
+for (const w of WAYS) { const row = wayRows.find((r) => r[0] === w)[1], none = wayRows[0][1]; const best = row.map(([a], i) => a - none[i][0]); console.log(`${w}: best against no way of living by ${(100 * Math.max(...best) / n).toFixed(1)} points (${['careful', 'mammal', 'amphibian'][best.indexOf(Math.max(...best))]})`); }
 console.log(floor());
 
 console.log('\n7. One mouth: deep against wide, at one region');
@@ -70,7 +73,10 @@ for (const [label, policy] of [['deep', { plan: 'special', regions: 1 }], ['wide
 
 console.log('\n8. Moments: the careful policy always taking the first, second or third road');
 console.log('road            ' + ['THROUGH', 'top three'].map((h) => h.padStart(10)).join(' '));
-for (const [label, o] of [['first', { policy: { ...POLICIES.careful, pick: 0 } }], ['second', { policy: { ...POLICIES.careful, pick: 1 } }], ['third', { policy: { ...POLICIES.careful, pick: 2 } }], ['no moments', { policy: POLICIES.careful, noMoments: true }]]) { const rs = runAll(o); console.log(label.padEnd(16) + rate(thr(rs)) + ' ' + rate(top3(rs))); }
+const roadRuns = [];
+for (const [label, o] of [['first', { policy: { ...POLICIES.careful, pick: 0 } }], ['second', { policy: { ...POLICIES.careful, pick: 1 } }], ['third', { policy: { ...POLICIES.careful, pick: 2 } }], ['no moments', { policy: POLICIES.careful, noMoments: true }]]) { const rs = runAll(o); roadRuns.push(rs); console.log(label.padEnd(16) + rate(thr(rs)) + ' ' + rate(top3(rs))); }
+const turned = seeds.filter((_, i) => new Set(roadRuns.slice(0, 3).map((rs) => rs[i].outcome)).size > 1).length;
+console.log(`Seeds on which the road taken decides whether the lineage comes through: ${rate(turned).trim()}%`);
 console.log(floor());
 
 console.log('\n9. Warning, range and what the world is made of (careful play pooled)');

@@ -29,12 +29,12 @@ export const TRAITS = {
   scavenge: { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawPrey', 'jawInsects'] },         // eats the dead
   crush:    { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawFish', 'jawPlants', 'jawPrey'] }, // cracks shell, seed and bone
   herd:   { cost: 0.05, needs: { brain: 1 } },   // living in herds or packs
-  size:   { cost: 0.10, needs: {} },
-  warm:   { cost: 0.12, needs: { skin: 1 } },    // a faster, warmer metabolism
+  size:   { cost: 0.08, needs: {} },
+  warm:   { cost: 0.08, needs: { skin: 1 } },    // a faster, warmer metabolism
   gait:   { cost: 0.04, needs: { limbs: 3 } },   // legs under the body
   burrow: { cost: 0.03, needs: { limbs: 2 } },
-  brain:  { cost: 0.06, needs: {} },
-  armour: { cost: 0.07, needs: { skin: 1 } },
+  brain:  { cost: 0.05, needs: {} },
+  armour: { cost: 0.05, needs: { skin: 1 } },
 };
 export const START_TRAITS = { lungs: 1, limbs: 1, jawFish: 1 };
 export const START_POP = 12;
@@ -45,7 +45,7 @@ export const MAX_REGIONS = 3;
 export const HALF_SAT = 20;                 // food competition: claims needed to take half a stock
 export const MIN_VIABLE = 3;                // a region's population below this dies out
 export const LEAST = 1;                     // the lineage ends when its whole number falls below this
-export const STARVE = { plain: 0.64, fat: 0.56 };   // the share of the gap closed each turn when the ground feeds fewer than there are
+export const STARVE = { plain: 0.72, fat: 0.67, size: 0.075, armour: 0.025, burrow: 0.05 };   // the share of the gap closed each turn when the ground feeds fewer than there are
 export const FOOD_FLOOR = 0.05;             // the least a die-off leaves of a food it takes
 
 // Ways of living: behaviours, held two at a time at most. Chosen, not grown, but a new one takes
@@ -66,16 +66,17 @@ export const LENGTH_M = [0.4, 0.9, 2, 4];
 // region: [id, wet, temp, insects, fish, plants, prey, predators]
 const R = (id, wet, temp, insects, fish, plants, prey, pred) => ({ id, wet, temp, food: { insects, fish, plants, prey }, pred });
 
+// A die-off takes the hunted hardest: whatever lives at the top of the food goes first.
 export const DIEOFFS = {
-  cold:     { dWet: 0,     dTemp: -0.35, food: { insects: 0.4, plants: 0.5, prey: 0.7, fish: 0.7 } },
-  drought:  { dWet: -0.45, dTemp: 0.05,  food: { plants: 0.5, fish: 0.3, insects: 0.6, prey: 0.6 } },
-  heat:     { dWet: -0.15, dTemp: 0.35,  food: { fish: 0.4, plants: 0.6, insects: 0.6, prey: 0.7 } },
-  collapse: { dWet: 0,     dTemp: 0,     food: { plants: 0.25, prey: 0.4, insects: 0.5, fish: 0.6 } },
-  greatHot: { dWet: -0.30, dTemp: 0.40,  food: { plants: 0.3, prey: 0.4, fish: 0.3, insects: 0.6 } },
-  greatDry: { dWet: -0.50, dTemp: 0.25,  food: { plants: 0.25, prey: 0.5, fish: 0.2, insects: 0.6 } },
+  cold:     { dWet: 0,     dTemp: -0.35, food: { insects: 0.4, plants: 0.5, prey: 0.4, fish: 0.7 } },
+  drought:  { dWet: -0.45, dTemp: 0.05,  food: { plants: 0.5, fish: 0.3, insects: 0.6, prey: 0.35 } },
+  heat:     { dWet: -0.15, dTemp: 0.35,  food: { fish: 0.4, plants: 0.6, insects: 0.6, prey: 0.4 } },
+  collapse: { dWet: 0,     dTemp: 0,     food: { plants: 0.25, prey: 0.25, insects: 0.5, fish: 0.6 } },
+  greatHot: { dWet: -0.30, dTemp: 0.40,  food: { plants: 0.3, prey: 0.25, fish: 0.3, insects: 0.6 } },
+  greatDry: { dWet: -0.50, dTemp: 0.25,  food: { plants: 0.25, prey: 0.25, fish: 0.2, insects: 0.6 } },
   // Two more faces of the Great Dying, so that it does not always favour the dry, scaled body.
-  greatCold:  { dWet: 0,   dTemp: -0.65, food: { plants: 0.2, insects: 0.25, prey: 0.4, fish: 0.5 } },
-  greatWaste: { dWet: 0.05, dTemp: 0.05, food: { plants: 0.1, prey: 0.2, insects: 0.25, fish: 0.5 } },
+  greatCold:  { dWet: 0,   dTemp: -0.65, food: { plants: 0.2, insects: 0.25, prey: 0.25, fish: 0.5 } },
+  greatWaste: { dWet: 0.05, dTemp: 0.05, food: { plants: 0.1, prey: 0.12, insects: 0.25, fish: 0.5 } },
 };
 export const HARSH = 2.6;                   // every die-off's strength, one dial
 export const SENS = [0.05, 1.5];            // how hard a die-off hits a region: the low end is a refuge
@@ -117,18 +118,18 @@ export const PANEL = [
   R('coolSouth', 0.5, 0.3, 50, 20, 100, 60, 0.45),
   R('riverDelta', 0.9, 0.65, 110, 90, 80, 60, 0.6),
 ];
-export const STANDING = { fullAt: 25, grounds: [0.8, 0.9, 1.0], weight: 0.3 };   // numbers that count as secure; the worth of 1, 2, 3 regions
+export const STANDING = { fullAt: 25, grounds: [0.8, 0.9, 1.0], weight: 0.2 };   // numbers that count as secure; the worth of 1, 2, 3 regions
 
 // numbers and ground are what the lineage is taken to have had as the last die-off ended, in the
 // game's terms: like the player's, they are what was left, not what there had been.
 export const LINEAGES = {
-  dinosaur:  { traits: { lungs: 2, limbs: 3, gait: 3, skin: 2, egg: 3, warm: 2, size: 2, jawPrey: 2, omni: 1, herd: 1, brain: 1 }, ways: ['tend'], numbers: 22, ground: 3 },
-  crocodile: { traits: { lungs: 2, limbs: 2, skin: 3, egg: 2, armour: 2, size: 2, jawPrey: 3, scavenge: 1 }, ways: ['fat'], numbers: 14, ground: 2 },
-  mammal:    { traits: { lungs: 2, limbs: 2, skin: 1, egg: 1, warm: 3, brain: 2, burrow: 2, jawInsects: 2, omni: 1 }, ways: ['night', 'tend'], numbers: 18, ground: 3 },
-  amphibian: { traits: { lungs: 3, limbs: 2, skin: 1, armour: 1, size: 3, jawFish: 3 }, ways: ['fat'], numbers: 9, ground: 1 },
-  lizard:    { traits: { lungs: 2, limbs: 2, skin: 3, egg: 2, jawInsects: 2, burrow: 1 }, ways: [], numbers: 16, ground: 2 },
-  turtle:    { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, armour: 3, jawPlants: 1, omni: 2, crush: 1 }, ways: ['fat'], numbers: 12, ground: 2 },
-  beaked:    { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, size: 3, jawPlants: 3, crush: 1, herd: 2, brain: 1 }, ways: [], numbers: 4, ground: 1 },
+  dinosaur:  { traits: { lungs: 2, limbs: 3, gait: 3, skin: 2, egg: 3, warm: 2, size: 2, jawInsects: 2, omni: 2, herd: 1, brain: 1 }, ways: ['tend'], numbers: 9, ground: 2 },
+  crocodile: { traits: { lungs: 2, limbs: 2, skin: 3, egg: 2, armour: 2, size: 2, jawPrey: 3, scavenge: 1 }, ways: ['tend'], numbers: 6, ground: 1 },
+  mammal:    { traits: { lungs: 2, limbs: 2, skin: 1, egg: 1, warm: 3, brain: 2, burrow: 2, jawInsects: 2, omni: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
+  amphibian: { traits: { lungs: 3, limbs: 2, skin: 1, armour: 1, size: 3, jawFish: 3, burrow: 1 }, ways: ['tend', 'roam'], numbers: 4, ground: 1 },
+  lizard:    { traits: { lungs: 2, limbs: 2, skin: 3, egg: 2, jawInsects: 2, burrow: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
+  turtle:    { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, armour: 3, size: 1, jawPlants: 2, omni: 2, crush: 1 }, ways: ['tend'], numbers: 5, ground: 1 },
+  beaked:    { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, size: 3, jawPlants: 3, crush: 1, herd: 2, brain: 1 }, ways: [], numbers: 2, ground: 1 },
 };
 
 // ---- Moments ------------------------------------------------------------------
@@ -141,16 +142,16 @@ export const LINEAGES = {
 //   ['food', id, m, n]    that food ('all' for every one) times m, everywhere, for n turns
 //   ['pred', d, n]        hunters more (d > 0) or fewer, everywhere, for n turns
 export const MOMENTS = {
-  flood:      { when: 'any', options: [[['pop', 0.9], ['food', 'plants', 1.4, 4]], [['pop', 0.95], ['food', 'fish', 1.5, 4]], [['pop', 0.92], ['settle', 6]]] },
-  newHunter:  { when: 'any', options: [[['pop', 0.9], ['step', 2]], [['food', 'all', 0.8, 3]], [['pop', 0.94], ['pred', -0.1, 6]]] },
-  plague:     { when: 'rivalNear', options: [[['rivals', 0.6], ['food', 'all', 0.9, 2]], [['rivals', 0.6], ['pop', 0.85], ['food', 'all', 1.25, 3]], [['rivals', 0.6], ['pop', 0.92], ['food', 'carrion', 2.5, 3]]] },
-  richYear:   { when: 'any', options: [[['pop', 1.25]], [['settle', 8]], [['step', 3]]] },
-  leanYear:   { when: 'any', options: [[['pop', 0.8]], [['pop', 0.9], ['step', 1]], [['pop', 0.88], ['settle', 5]]] },
-  rivalYoung: { when: 'rivalNear', options: [[['rivals', 0.75], ['pop', 1.05], ['pred', 0.05, 4]], [['step', 1]], [['rivals', 0.85], ['pop', 0.95]]] },
-  landBridge: { when: 'canSettle', options: [[['pop', 0.9], ['settle', 10]], [['settle', 4]], [['step', 2]]] },
-  fire:       { when: 'any', options: [[['pop', 0.88]], [['pop', 0.93], ['food', 'plants', 0.6, 3]], [['pop', 0.9], ['food', 'prey', 1.5, 3], ['food', 'insects', 1.3, 3]]] },
-  oddYoung:   { when: 'any', options: [[['pop', 0.92], ['step', 4]], [['settle', 4]], [['pop', 1.05]]] },
-  longWinter: { when: 'any', options: [[['pop', 0.9], ['pred', -0.1, 3]], [['food', 'insects', 0.6, 3], ['step', 2]], [['pop', 0.9], ['settle', 6]]] },
-  giantDead:  { when: 'any', options: [[['pop', 1.15], ['pred', 0.1, 3]], [['pop', 1.05]], [['pop', 0.97], ['food', 'prey', 1.5, 3]]] },
-  crowding:   { when: 'crowded', options: [[['settle', 10]], [['pop', 0.85], ['step', 2]], [['rivals', 0.8], ['pop', 0.92]]] },
+  flood:      { when: 'any', options: [[['pop', 0.85], ['food', 'plants', 1.6, 6]], [['pop', 0.95], ['food', 'fish', 1.8, 6]], [['pop', 0.9], ['settle', 12]]] },
+  newHunter:  { when: 'any', options: [[['pop', 0.85], ['step', 4]], [['food', 'all', 0.75, 4]], [['pop', 0.9], ['pred', -0.2, 8]]] },
+  plague:     { when: 'rivalNear', options: [[['rivals', 0.5], ['food', 'all', 0.9, 2]], [['rivals', 0.5], ['pop', 0.8], ['food', 'all', 1.4, 5]], [['rivals', 0.5], ['pop', 0.9], ['food', 'carrion', 3, 5]]] },
+  richYear:   { when: 'any', options: [[['pop', 1.4]], [['settle', 14]], [['step', 5]]] },
+  leanYear:   { when: 'any', options: [[['pop', 0.75], ['food', 'all', 1.2, 4]], [['pop', 0.88], ['step', 3]], [['pop', 0.85], ['settle', 10]]] },
+  rivalYoung: { when: 'rivalNear', options: [[['rivals', 0.55], ['pop', 1.1], ['pred', 0.1, 5]], [['step', 4]], [['rivals', 0.7], ['pop', 0.92]]] },
+  landBridge: { when: 'canSettle', options: [[['pop', 0.85], ['settle', 20]], [['settle', 8]], [['step', 4]]] },
+  fire:       { when: 'any', options: [[['pop', 0.85], ['settle', 6]], [['pop', 0.95], ['food', 'plants', 0.5, 4]], [['pop', 0.88], ['food', 'prey', 1.8, 4], ['food', 'insects', 1.5, 4]]] },
+  oddYoung:   { when: 'any', options: [[['pop', 0.88], ['step', 7]], [['settle', 10]], [['pop', 1.2]]] },
+  longWinter: { when: 'any', options: [[['pop', 0.88], ['pred', -0.2, 6]], [['food', 'insects', 0.5, 4], ['step', 4]], [['pop', 0.88], ['settle', 12]]] },
+  giantDead:  { when: 'any', options: [[['pop', 1.3], ['pred', 0.15, 5]], [['pop', 1.1]], [['pop', 0.95], ['food', 'prey', 1.8, 5]]] },
+  crowding:   { when: 'crowded', options: [[['settle', 20]], [['pop', 0.8], ['step', 5]], [['rivals', 0.6], ['pop', 0.9]]] },
 };

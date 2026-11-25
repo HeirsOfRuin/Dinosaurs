@@ -23,7 +23,7 @@ export function body(t, ways = []) {
   const mouth = mouthOf(t), own = mouth ? JAWS[mouth] : null;
   const eff = {};
   for (const f of BASE_FOODS) {
-    let e = 0.35 + (f === own ? 0.25 * lv(t, mouth) - 0.06 * omni : 0.08 * omni) + 0.05 * lv(t, 'brain');
+    let e = 0.35 + (f === own ? 0.25 * lv(t, mouth) - 0.08 * omni : 0.06 * omni) + 0.05 * lv(t, 'brain');
     if (f === 'prey') e = e * (0.55 + 0.6 * mob) + 0.08 * size + 0.04 * herd;
     if (f === 'insects') e = e * (0.8 + 0.25 * mob) - 0.08 * size;
     if (f === 'plants') e += 0.05 * size;
@@ -32,18 +32,19 @@ export function body(t, ways = []) {
   eff.carrion = 0.22 * lv(t, 'scavenge');                 // nothing, without the stomach for it
   eff.hard = lv(t, 'crush') ? 0.2 * lv(t, 'crush') + 0.03 * size : 0;
   if (night) for (const f of FOODS) eff[f] *= 0.9;        // finds less in the dark
-  let upkeep = 1 + (tend ? 0.06 : 0);
+  let upkeep = 1 + (tend ? 0.06 : 0) + (roam ? 0.07 : 0);   // young to feed; miles to walk
   for (const id in t) upkeep += TRAITS[id].cost * t[id];
   return {
     dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg') + 0.06 * burrow),   // a burrow is damp
     lo: 0.40 - 0.10 * warm - 0.04 * size - 0.05 * burrow,
-    hi: 0.65 + 0.07 * skin - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.06 : 0),
+    hi: 0.65 + 0.07 * skin - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
     mob, eff, upkeep, mouth,
-    defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + (night ? 0.12 : 0)),
-    grow: (tend ? 0.7 : 0.5) * (fat ? 0.6 : 1),          // how fast numbers rise toward what the ground feeds
-    starve: fat ? STARVE.fat : STARVE.plain,                             // how fast they fall toward it
-    ease: roam ? 0.6 : 1,                                 // how much of bad ground's harm is felt
-    drag: roam ? 0.8 : 1,                                 // a lineage on the move changes more slowly
+    defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + (night ? 0.2 : 0)),
+    grow: (tend ? 0.68 : 0.5) * (fat ? 0.75 : 1),          // how fast numbers rise toward what the ground feeds
+    // A heavy animal starves more slowly than a slight one; so does a slow one in armour, and one that has laid down fat.
+    starve: (fat ? STARVE.fat : STARVE.plain) * (1 - STARVE.size * size - STARVE.armour * lv(t, 'armour') - STARVE.burrow * burrow * (3 - size) / 3),   // and a small one gone to ground                            // how fast they fall toward it
+    ease: roam ? 0.55 : 1,                                 // how much of bad ground's harm is felt
+    drag: 1,                                 // a lineage on the move changes more slowly
   };
 }
 
@@ -79,7 +80,7 @@ export function canShed(t, id) {
 // die. (At first the dead only rose with a die-off, and a scavenger slept through the Great
 // Dying on 130 of carrion a region.) Hard food is a share of what grows.
 function yields(food, pred, hit) {
-  food.carrion = (5 + 30 * pred) * Math.max(0.25, 1 + hit - 0.65 * hit * hit);
+  food.carrion = (5 + 30 * pred) * Math.max(0.2, 1 + 0.5 * hit - 0.65 * hit * hit);
   food.hard = 0.12 * (food.plants + food.fish + food.prey);
   return food;
 }
