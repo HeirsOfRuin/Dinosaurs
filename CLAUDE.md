@@ -33,12 +33,27 @@
 - A trait is built over several turns and rests on earlier traits. The author:
   "don't make it fly by without any room for investment." Do not add anything
   that is bought in one turn.
-- Four endings win: dinosaur, crocodile line, mammal line, great amphibian.
-  The author: "I want there to be several endings considered wins". A change
-  that helps one road is measured on all four.
-- The author's targets: a careful player wins about 15% on one life and about
-  70% with a save at every era, counted as a win within three tries an era;
-  the four roads within 10% of each other. A replayed era rolls a new die-off.
+- `docs/FRAME-standing.md` is the approved design of how the game is won and
+  what a turn offers. Where it differs from `SPEC.md` it wins.
+- A lineage that is alive after the last die-off has come through: that is the
+  win, whatever its body. The author, after being told his survivor had not
+  won: "I don't think winning should be reliant on fitting a list of traits."
+  How well is its standing, placed on a ladder of seven lineages that are
+  bodies in `src/data/world.data.js` scored by the same function. Never type a
+  score in, and never gate a win on a body.
+- One mouth. The author: "You shouldn't be able to change what you eat
+  constantly, that's unrealistic." A lineage holds one jaw; what it eats
+  follows from it; refinements grow from it. Do not add a choice of food.
+- Ways of living are chosen, not grown, and take turns to settle. Herding is
+  a trait (the author: "Herd mentality should be a trait").
+- A moment comes once in a run and has three roads, none a refusal and none
+  the right answer. The gate measures the three roads against each other.
+- Animals are shown in heads: `HEADS` to one unit of the model, applied in
+  `view` and nowhere else. The author asked for "500 instead of 5".
+- Acting on rivals is wanted and not built. The notes are in
+  `docs/FRAME-standing.md` section 5. Build a rivals screen first.
+- The author's targets: about 30% of careful play comes through on one life,
+  about 10% reaches the top three rungs. A replayed era rolls a new die-off.
 - A win rate can be right and still be a coin toss. One tuning read 27% and
   was "did the Great Dying come cold". Read the win by face of the die-off
   (the gate prints it) before believing a pooled number.

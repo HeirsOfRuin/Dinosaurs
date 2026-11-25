@@ -62,9 +62,14 @@ export function animalRects(p) {
 
 const rect = ([x, y, w, h, col]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}"/>`;
 
-/** The animal alone, for the Body screen. `px` is the size of one pixel on screen. */
-export function animalSVG(p, px, label) {
-  return `<svg viewBox="0 0 32 20" width="${32 * px}" height="${20 * px}" shape-rendering="crispEdges" role="img" aria-label="${label}">${animalRects(p).map(rect).join('')}</svg>`;
+/** The animal alone with a measure under it, for the Body screen. `px` is one pixel on screen; `metres` its length. */
+export function animalSVG(p, px, label, metres) {
+  const rects = animalRects(p);
+  const x0 = Math.min(...rects.map((r) => r[0])), x1 = Math.max(...rects.map((r) => r[0] + r[2]));
+  // A bar of a round length, drawn to the animal's own scale: a metre for a big animal, ten centimetres for a small one.
+  const unit = metres >= 2 ? 1 : metres >= 0.8 ? 0.5 : 0.1, bar = Math.max(1, Math.round((x1 - x0) * unit / metres));
+  const measure = metres ? `<rect x="${x0}" y="20" width="${bar}" height="1" fill="#e9e6d6"/><rect x="${x0}" y="19" width="1" height="2" fill="#e9e6d6"/><rect x="${x0 + bar - 1}" y="19" width="1" height="2" fill="#e9e6d6"/>` : '';
+  return { svg: `<svg viewBox="0 0 32 22" width="${32 * px}" height="${22 * px}" shape-rendering="crispEdges" role="img" aria-label="${label}">${rects.map(rect).join('')}${measure}</svg>`, unit };
 }
 
 // Ground and sky for each era: [x, y, w, h, palette index] on a 64 by 30 grid.
@@ -76,9 +81,21 @@ const SCENES = {
   triassic: [[0, 0, 64, 30, 0], [0, 0, 64, 8, 1], [48, 2, 6, 6, 2], [0, 15, 24, 7, 1], [34, 13, 30, 9, 1], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2]],
 };
 
-/** The animal on its era's ground, for the Turn screen. Fills its container's width. */
-export function sceneSVG(eraId, palette, p, label, dim) {
+// One animal placed in the scene: feet on the ground line (row 24), at `k` times the player's size.
+function placed(p, x, k, fade) {
+  return `<g transform="translate(${x} ${24 - 18 * k}) scale(${k})"${fade ? ` opacity="${fade}"` : ''}>${animalRects(p).map(rect).join('')}</g>`;
+}
+
+/**
+ * The animal on its era's ground, for the Turn screen. Fills its container's width.
+ * `others` are the rival animals that share ground with it: [{ parts, ratio }], ratio being their
+ * length over the player's, so a rival twice as long is drawn twice as long.
+ */
+export function sceneSVG(eraId, palette, p, label, dim, others = []) {
   const bg = (SCENES[eraId] || SCENES.shore).map(([x, y, w, h, i]) => rect([x, y, w, h, palette[i]])).join('');
-  const animal = animalRects(p).map(([x, y, w, h, col]) => rect([x + 16, y + 6, w, h, col])).join('');
-  return `<svg class="scene${dim ? ' dim' : ''}" viewBox="0 0 64 30" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" role="img" aria-label="${label}">${bg}${animal}</svg>`;
+  const spots = [[40, 0.75], [0, 0.6]];
+  const rivals = others.slice(0, 2).map((o, i) => placed(o.parts, spots[i][0] + (o.ratio > 1.4 ? -4 : 0), Math.max(0.45, Math.min(1.7, o.ratio)), 0.8)).join('');
+  // Its own kind beside it: one for a herd beginning, two for a herd.
+  const kin = [[8, 0.8], [27, 0.7]].slice(0, Math.min(2, p.herd || 0)).map(([x, k]) => placed(p, x, k, 0.9)).join('');
+  return `<svg class="scene${dim ? ' dim' : ''}" viewBox="0 0 64 30" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" role="img" aria-label="${label}">${bg}${rivals}${kin}${placed(p, 16, 1)}</svg>`;
 }

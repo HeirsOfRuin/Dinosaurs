@@ -18,6 +18,8 @@ export async function advanceOnce(page) {
   // Starting a lineage takes three taps (new, the setting, the opening note). A caller that made
   // only the first (tools/check-bundle.mjs, offline) is carried through the rest here.
   for (const sel of START.slice(1)) if (await page.locator(sel).count()) await page.click(sel);
+  // A moment, when one is waiting, has to be met before the turn can be taken.
+  if (await page.locator('[data-act^="meet:"]').count()) await page.locator('[data-act^="meet:"]').first().click();
   const before = (await page.locator(CLOCK).textContent())?.trim();
   const btn = page.locator('[data-action]:not([disabled])').first();
   if (!(await btn.count())) return false;

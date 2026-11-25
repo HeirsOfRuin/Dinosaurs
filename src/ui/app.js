@@ -7,12 +7,12 @@
 //  - A throw never leaves a dead button: busy is released in finally, and the
 //    error screen offers the save.
 
-import { newGame, advance, setPlan, retry, view } from '../engine/turn.js';
+import { newGame, advance, setPlan, meet, retry, view } from '../engine/turn.js';
 import { SAVE_KEY, SHELF_KEY, serialize, deserialize, toCode, fromCode } from '../engine/state.js';
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
 import { animalSVG, sceneSVG } from './sprite.js';
-import { TITLE, TRAIT_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, DIEOFF_TEXT, ENDING_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
+import { TITLE, TRAIT_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, DIEOFF_TEXT, LINEAGE_TEXT, RANK_TEXT, THROUGH_TEXT, STANDING_TEXT, WAY_TEXT, MOMENT_TEXT, SIZE_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
 
 const SHELF_MAX = 6;
 const app = document.getElementById('app');
@@ -24,11 +24,14 @@ let banner = null;
 let install = null;
 let choosing = false;
 let lastNote = null;
+let shownMa = null;   // the date the calendar last showed, so it can be seen to move
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-const n0 = (x) => String(Math.round(x));
+const n0 = (x) => Math.round(x).toLocaleString('en-GB');
 const n2 = (x) => x.toFixed(2);
-const signed = (x) => (Math.abs(x) < 0.5 ? 'no change in food' : x > 0 ? `feeds ${n0(x)} more` : `feeds ${n0(-x)} fewer`);
+const signed = (x) => (Math.abs(x) < 50 ? 'no change in food' : x > 0 ? `feeds ${n0(x)} more` : `feeds ${n0(-x)} fewer`);
+const ma = (x) => x.toFixed(1);
+const metres = (m) => (m < 1 ? `${Math.round(m * 100)} cm` : `${m} m`);
 const plural = (n, one, many) => (Math.round(n) === 1 ? one : many);
 const list = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} or ${xs[xs.length - 1]}`);
 
@@ -78,18 +81,36 @@ function render() {
   const tabs = [['play', 'Turn'], ['body', 'Body'], ['menu', 'Menu']];
   app.innerHTML = `
     <header class="hud">
-      <div class="hud-top"><h1>${esc(v.era.name)}</h1><span class="ma">${v.era.ma} million years ago</span></div>
+      <div class="hud-top"><h1>${esc(v.era.name)}</h1><span class="turn">Turn ${v.era.turn} of ${v.era.turns}</span></div>
       <div class="eras" aria-hidden="true">${v.eras.map((e) => `<i style="flex:${e.turns}"><b style="width:${Math.round(e.frac * 100)}%"></b></i>`).join('')}</div>
-      <div class="hud-sub"><span class="turn">Turn ${v.era.turn} of ${v.era.turns}</span><span>Era ${v.era.index + 1} of ${v.eras.length} · ${SETTING_TEXT[v.setting].name.toLowerCase()}</span></div>
+      <div class="hud-sub"><span class="ma"><b id="ma" data-to="${ma(v.era.ma)}">${ma(shownMa ?? v.era.ma)}</b> million years ago</span><span>${ma(v.era.perTurn)} million years a turn</span></div>
     </header>
     ${banner ? `<p class="banner">${esc(banner)} <button data-act="dismiss">OK</button></p>` : ''}
     <main class="panel">${tab === 'play' ? playTab(v) : tab === 'body' ? bodyTab(v) : menuTab(v)}</main>
     <nav class="tabs">${tabs.map(([id, label]) => `<button data-tab="${id}" class="${tab === id ? 'on' : ''}">${label}</button>`).join('')}</nav>
     ${modal ? `<div class="scrim"><div class="sheet">${modal}</div></div>` : ''}`;
+  runCalendar(v.era.ma);
+}
+
+// The date counts down to where it now stands, so the years are seen to pass.
+function runCalendar(to) {
+  const el = document.getElementById('ma'), from = shownMa ?? to;
+  shownMa = to;
+  if (!el || Math.abs(from - to) < 0.05) { if (el) el.textContent = ma(to); return; }
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = ma(to); return; }
+  const t0 = performance.now(), ms = 700;
+  const tick = (now) => {
+    const k = Math.min(1, (now - t0) / ms), node = document.getElementById('ma');
+    if (!node || node.dataset.to !== ma(to)) return;
+    node.textContent = ma(from + (to - from) * k);
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }
 
 const animalLabel = (v) => `Your animal: ${PART_TEXT.trunk[v.parts.trunk]} body, limbs ${PART_TEXT.limbs[v.parts.limbs]}, ${PART_TEXT.skin[v.parts.skin]} skin`;
-const eating = (v) => (v.focus ? `eating mostly ${FOOD_TEXT[v.focus]}` : 'eating anything');
+const eating = (v) => (v.mouth ? PART_TEXT.jaw[v.mouth] : 'no settled mouth');
+const others = (v) => v.rivals.filter((r) => r.near).map((r) => ({ parts: r.parts, ratio: r.length / v.length }));
 
 function fitWord(r) {
   if (r.fit >= 0.85) return 'liveable';
@@ -121,18 +142,31 @@ function playTab(v) {
     ? `<button class="row" data-tab="body"><span>${p.kind === 'shed' ? 'Letting go of' : 'Pressure on'} <strong>${esc(TRAIT_TEXT[p.id].name.toLowerCase())}</strong></span><span class="dim">${p.kind === 'shed' ? '' : `to ${STEP_NAMES[p.to]} · `}${p.left} ${plural(p.left, 'turn', 'turns')} left</span>${p.kind === 'press' ? `<span class="bar"><b style="width:${Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : ''}</button>`
     : '<button class="row empty" data-tab="body"><span><strong>Nothing is under pressure.</strong></span><span class="dim">No trait is growing. Choose one on the Body screen.</span></button>';
 
-  const foods = v.foods.map((f) => `<button class="chip${f.on ? ' on' : ''}" data-act="focus:${f.id || 'mixed'}">${f.id ? FOOD_TEXT[f.id] : 'anything'}<small>${n0(f.feeds)}</small></button>`).join('');
+  const eats = Object.entries(v.eats).filter(([, e]) => e > 0.05).sort((a, b) => b[1] - a[1]).map(([f, e]) => `<span class="eat"><i style="width:${Math.round(Math.min(1, e) * 100)}%"></i><em>${FOOD_TEXT[f]}</em></span>`).join('');
+  const rivalsNear = v.rivals.filter((r) => r.near);
 
+  if (v.moment && v.moment.picked == null) {
+    const m = MOMENT_TEXT[v.moment.id];
+    return `
+    <div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), false, others(v))}
+      <div class="strip"><span><strong>${n0(v.pop)}</strong> alive</span><span class="dim">${eating(v)}</span><span class="dim">${metres(v.length)} long</span></div>
+    </div>
+    <div class="moment"><h2>${esc(m.title)}</h2><p>${esc(m.text)}</p>
+      <div class="stack">${m.roads.map((r, i) => `<button data-act="meet:${i}">${esc(r)}</button>`).join('')}</div>
+      <p class="hint">Something like this comes every few turns. Each comes once; none of the three is the wrong answer.</p>
+    </div>`;
+  }
   const offers = v.offers.length ? v.offers.map((o) => `
     <div class="offer">
-      <div><strong>${esc(TRAIT_TEXT[o.id].name)}</strong><small>${esc(TRAIT_TEXT[o.id].does)} Upkeep +${n2(o.cost)}; ${signed(o.feeds)} now.${o.closes.length ? ` Closes the road to the ${list(o.closes.map((e) => ENDING_TEXT[e].name.toLowerCase()))}.` : ''}</small></div>
+      <div><strong>${esc(TRAIT_TEXT[o.id].name)}</strong><small>${esc(TRAIT_TEXT[o.id].does)} Upkeep +${n2(o.cost)}; ${signed(o.feeds)} now.</small></div>
       <button class="primary" data-action="keep:${o.id}">Keep</button>
     </div>`).join('') : '<p class="empty">No new mutation this generation: everything this body could begin, it has begun.</p>';
 
   return `
-    <div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), !!v.dieoff)}
-      <div class="strip"><span><strong>${n0(v.pop)}</strong> alive</span><span class="dim">${eating(v)}</span><span class="dim">upkeep ${n2(v.upkeep)}</span></div>
+    <div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), !!v.dieoff, others(v))}
+      <div class="strip"><span><strong>${n0(v.pop)}</strong> alive</span><span class="dim">${eating(v)}</span><span class="dim">${metres(v.length)} long</span></div>
     </div>
+    ${rivalsNear.length ? `<p class="note">Beside you: ${rivalsNear.map((r) => `${n0(r.pop)} of an animal ${metres(r.length)} long, most like the ${LINEAGE_TEXT[r.like].name.toLowerCase()}`).join('; ')}.</p>` : ''}
     ${lastNote ? `<p class="note">${lastNote}</p>` : ''}
     ${omen}
     ${pressure}
@@ -141,8 +175,9 @@ function playTab(v) {
     <button class="next" data-action="next">${v.offers.length ? 'Keep none, next turn' : 'Next turn'}</button>
     <h2>Where you live</h2>
     <div class="regions">${regions}</div>
-    <h2>Eat mostly <span class="plainh">(numbers it would feed)</span></h2>
-    <div class="foodrow">${foods}</div>`;
+    <h2>What this mouth makes of each food</h2>
+    <div class="eats">${eats}</div>
+    <p class="hint">Food follows from the mouth. To eat differently, grow the mouth on the Body screen.</p>`;
 }
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -164,20 +199,21 @@ function regionSheet(id) {
 
 function turnNote(rec) {
   const bits = [];
+  if (rec.met) bits.push(`${MOMENT_TEXT[rec.met.id].title}: ${MOMENT_TEXT[rec.met.id].roads[rec.met.road].split('.')[0]}.`);
   if (rec.kept) bits.push(`Kept: ${TRAIT_TEXT[rec.kept].name.toLowerCase()}.`);
   for (const id of rec.gained) bits.push(`${TRAIT_TEXT[id].name} is now ${STEP_NAMES[view(state).traits.find((t) => t.id === id)?.level || 1]}.`);
   for (const id of rec.lost) bits.push(`${TRAIT_TEXT[id].name} has faded a step.`);
   for (const id of rec.settled) bits.push(`Settlers reached the ${REGION_TEXT[id].toLowerCase()}.`);
   for (const id of rec.emptied) bits.push(`None of you are left in the ${REGION_TEXT[id].toLowerCase()}.`);
   const d = rec.popAfter - rec.popBefore;
-  bits.push(Math.abs(d) < 0.5 ? 'Numbers held.' : d > 0 ? `Numbers up ${n0(d)}.` : `Numbers down ${n0(-d)}.`);
+  bits.push(Math.abs(d) < 50 ? 'Numbers held.' : d > 0 ? `Numbers up ${n0(d)}.` : `Numbers down ${n0(-d)}.`);
   return bits.map(esc).join(' ');
 }
 
 function eraSheet(rec) {
   const e = rec.eraEnded, v = view(state), d = DIEOFF_TEXT[e.kind];
   const ids = [...new Set([...Object.keys(e.onset), ...Object.keys(e.after)])];
-  const rows = ids.map((id) => `<tr><td>${REGION_TEXT[id]}</td><td class="num">${n0(e.onset[id] || 0)} to ${e.after[id] >= 1 ? n0(e.after[id]) : 'none'}</td></tr>`).join('');
+  const rows = ids.map((id) => `<tr><td>${REGION_TEXT[id]}</td><td class="num">${n0(e.onset[id] || 0)} to ${e.after[id] >= 50 ? n0(e.after[id]) : 'none'}</td></tr>`).join('');
   const next = e.next != null
     ? `<p><strong>Of those left, ${n0(e.carried)} find their way into ${esc(mid(v.era.name))}.</strong> ${esc(v.era.intro)}</p>${v.setting === 'saved' ? `<p class="hint">Saved: the start of ${esc(mid(v.era.name))}. Your saves for the earlier eras are kept.</p>` : ''}`
     : '';
@@ -186,19 +222,35 @@ function eraSheet(rec) {
 
 // ---- the end ------------------------------------------------------------------
 
+function ladderRows(v) {
+  return v.ladder.map((r) => `<tr class="${r.you ? 'you' : ''}"><td>${cap(RANK_TEXT[r.rank - 1])}</td><td>${r.you ? '<strong>Your lineage</strong>' : esc(LINEAGE_TEXT[r.id].name)}</td><td class="num">${n0(r.score)}</td></tr>`).join('');
+}
+
+function standingLines(v) {
+  const st = v.standing;
+  return `<p class="hint">${STANDING_TEXT.prospects} <strong>${n0(st.prospects)}</strong>.<br>${STANDING_TEXT.secure} Counts for <strong>${Math.round(st.secure * 100)}%</strong>.<br>${STANDING_TEXT.spread} Counts for <strong>${Math.round(st.spread * 100)}%</strong>.</p>`;
+}
+
 function endTab(v) {
-  const won = v.outcome === 'win';
-  const head = won ? ENDING_TEXT[v.form].name : v.outcome === 'survived' ? 'Still here' : 'The line ends';
-  const text = won ? ENDING_TEXT[v.form].won : v.outcome === 'survived' ? OTHER_ENDINGS.survived : OTHER_ENDINGS[v.cause] || OTHER_ENDINGS.starved;
+  const through = v.outcome === 'through', st = v.standing, like = LINEAGE_TEXT[st.like];
+  const head = through ? `Through, ${RANK_TEXT[st.rank - 1]} of ${st.of}` : 'The line ends';
+  const text = through ? THROUGH_TEXT[st.rank - 1] : OTHER_ENDINGS[v.cause] || OTHER_ENDINGS.starved;
   const again = v.setting === 'saved' && v.saves.length
-    ? `<h2>Begin an era again</h2><p class="hint">Each try rolls a new die-off. The body you carried in is the body you start with.</p><div class="stack">${[...v.saves].reverse().map((s) => `<button data-act="retry:${s.era}"><strong>The start of ${esc(mid(s.name))}</strong><small>${s.tries ? `tried ${s.tries + 1} ${plural(s.tries + 1, 'time', 'times')}` : 'tried once'}</small></button>`).join('')}</div>`
-    : v.outcome === 'extinct' ? '<p class="hint">This lineage had one life. A new one begins at the Shore.</p>' : '';
-  return `<div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), !won)}</div>
+    ? `<h2>Begin an era again</h2><p class="hint">Each try rolls a new die-off. The body you carried in is the body you start with.</p><div class="stack">${[...v.saves].reverse().map((s) => `<button data-act="retry:${s.era}"><strong>The start of ${esc(mid(s.name))}</strong><small>${s.tries ? `begun ${s.tries + 1} times` : 'begun once'}</small></button>`).join('')}</div>`
+    : !through ? '<p class="hint">This lineage had one life. A new one begins at the Shore.</p>' : '';
+  const won = through ? `
+    <h2>The ladder</h2>
+    <table class="ledger ladder">${ladderRows(v)}</table>
+    ${standingLines(v)}
+    <h2>What it most resembles</h2>
+    <p><strong>${esc(like.name)}.</strong> ${esc(like.line)} ${esc(like.after)}</p>
+    <p class="hint">One that lived: ${esc(like.example)}</p>` : '';
+  return `<div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), !through, others(v))}</div>
     <h2 class="big">${esc(head)}</h2>
     <p>${esc(text)}</p>
-    <p class="dim">${esc(v.era.name)}, ${v.era.ma} million years ago. ${v.pop >= 1 ? n0(v.pop) : 'None'} alive at the end, after ${v.clock.turn} ${plural(v.clock.turn, 'turn', 'turns')} of ${v.clock.of}.</p>
-    ${again}
-    <div class="stack last"><button ${again && v.setting === 'saved' ? '' : 'class="primary"'} data-act="new">New lineage</button></div>`;
+    <p class="dim">${esc(v.era.name)}, ${ma(v.era.ma)} million years ago. ${v.pop >= 50 ? n0(v.pop) : 'None'} alive at the end, after ${v.clock.turn} ${plural(v.clock.turn, 'turn', 'turns')} of ${v.clock.of}.</p>
+    ${won}${again}
+    <div class="stack last"><button ${again ? '' : 'class="primary"'} data-act="new">New lineage</button></div>`;
 }
 
 // ---- the body -----------------------------------------------------------------
@@ -208,23 +260,37 @@ function bodyTab(v) {
   const pips = (n, growing) => `<span class="pips">${[1, 2, 3].map((i) => `<i class="${i <= n ? 'on' : growing && i === n + 1 ? 'grow' : ''}"></i>`).join('')}</span>`;
   const traits = v.traits.map((t) => `
     <button class="trait${t.pressing ? ' on' : ''}${t.shedding ? ' fade' : ''}" data-act="trait:${t.id}">
-      <span>${esc(TRAIT_TEXT[t.id].name)}</span>
+      <span>${esc(TRAIT_TEXT[t.id].name)}${t.isMouth ? ' <em class="tag">mouth</em>' : ''}</span>
       <span class="dim">${t.pressing ? 'under pressure' : t.shedding ? 'letting go' : STEP_NAMES[t.level]}</span>${pips(t.level, t.pressing)}
     </button>`).join('');
-  const roads = v.roads.map((r) => `
-    <div class="road${r.is ? ' on' : ''}${r.closedBy ? ' shut' : ''}">
-      <strong>${ENDING_TEXT[r.id].name}</strong>
-      <small>${r.is ? 'This is what you are.' : r.closedBy ? `Closed while you keep ${TRAIT_TEXT[r.closedBy].name.toLowerCase()}.` : r.fits ? 'The body is ready.' : `${r.have} of ${r.need} steps`}</small>
-    </div>`).join('');
+  const ways = v.ways.map((w) => `
+    <button class="way${w.on ? ' on' : ''}" data-act="way:${w.id}" ${w.full || v.over ? 'disabled' : ''}>
+      <strong>${WAY_TEXT[w.id].name}</strong>
+      <small>${WAY_TEXT[w.id].gives} ${WAY_TEXT[w.id].costs}</small>
+      <small class="state">${w.on ? (w.settling ? `Taking hold: ${w.settling} more ${plural(w.settling, 'turn', 'turns')} before it does anything. Tap to give it up.` : 'This is how you live. Tap to give it up.') : w.full ? `A lineage lives ${v.maxWays} ways at most. Give one up first.` : `Tap to take it up. It takes hold after ${v.waySettle} turns. As things stand: ${signed(w.feeds)}.`}</small>
+    </button>`).join('');
+  const st = v.standing, like = LINEAGE_TEXT[st.like], pic = animalSVG(v.parts, 9, animalLabel(v), v.length);
   return `
-    <div class="stage plain">${animalSVG(v.parts, 9, animalLabel(v))}</div>
+    <div class="stage plain">${pic.svg}</div>
+    <p class="hint">About ${metres(v.length)} from snout to tail, ${SIZE_TEXT[[0.4, 0.9, 2, 4].indexOf(v.length)] || ''}. The bar under it is ${metres(pic.unit)}.</p>
     <div class="slots">${slots}</div>
-    <p class="hint">Upkeep ${n2(v.upkeep)} food a head. ${v.regionsHeld > 1 ? `Holding ${v.regionsHeld} regions, a trait grows at ${Math.round(v.speed * 100)}% of full speed.` : 'Holding one region, traits grow at full speed.'}</p>
+    <p class="hint">Upkeep ${n2(v.upkeep)} food a head. ${v.regionsHeld > 1 ? `Holding ${v.regionsHeld} regions, a trait grows at ${Math.round(v.speed * 100)}% of full speed.` : `A trait grows at ${Math.round(v.speed * 100)}% of full speed.`}</p>
     <h2>Traits held</h2>
     <div class="traits">${traits}</div>
-    <h2>What this body could become</h2>
-    <p class="hint">${v.form ? 'The crossing is made. It cannot be undone.' : `A lineage crosses into the first of these its body fits, from turn ${v.formFromTurn + 1} of the Triassic. Only these four count as a win.`}</p>
-    <div class="roads">${roads}</div>`;
+    <h2>How you live</h2>
+    <p class="hint">Ways of living are chosen, not grown. Up to ${v.maxWays} at once.</p>
+    <div class="ways">${ways}</div>
+    <h2>Where you would stand</h2>
+    <button class="row" data-act="ladder"><span>If it ended now: <strong>${RANK_TEXT[st.rank - 1]} of ${st.of}</strong></span><span class="dim">standing ${n0(st.score)}</span></button>
+    <p class="hint">Whoever is alive after the last die-off has come through. Most like the ${esc(like.name.toLowerCase())}: ${esc(like.line.toLowerCase())} One that lived: ${esc(like.example)}</p>`;
+}
+
+function ladderSheet() {
+  const v = view(state);
+  return `<h2>The ladder</h2><p>Seven lineages that were alive at the end of the Triassic, and yours as it stands now. All eight are scored the same way.</p>
+    <table class="ledger ladder">${ladderRows(v)}</table>${standingLines(v)}
+    ${v.ladder.filter((r) => !r.you).map((r) => `<p class="hint"><strong>${esc(LINEAGE_TEXT[r.id].name)}.</strong> ${esc(LINEAGE_TEXT[r.id].line)} ${esc(LINEAGE_TEXT[r.id].example)}</p>`).join('')}
+    <button data-act="close">Close</button>`;
 }
 
 function traitSheet(id) {
@@ -261,6 +327,7 @@ function menuTab(v) {
       <button data-act="quit">Back to the title</button>
     </div>
     <p class="hint">Saves live in this browser on this device. A save code moves a lineage anywhere.</p>
+    <h2>The calendar</h2><p class="hint">${ma(v.era.since)} million years have passed since the Shore. In ${esc(mid(v.era.name))} each turn is about ${ma(v.era.perTurn)} million years.</p>
     <h2>Notes</h2>${NOTES.map((n) => `<p class="hint">${esc(n)}</p>`).join('')}`;
 }
 
@@ -278,7 +345,7 @@ function start(setting) {
   state = newGame({ seed: (Math.random() * 2 ** 31) >>> 0, setting });
   tab = 'play'; modal = null; choosing = false; lastNote = null; banner = null; save();
   const v = view(state);
-  modal = `<h2>${esc(v.era.name)}</h2><p>${esc(v.era.intro)}</p><p>You are ${n0(v.pop)} small animals at the water's edge. Each turn a generation offers three changes: keep one, or none. Put pressure on a trait to grow it. The era will end badly; the signs come first.</p><button class="primary" data-act="close">Begin</button>`;
+  modal = `<h2>${esc(v.era.name)}</h2><p>${esc(v.era.intro)}</p><p>You are ${n0(v.pop)} small animals at the water's edge, each about ${metres(v.length)} long. Each turn a generation offers three changes: keep one, or none. Put pressure on a trait to grow it, and choose how you live, on the Body screen. The era will end badly; the signs come first. Whoever is alive at the end of the fifth era has come through.</p><button class="primary" data-act="close">Begin</button>`;
 }
 
 function turn(keep) {
@@ -287,7 +354,6 @@ function turn(keep) {
   lastNote = turnNote(record);
   const sheets = [];
   if (record.dieoffBegan) sheets.push(`<h2>${esc(cap(DIEOFF_TEXT[record.dieoffBegan].name))}</h2><p>${DIEOFF_TEXT[record.dieoffBegan].did} It will run to the end of the era. What you have built is what you have.</p><button class="primary" data-act="close">Go on</button>`);
-  if (record.crossed) sheets.push(`<h2>${ENDING_TEXT[record.crossed].name}</h2><p>The body has become something with a name. ${ENDING_TEXT[record.crossed].line} Bring it through the end of the Triassic and it is a win.</p><button class="primary" data-act="close">Go on</button>`);
   if (record.eraEnded) sheets.push(eraSheet(record));
   if (state.note) { banner = state.note; }
   pending = sheets; modal = pending.shift() || null;
@@ -317,7 +383,12 @@ app.addEventListener('click', (e) => {
       else if (act === 'region') { modal = regionSheet(arg); }
       else if (act === 'spread') { state = setPlan(state, { spread: arg }); save(); modal = null; }
       else if (act === 'unspread') { state = setPlan(state, { spread: null }); save(); modal = null; }
-      else if (act === 'focus') { state = setPlan(state, { focus: arg === 'mixed' ? null : arg }); save(); }
+      else if (act === 'meet') { state = meet(state, Number(arg)); save(); }
+      else if (act === 'way') {
+        const now = view(state).ways.filter((w) => w.on).map((w) => w.id);
+        state = setPlan(state, { ways: now.includes(arg) ? now.filter((w) => w !== arg) : [...now, arg] }); save();
+      }
+      else if (act === 'ladder') { modal = ladderSheet(); }
       else if (act === 'trait') { modal = traitSheet(arg); }
       else if (act === 'press') { state = setPlan(state, { press: arg === 'none' ? null : arg }); save(); modal = null; }
       else if (act === 'shed') { state = setPlan(state, { shed: arg === 'none' ? null : arg }); save(); modal = null; }

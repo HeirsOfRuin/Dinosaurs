@@ -32,7 +32,7 @@ body { font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overscro
 #app { max-width: 600px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
 
 h1, h2 { font-family: var(--block); line-height: 1.15; margin: 0; letter-spacing: .02em; }
-h1 { font-size: 1.35rem; font-weight: 700; text-transform: uppercase; }
+h1 { font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
 h2 { font-size: .95rem; font-weight: 400; color: var(--ink-dim); margin: 1rem 0 .4rem; text-transform: uppercase; }
 h2.big { font-size: 1.5rem; font-weight: 700; color: var(--ink); margin-top: .8rem; }
 p { margin: 0 0 .7em; }
@@ -61,7 +61,7 @@ button.primary small { color: var(--accent-ink); }
 
 .hud { position: sticky; top: 0; z-index: 2; padding: calc(.55rem + var(--sa-top)) 1rem .5rem; background: var(--bg); border-bottom: 2px solid var(--line); font-variant-numeric: tabular-nums; }
 .hud-top, .hud-sub { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; }
-.hud-sub, .ma { font-size: .8rem; color: var(--ink-dim); }
+.hud-sub, .ma, .hud .turn { font-size: .8rem; color: var(--ink-dim); white-space: nowrap; }
 .eras { display: flex; gap: 4px; margin: .4rem 0 .3rem; }
 .eras i { height: 6px; background: var(--well); display: block; }
 .eras b { display: block; height: 6px; background: var(--accent); }
@@ -100,11 +100,22 @@ button.primary small { color: var(--accent-ink); }
 .bar { grid-column: 1 / -1; height: 8px; background: var(--well); display: block; }
 .bar b { display: block; height: 8px; background: var(--accent); }
 
-.foodrow { display: flex; gap: 6px; }
 .plainh { font-family: system-ui, sans-serif; text-transform: none; font-size: .8rem; }
-.chip { flex: 1 1 0; min-width: 56px; text-align: center; padding: .3em .2em; font-size: .82rem; }
-.chip small { font-variant-numeric: tabular-nums; }
-.chip.on { background: var(--panel-2); border-color: var(--accent); }
+.eats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; font-size: .82rem; }
+.eat { position: relative; display: block; background: var(--well); height: 22px; }
+.eat i { position: absolute; inset: 0 auto 0 0; background: var(--moss); }
+.eat em { position: relative; font-style: normal; line-height: 22px; padding-left: 6px; }
+.moment { margin-top: .6rem; padding: .6rem; background: var(--panel-2); border: 2px solid var(--accent); }
+.moment h2 { margin-top: 0; color: var(--ink); font-weight: 700; font-size: 1.05rem; }
+.moment button { font-size: .9rem; }
+.ways { display: flex; flex-direction: column; gap: 4px; }
+.way { width: 100%; }
+.way.on { background: var(--panel-2); border-color: var(--accent); }
+.way .state { color: var(--ink); }
+.tag { font-style: normal; font-size: .7rem; font-family: var(--block); text-transform: uppercase; color: var(--accent); margin-left: .3em; }
+.ladder tr.you td { background: var(--panel-2); color: var(--ink); }
+.ladder td:first-child { color: var(--ink-dim); font-family: var(--block); text-transform: uppercase; font-size: .78rem; width: 5.2em; }
+#ma { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
 
 .offer { display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: stretch; background: var(--panel); border: 2px solid var(--line); padding: .5rem .6rem; margin-bottom: 6px; }
 .offer small { display: block; color: var(--ink-dim); margin-top: 2px; }

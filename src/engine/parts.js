@@ -13,6 +13,7 @@ export function parts(t) {
     trunk: ['slight', 'sturdy', 'heavy', 'massive'][lv(t, 'size')],
     limbs: lv(t, 'gait') >= 2 ? 'upright' : lv(t, 'gait') === 1 ? 'raised' : lv(t, 'limbs') >= 2 ? 'sprawlStrong' : 'sprawlShort',
     claws: lv(t, 'burrow') >= 1,
+    herd: lv(t, 'herd'),   // how many of its own kind are drawn beside it
     tail: lv(t, 'gait') >= 2 ? 'balance' : lv(t, 'lungs') >= 2 ? 'plain' : 'fin',
     skin: lv(t, 'armour') >= 1 ? 'armoured' : lv(t, 'warm') >= 2 ? 'insulated' : lv(t, 'skin') >= 2 ? 'scaled' : lv(t, 'skin') === 1 ? 'scaling' : 'wet',
   };

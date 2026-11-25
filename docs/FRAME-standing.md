@@ -1,9 +1,8 @@
 # Frame: standing, ways of living, and mouths
 
-Status: **proposed 2026-11-25, waiting for the author's approval.** Nothing in
-it is built. It changes how the game is won, what a turn offers and how food
-works, so it reopens the kill gate: the numbers in `KILLGATE.md` round 5 will
-not survive it and must be measured again.
+Status: **approved 2026-11-25 ("Go with your recommendations") and built the
+same day**, with the changes the author added on approving it (section 4).
+The kill gate was reopened: round 6 in `KILLGATE.md` has the numbers.
 
 ## The author's words
 
@@ -28,8 +27,12 @@ changes.
 
 From the save he sent (seed 1357618641, a save at every era):
 
-- He came through all five eras and all five die-offs on his first try,
-  with no era retried. Careful bots do that about 15% of the time.
+- He came through all five eras, on the saved setting, having begun the
+  Drying twice and the Long Shadow four times. (The first reading of his save
+  said he had retried nothing. That was wrong, and he said so: "Wrong, I had
+  to retry several times." The save's attempt counter is reset at each new
+  era; the tries are in a separate list that the pasted code was cut off
+  before.)
 - 17 alive at the end in three regions. Body: limbs 3, legs under the body 2,
   skin 3, egg 2, brain 3, burrowing 2, and three jaws (insects 2, plants 3,
   prey 3), eating mostly prey.
@@ -159,6 +162,62 @@ when a die-off takes one food.
 
 **What goes.** "Eat mostly" on the Turn screen, and holding several jaws at
 once.
+
+## 4. What the author added on approving it
+
+2026-11-25, with a picture of his end screen:
+
+> "Need more art for animals. Herd mentality should be a trait. Art could
+> show other animals around, other rivals, show some idea of how big you
+> actually are. I want the interactions with rivals, so if that is paused for
+> now, make notes. Go with your recommendations. Lineages should also give an
+> example of something that was living in that line. Also, a moving calender
+> would be nice, so you see how many years are going by. Also, I think using
+> a better population gauge would be nice, so like 500 instead of 5, or
+> whatever number is realistic. Maybe it starts with 10 and grows to 1000,
+> idk"
+
+| Asked | Built |
+|---|---|
+| Herding is a trait | `herd`, three steps, resting on a brain: fewer caught, prey easier. It is drawn: one or two of your own kind beside you |
+| Other animals in the art | The rivals that share your ground are drawn in the scene from their own bodies, and named in a line under it with their numbers |
+| How big you are | Every size step has a length (40 cm, 90 cm, 2 m, 4 m; tuned). A rival is drawn at its length over yours. The Body screen puts a measured bar under the animal and says what it is the length of |
+| An example for each lineage | One animal that lived in each line, on the ladder and wherever a lineage is named. From memory; unchecked |
+| A moving calendar | The date is in the header to a tenth of a million years and counts down as each turn passes; the header says how many years a turn is |
+| Bigger numbers | One unit of the model is a hundred animals on every screen: a lineage begins at 1,200 and reaches the tens of thousands |
+| Rivals | Paused, with notes: section 5 |
+
+## 5. Acting on rivals: notes for when it is built
+
+The author wants this. It is not built. What is known:
+
+- **What exists.** Two rival lineages an era, steered by policies through the
+  player's own rules. They eat the same food on the same ground, which is the
+  only way they touch the player now. A moment can thin them (a plague, a
+  raid on their nests, crowding them), and that is the first interaction in
+  the game. `view().rivals` already gives each rival's body, length, numbers
+  and the lineage it most resembles; the scene draws them.
+- **What to build first: a rivals screen.** Who they are, what they eat, where
+  they live, whether they are growing. An action on a rival cannot be chosen
+  well until the rival can be seen.
+- **Candidate actions**, each a standing order like settlers, resolved by the
+  turn:
+  - *Push*: contest a region you share. Costs numbers on both sides, by
+    numbers, size, herding and armour; the loser leaves the region.
+  - *Shadow*: live beside a bigger hunter and eat what it leaves. A
+    scavenger's road: more carrion, more caught.
+  - *Avoid*: give up the food the rival eats best and take the rest. Less
+    food, no losses.
+  - *Prey on them*: only for a hunter's mouth, and only on a rival smaller
+    than you: their numbers become your prey.
+- **Rule to hold.** The rival answers by the same rules: a pushed rival may
+  push back, and a rival may prey on you. Otherwise the player outgrows the
+  world (game-building rule 7).
+- **What it will cost.** The rivals are much more numerous than the player
+  for most of a run (22,000 to the player's 500 in one Coal Forests picture).
+  That has to be looked at before any contest of numbers is fair.
+- **What must be measured.** Each action best somewhere; no action that is
+  always right; the share coming through with and without each.
 
 ## What will be measured
 

@@ -2,12 +2,13 @@
 
 Steer a lineage from a Devonian shore to the first dinosaurs.
 
-Status: **built and playable, 2026-11-24** (`docs/DESIGN.md`); **first
-playtest 2026-11-25**. The author asked for three changes that reopen the
-design: winning by standing instead of by a list of traits, more to do in a
-turn, and one mouth instead of a choice of food. They are framed in
-`docs/FRAME-standing.md` and wait for his approval. Sections 3, 5 and 7 below
-describe the game as built, not as it will be.
+Status: **playable; rebuilt 2026-11-25 after the author's first run**
+(`docs/FRAME-standing.md`, `docs/DESIGN.md`). A lineage wins by coming through
+the end of the Triassic and is ranked by its standing; it has one mouth; it
+chooses ways of living; moments come every few turns. Sections 3, 5, 7 and 8
+below were written before that and are superseded where the frame differs.
+The kill gate is at round 6 (`docs/KILLGATE.md`). Next: the author plays it
+again.
 
 The author's brief, 2026-11-24: "a 2d [pixel] type game similar to spore, but
 you [evolve] your simple amphibian like animal into [one of] the first
@@ -153,7 +154,8 @@ Newest first. Quote the author; give the numbers with their run counts.
 
 | Date | Decision |
 |---|---|
-| 2026-11-25 | **First playtest, three changes asked for** (`docs/FRAME-standing.md`, proposed, not yet approved). The author came through all five eras on his first try with 17 alive and was told it was not a win, his animal being on none of the four lists. His words: "I don't think winning should be reliant on fitting a list of traits. It should be surging and having a score of how well you would do, with ranks compared to preset scores of others like the 4 current win species, or more if there are good choices." "There needs to be more you can do besides just adopt traits". "You shouldn't be able to change what you eat constantly, that's unrealistic. Once you have a certain type of mouth, it can evolve different aspects to improve or widen it's possible food sources, like an omnivore like bears or birds, scavenge or hunt, etc". "Surging" is read as "surviving". |
+| 2026-11-25 | **The frame approved, with additions; built.** The author: "Go with your recommendations" (about 30% of careful play comes through on one life and about 10% reaches the top three rungs; ways of living and moments now, acting on rivals later; seven lineages on the ladder). He added: "Herd mentality should be a trait"; "Need more art for animals... show other animals around, other rivals, show some idea of how big you actually are"; "I want the interactions with rivals, so if that is paused for now, make notes"; "Lineages should also give an example of something that was living in that line"; "a moving calender would be nice, so you see how many years are going by"; "a better population gauge would be nice, so like 500 instead of 5". And corrected the reading of his run: "Wrong, I had to retry several times." All in `docs/FRAME-standing.md` sections 4 and 5. |
+| 2026-11-25 | **First playtest, three changes asked for** (`docs/FRAME-standing.md`). The author came through all five eras with 17 alive (having begun two of them more than once) and was told it was not a win, his animal being on none of the four lists. His words: "I don't think winning should be reliant on fitting a list of traits. It should be surging and having a score of how well you would do, with ranks compared to preset scores of others like the 4 current win species, or more if there are good choices." "There needs to be more you can do besides just adopt traits". "You shouldn't be able to change what you eat constantly, that's unrealistic. Once you have a certain type of mouth, it can evolve different aspects to improve or widen it's possible food sources, like an omnivore like bears or birds, scavenge or hunt, etc". "Surging" is read as "surviving". |
 | 2026-11-24 | **Build it.** Offered three ways to settle the saved setting (accept 60.7% as a floor and move on; let one life rise to about 20%; count the target at four tries an era), the author: "Go with your recommendation and build this bad boy". So: 60.7% is accepted as a floor, and the game is built (`docs/DESIGN.md`). The design proposal was not put to him as a separate step; his word to build is taken as its approval. The model was moved into the engine with every result unchanged (fingerprint over 13 policies × 40 seeds and 12 saved runs, identical before and after). |
 | 2026-11-24 | **Kill gate round 5** (`docs/KILLGATE.md`, 91,677 runs). Saved, a win within three tries an era: mean 60.7%, 56.2 to 65.4% by road (1,000 seeds each), from 56.9% and 42.3 to 68.7%. One life 15.4% pooled, roads 14.6 to 16.4% (4,000 seeds a road). The two targets trade off with this bot: one life 15.3% gave saved 64.3%, one life 19.0% gave 67.3%. |
 | 2026-11-24 | **Fix the saved setting.** Offered a move to the design document with the saved setting carried as a risk, the author: "Fix the saved setting". |

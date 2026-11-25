@@ -7,11 +7,11 @@ import { newGame } from '../src/engine/turn.js';
 import { POLICIES, playGame } from './bot.js';
 
 export const axes = { policy: POLICIES, setting: ['oneLife', 'saved'] };
-export const defaults = { policy: 'dinosaur.plan', setting: 'oneLife' };
+export const defaults = { policy: 'careful', setting: 'oneLife' };
 
 export function play(seed, opts = {}) {
   const setting = opts.setting || 'oneLife';
-  return playGame(newGame({ seed, setting }), opts.policy || 'dinosaur.plan', { retries: setting === 'saved' ? 2 : 0 });
+  return playGame(newGame({ seed, setting }), opts.policy || 'careful', { retries: setting === 'saved' ? 2 : 0 });
 }
 
 export function progress(g) {
@@ -24,8 +24,8 @@ export function progress(g) {
 
 export function metrics(g) {
   return {
-    win: g.outcome === 'win',
-    alive: g.outcome !== 'extinct',
+    through: g.outcome === 'through',
+    topThree: g.outcome === 'through' && g.s.rank <= 3,
     turns: g.turns,
     erasPassed: g.s.eraLog.length,
     retries: g.tries.reduce((a, b) => a + b, 0),
@@ -33,7 +33,7 @@ export function metrics(g) {
 }
 
 export function digest(g) {
-  return JSON.stringify([g.outcome, g.turns, g.s.form || null, g.s.eraLog]);
+  return JSON.stringify([g.outcome, g.turns, g.s.standing ?? null, g.s.eraLog]);
 }
 
 export function trace(g) {

@@ -8,17 +8,54 @@
 // v1 was the scaffold's placeholder game (a 24-turn trading toy), which was
 // on Pages for a day. A v1 save cannot become a lineage, so its migration
 // starts a new lineage from the same seed and says so in `note`.
+//
+// v2 was the first real build: several jaws at once, a choice of food each
+// turn, and four fixed winning bodies. v3 has one mouth, ways of living,
+// moments and standing. A v2 lineage keeps its strongest jaw as its mouth and
+// loses the others, and is told so; a v2 lineage that was alive at the end has
+// come through, and is given its standing.
 
 import { freshGame } from './game.js';
+import { JAWS } from '../data/world.data.js';
+import { regionsNow, ladder, resembles } from './model.js';
 
 export const SAVE_KEY = 'deep-time.save.v1'; // never rename
 export const SHELF_KEY = 'deep-time.shelf.v1'; // lineages set aside by going back to an earlier era
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const CODE_PREFIX = 'DEEP1.';
 
 /** MIGRATIONS[v](save) returns the save at version v + 1. Add one per version bump. */
 export const MIGRATIONS = {
-  1: (old) => ({ ...freshGame({ seed: old.seed, setting: 'saved' }), note: 'A save from the first test build could not be carried over. A new lineage was begun in its place.' }),
+  1: (old) => ({ ...freshGame({ seed: old.seed, setting: 'saved' }), v: 2, plan: { press: null, shed: null, focus: null, spread: null }, note: 'A save from the first test build could not be carried over. A new lineage was begun in its place.' }),
+  2: (old) => {
+    const g = structuredClone(old);
+    let lost = false;
+    const world = (s) => {
+      for (const l of s.lineages) {
+        const jaws = Object.keys(l.traits).filter((id) => JAWS[id]).sort((a, b) => l.traits[b] - l.traits[a]);
+        for (const id of jaws.slice(1)) { delete l.traits[id]; if (l.player) lost = true; }
+        for (const k of Object.keys(l.prog || {})) if (JAWS[k.replace('shed.', '')] && !l.traits[k.replace('shed.', '')]) delete l.prog[k];
+        delete l.focus; delete l.form; l.ways = {};
+      }
+      s.seen = []; s.mods = []; s.faces = {};
+      delete s.form; delete s.formAt; delete s.bodyAt; delete s.faceShadow;
+      s.rev = (s.rev || 0) + 1;
+      s.regions = regionsNow(s);
+      if (s.ended && s.outcome !== 'extinct') {
+        const rows = ladder(s), at = rows.findIndex((r) => r.you);
+        s.outcome = 'through'; s.standing = rows[at].score; s.rank = at + 1; s.like = resembles(s.lineages.find((l) => l.player).traits);
+      }
+      return s;
+    };
+    g.s = world(g.s);
+    g.saves = (g.saves || []).map((x) => (x ? world(x) : x));
+    g.plan = { press: g.plan?.press ?? null, shed: g.plan?.shed ?? null, spread: null, ways: [], pick: null };
+    if (g.plan.press && !g.s.lineages.find((l) => l.player).traits[g.plan.press]) g.plan.press = null;
+    if (g.over) g.outcome = g.s.outcome;
+    g.v = 3;
+    g.note = old.note ? old.note : `The rules have changed since this lineage was saved. A lineage now has one mouth${lost ? ': yours keeps its strongest jaw and has lost the others' : ''}, and the food it eats follows from it. Coming through the end of the Triassic is now the win, and how well is a place on a ladder.`;
+    return g;
+  },
 };
 
 export function migrate(save) {

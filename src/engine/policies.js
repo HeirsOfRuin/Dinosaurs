@@ -1,51 +1,53 @@
-// Fixed policies. A policy is parts, each of which must change the end state
-// (check.js proves it): a plan for the body, the road it is walking, how many
-// regions to hold, whether it chooses what to eat, and whether it heeds the
-// die-off warning.
-import { FOODS, TRAITS, MAX_REGIONS, MIN_VIABLE, ENDINGS } from '../data/world.data.js';
-import { body, fits, capacity, held, canRaise, canShed } from './model.js';
+// How a lineage decides without a person: the rivals in the game, and the bots
+// that measure it. A policy is parts, each of which must change the end state
+// (sim/gate-check.js proves it): a plan for the body, the lineage it is making
+// for, how many regions to hold, the ways it lives, whether it heeds the
+// die-off warning, whether it braces for it, and which road it takes at a moment.
+import { TRAITS, JAWS, MAX_REGIONS, MIN_VIABLE, LINEAGES } from '../data/world.data.js';
+import { body, capacity, held, totalPop, canRaise, canShed, mouthOf, waysOf } from './model.js';
 import { streamFor } from './rng.js';
 
 const lv = (t, id) => t[id] || 0;
-const jawOf = (f) => 'jaw' + f[0].toUpperCase() + f.slice(1);
 const TOLERANT = [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['burrow', 1], ['brain', 1], ['lungs', 3], ['skin', 3], ['egg', 3], ['brain', 2], ['burrow', 2]];
-// One build order per ending. A ".list" policy follows it and reads nothing else.
-export const ROADS = {
-  dinosaur:  [['lungs', 2], ['limbs', 2], ['skin', 1], ['egg', 1], ['limbs', 3], ['gait', 1], ['gait', 2], ['warm', 1], ['skin', 2], ['gait', 3], ['egg', 2], ['warm', 2], ['size', 1], ['egg', 3], ['size', 2]],
-  crocodile: [['lungs', 2], ['jawPrey', 1], ['jawPrey', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['jawPrey', 3], ['skin', 3], ['size', 1], ['armour', 1], ['size', 2], ['armour', 2]],
-  mammal:    [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['jawInsects', 1], ['burrow', 1], ['jawInsects', 2], ['burrow', 2], ['brain', 1], ['brain', 2], ['warm', 1], ['warm', 2], ['warm', 3]],
-  amphibian: [['lungs', 2], ['jawFish', 2], ['lungs', 3], ['limbs', 2], ['burrow', 1], ['jawFish', 3], ['size', 1], ['skin', 1], ['armour', 1], ['size', 2], ['armour', 2]],
-};
+// What to grow against each face of a die-off, when it has been named.
 const COUNTER = {
   cold: [['warm', 1], ['burrow', 2], ['size', 1]], drought: [['lungs', 2], ['skin', 2], ['egg', 2], ['skin', 3]],
-  heat: [['lungs', 2], ['skin', 2], ['burrow', 2], ['skin', 3]], collapse: [['jawInsects', 2], ['brain', 1], ['jawFish', 1]],
-  greatHot: [['lungs', 2], ['skin', 2], ['egg', 2], ['burrow', 2], ['skin', 3], ['jawInsects', 1]],
-  greatDry: [['lungs', 2], ['skin', 2], ['egg', 2], ['skin', 3], ['egg', 3], ['jawInsects', 1]],
+  heat: [['lungs', 2], ['skin', 2], ['burrow', 2], ['skin', 3]], collapse: [['omni', 1], ['brain', 1], ['omni', 2]],
+  greatHot: [['lungs', 2], ['skin', 2], ['egg', 2], ['burrow', 2], ['skin', 3]],
+  greatDry: [['lungs', 2], ['skin', 2], ['egg', 2], ['skin', 3], ['egg', 3]],
   greatCold: [['warm', 1], ['burrow', 1], ['burrow', 2], ['warm', 2], ['size', 1]],
-  greatWaste: [['jawFish', 1], ['jawFish', 2], ['brain', 1], ['jawInsects', 2]],
+  greatWaste: [['omni', 1], ['scavenge', 1], ['brain', 1], ['omni', 2]],
 };
+// The order a body is built in when making for a lineage: each trait to step 1, then to 2, then to 3.
+const ORDER = ['lungs', 'limbs', 'jawInsects', 'jawFish', 'jawPlants', 'jawPrey', 'skin', 'egg', 'burrow', 'brain', 'herd', 'gait', 'warm', 'size', 'armour', 'omni', 'scavenge', 'crush'];
+// The hungry traits come last: a bot that took warm blood and size as hints on the Shore starved
+// in the Coal Forests in 56 runs of 100.
+const HUNGRY = ['warm', 'size', 'armour', 'herd', 'brain'];
+export const roadTo = (target) => [(id) => !HUNGRY.includes(id), (id) => HUNGRY.includes(id)].flatMap((part) => [1, 2, 3].flatMap((n) => ORDER.filter((id) => part(id) && lv(target, id) >= n).map((id) => [id, n])));
 
 export const POLICIES = {
-  none:        { plan: 'none', regions: 1 },
-  drifter:     { plan: 'random', regions: 2 },
-  specialist:  { plan: 'special', regions: 1 },
-  generalist:  { plan: 'tolerant', regions: 3 },
-  opportunist: { plan: 'greedy', regions: 2, diet: true },
+  none:    { plan: 'none', regions: 1 },
+  drifter: { plan: 'random', regions: 2 },
+  eater:   { plan: 'greedy', regions: 2 },
+  tolerant: { plan: 'tolerant', regions: 3 },
+  // A careful player with no animal in mind: tolerance first, then whatever feeds it, eyes open.
+  careful: { plan: 'mixed', regions: 2, heed: true, brace: true, ways: ['tend'] },
 };
-for (const road of Object.keys(ROADS)) {
-  POLICIES[road + '.list'] = { plan: 'recipe', road, regions: 1 };
-  POLICIES[road + '.plan'] = { plan: 'recipe', road, regions: 2, diet: true, heed: true };
+export const ROADS = Object.keys(LINEAGES).filter((id) => id !== 'beaked');
+for (const road of ROADS) {
+  POLICIES[road + '.list'] = { plan: 'recipe', road, regions: 1, ways: LINEAGES[road].ways };
+  POLICIES[road + '.plan'] = { plan: 'recipe', road, regions: 2, heed: true, brace: true, ways: LINEAGES[road].ways };
 }
 
 const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
-const worth = (s, l, traits, focus) => sum(capacity(s, l, traits, focus));
+const worth = (s, l, traits) => sum(capacity(s, l, traits));
 const allowAll = () => true;
 
 // Walk an ordered list of (trait, level) targets: take the hint when it is
 // offered, press the first target that can be pressed, fetch what it rests on.
-// Only the next `ahead` unmet targets are worked on: the first bot took every
-// hint on its list the turn it was offered, carried armour and size on the
-// Shore, and starved there in 99 runs of 100.
+// Only the next `ahead` unmet targets are worked on: a bot that took every hint
+// on its list the turn it was offered carried armour and size on the Shore and
+// starved there in 99 runs of 100.
 function follow(l, offers, targets, allow = allowAll, ahead = 3) {
   const d = {}, want = [];
   let unmet = 0;
@@ -74,7 +76,7 @@ function greedy(s, l, offers, allow = allowAll) {
   if (!d.press) {
     best = now * 1.03;
     for (const id of Object.keys(l.traits)) {
-      if (!canShed(l.traits, id)) continue;
+      if (!canShed(l.traits, id) || JAWS[id]) continue;   // a bot does not talk itself out of its mouth for one turn's gain
       const t = { ...l.traits, [id]: l.traits[id] - 1 }; if (!t[id]) delete t[id];
       if (!allow(t)) continue;
       const w = worth(s, l, t); if (w > best) { best = w; d.shed = id; }
@@ -83,48 +85,69 @@ function greedy(s, l, offers, allow = allowAll) {
   return d;
 }
 
-function special(s, l, offers) {
-  // The richest food where the lineage lives; its jaw, then size, then brain.
-  const home = held(l)[0], r = s.regions.find((x) => x.id === home);
-  if (!r) return {};
-  // The food is chosen afresh in each era: the richest where the lineage now lives. (Until round 4
-  // this bot kept the fish jaw it started with for the whole run, through eras with no fish to speak of.)
-  if (l.foodEra !== s.era) { l.food = FOODS.reduce((a, f) => (r.food[f] > r.food[a] ? f : a)); l.foodEra = s.era; }
-  const food = l.food;
-  return { ...follow(l, offers, [[jawOf(food), 3], ['lungs', 2], ['skin', 1], ['egg', 1], ['size', 2], ['brain', 2], ['size', 3]]), food };
+// Making for a lineage's body. If it has the wrong mouth, the old one goes first: its
+// refinements, then the jaw; then the new mouth is taken when a generation offers it.
+function towards(s, l, offers, target, allow) {
+  const have = mouthOf(l.traits), want = mouthOf(target);
+  // The old mouth is let go only once there are enough to live through the lean turns without one.
+  // (Bots that changed mouths on the first turn, twelve strong, starved on the Shore half the time.)
+  if (want && have && have !== want && totalPop(l) < 25) return greedy(s, l, offers.filter((id) => !JAWS[id]), allow);
+  if (want && have && have !== want) {
+    const rest = Object.keys(l.traits).find((id) => TRAITS[id].jaw && canShed(l.traits, id));
+    return { keep: null, press: null, shed: rest || (canShed(l.traits, have) ? have : null) };
+  }
+  if (want && !have) return { keep: offers.includes(want) ? want : null, press: null };
+  const d = follow(l, offers, roadTo(target), allow);
+  const done = Object.entries(target).every(([id, n]) => lv(l.traits, id) >= n);
+  if (!d.press && !d.keep && done) return greedy(s, l, offers, allow);
+  if (!d.press) d.press = greedy(s, l, [], allow).press;
+  return d;
 }
 
 export function decide(s, l, offers, warn) {
   const p = l.plan || POLICIES.none;
   let d = {};
+  let allow = allowAll;
   if (p.plan === 'random') {
     const rng = streamFor(s.seed, `${s.era}.${s.turn}.${s.attempt}`, 'drift.' + l.id);
     const mine = Object.keys(l.traits).filter((id) => canRaise(l.traits, id));
     d = { keep: rng.chance(0.5) ? rng.pick(offers) : null, press: rng.pick(mine) || null };
-  } else if (p.plan === 'special') { d = special(s, l, offers); if (d.food) { l.food = d.food; d.focus = d.food; } delete d.food; }
-  else if (p.plan === 'tolerant') d = follow(l, offers, TOLERANT);
+  } else if (p.plan === 'special') {
+    // A rival that masters the mouth it has, then grows.
+    const jaw = mouthOf(l.traits);
+    d = follow(l, offers, [...(jaw ? [[jaw, 3]] : []), ['lungs', 2], ['skin', 1], ['egg', 1], ['size', 2], ['brain', 2], ['size', 3]]);
+  } else if (p.plan === 'wide') {
+    // The mouth it has to step 2, then an omnivore's teeth, then the same growth as the rival above.
+    const jaw = mouthOf(l.traits);
+    d = follow(l, offers, [...(jaw ? [[jaw, 2]] : []), ['omni', 1], ['omni', 2], ['lungs', 2], ['omni', 3], ['skin', 1], ['egg', 1], ['size', 2], ['brain', 2]]);
+  } else if (p.plan === 'tolerant') d = follow(l, offers, TOLERANT);
   else if (p.plan === 'greedy') d = greedy(s, l, offers);
-  // On a road: never take a step the ending forbids, and never drop below what it needs.
-  const end = p.plan === 'recipe' ? ENDINGS[p.road || 'dinosaur'] : null;
-  const allow = end ? (t) => Object.entries(end.max).every(([id, n]) => lv(t, id) <= n) && Object.entries(end.min).every(([id, n]) => lv(t, id) >= Math.min(n, lv(l.traits, id))) : allowAll;
-  if (end) {
-    d = follow(l, offers, ROADS[p.road || 'dinosaur'], allow);
-    if (!d.press && !d.keep && fits(l.traits, end)) d = greedy(s, l, offers, allow);
-    else if (!d.press) d.press = greedy(s, l, [], allow).press;
+  else if (p.plan === 'mixed') {
+    d = follow(l, offers, TOLERANT.slice(0, 6));
+    const g = greedy(s, l, offers);
+    if (!d.keep) d.keep = g.keep;
+    if (!d.press) { d.press = g.press; d.shed = g.shed; }
+  } else if (p.plan === 'recipe') {
+    const target = LINEAGES[p.road || 'dinosaur'].traits;
+    // On a road: never drop below what the lineage's body needs.
+    allow = (t) => Object.entries(target).every(([id, n]) => lv(t, id) >= Math.min(n, lv(l.traits, id)));
+    d = towards(s, l, offers, target, allow);
   }
+  // What was grown to meet the last die-off and is not on the road is let go once it costs
+  // more than it feeds. (The first heeding bots kept warm blood from the Shore's cold for good.)
   let wantRegions = Math.min(MAX_REGIONS, p.regions || 1);
+  let ways = p.ways ? [...p.ways] : [];
   const named = p.heed && warn && warn.kinds.length === 1 && warn.sens;
-  // A second try at an era is played the same way as the first. (Rounds 3 and 4 had the bot put
-  // tolerance before its road on a retry; that cost the crocodile 13 points of saved wins, 400 seeds.)
   if (named) {
     const c = follow(l, offers, COUNTER[warn.kinds[0]], allow, 2);
     if (c.keep) d.keep = c.keep;
     if (c.press) { d.press = c.press; delete d.shed; }
     if (!p.fixedRange) wantRegions = MAX_REGIONS;
+    if (p.brace) ways = [ways[0], 'fat'].filter(Boolean);   // lay down fat for what is coming
   }
-  // What to eat is chosen every turn and costs nothing to change.
-  if (p.diet) d.focus = [null, ...FOODS].map((f) => [f, worth(s, l, l.traits, f)]).sort((a, c) => c[1] - a[1])[0][0];
-  const mine = held(l), b = body(l.traits), arrive = Math.max(0, Math.min(1, 0.3 + 0.6 * b.mob));
+  d.ways = ways;
+  d.pick = p.pick ?? 0;
+  const mine = held(l), b = body(l.traits, waysOf(s, l)), arrive = Math.max(0, Math.min(1, 0.3 + 0.6 * b.mob));
   const big = Math.max(0, ...mine.map((id) => l.pop[id]));
   // What a region would feed if `n` of the lineage arrived, with everyone already there counted.
   // (The first bots judged a region by its food alone, walked into the rivals' ground and starved.)
@@ -135,6 +158,7 @@ export function decide(s, l, offers, warn) {
   // bot sent six, three arrived, and the colony died every turn it tried) and
   // the place can feed more than arrive.
   if (mine.length < wantRegions && open.length && settlers >= 2 * MIN_VIABLE && prospect(open[0].id, settlers) > settlers) d.spread = open[0].id;
-
   return d;
 }
+
+
