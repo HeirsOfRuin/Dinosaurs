@@ -1,27 +1,141 @@
 # Kill gate: results
 
-**Where the build is (2026-11-24):** Stage 4. The game is built on this
-model and plays on a phone (`docs/DESIGN.md`). The author's targets are met on
-one life and for the balance of the four endings; the saved setting is level
-across the roads and short of its target, 60.7% against about 70%. Nobody has
-played it yet: the next gate is the author's.
+**Where the build is (2026-11-25):** Stage 7. The game is built and has been
+played once by the author. After that run it was rebuilt on a changed design
+(`docs/FRAME-standing.md`): a lineage wins by coming through, is ranked by
+standing, has one mouth, chooses ways of living and meets moments. Round 6
+below is the measurement of that game. Rounds 5 to 1 measured an earlier
+design, in which a win needed one of four fixed bodies; they are kept as the
+record and their numbers no longer describe the game.
 
-The kill gate began as a numbers-only prototype. It is retired: its model is
-now the game's engine (`src/engine/model.js`, `src/data/world.data.js`,
-`src/engine/policies.js`), moved without changing a result (the fingerprint
-in `docs/DESIGN.md` section 3), and `sim/gate.js` measures the game itself.
-One lineage steered by a policy, two rival lineages steered through the same
-functions, five eras, 107 turns, four regions an era, fourteen traits, a
-die-off at the end of every era, four endings that count as a win.
+The gate measures the game's own engine (`src/engine/model.js`,
+`src/data/world.data.js`, `src/engine/policies.js`). Every number in the data
+table is tuned, not sourced. `npm run gate` reproduces round 6 (120,000 runs,
+about an hour); `npm run gate:check` proves the model is deterministic, that
+every run ended and moved its clock, and that every policy part and world
+switch changes the end state (24 parts, each changed 37 to 40 of 40 seeds).
 
-Every number in `src/data/world.data.js` is tuned, not sourced. `npm run gate`
-reproduces round 5's tables (91,677 runs, about 27 minutes); `npm run
-gate:check` proves the model is deterministic, that every run ended and moved
-its clock, and that every policy part and world switch changes the end state
-(16 parts, each changed 39 or 40 of 40 seeds).
+Round 6 is the current model and verdict.
 
-Round 5 is the current model and verdict. Rounds 4 to 1 are kept below as
-the record; their tables are from the model as it was then.
+## Round 6: after the first playtest
+
+The author, 2026-11-25: "I would like you to work on fixing all the balance
+faults." The faults were those of the first measurement of the rebuilt game
+(1,000 seeds a policy, the "before" column below).
+
+"Careful play" is seven policies pooled: one with no animal in mind, and one
+making for each of six lineages' bodies, all heeding the warning. "Through"
+is alive after the last die-off. 120,000 runs, same seeds per arm, ±1 SE.
+
+### Against the author's targets
+
+| Target | Measured | Met? |
+|---|---|---|
+| About 30% of careful play comes through on one life | 33.1 ±0.6% (7,000 runs) | Yes |
+| About 10% reaches the top three rungs | 10.5 ±0.4% (7,000 runs) | Yes |
+| The saved setting (no target set since the rebuild) | 56.0 to 81.0% through within three tries an era, by body; mean 67.1% (1,000 seeds each) | |
+
+### The faults
+
+| Fault | Before | After | Fixed? |
+|---|---|---|---|
+| One body dominates survival | Lizard 81.4% through; amphibian 2.7% | Lizard 47.5, turtle 38.8, crocodile 36.8, dinosaur 30.1, careful 29.2, mammal 25.4, amphibian 23.9 (1,000 seeds each, ±1.6) | Much reduced; not level (two to one) |
+| The safest body also ranks best | Lizard: 21.0% top three, the most | Crocodile 23.4, lizard 13.6, turtle 12.8, amphibian 11.7, dinosaur 8.5, careful 2.6, mammal 1.1 | Changed: the heavy hunter now ranks best. See open fault 1 |
+| Nobody reaches first | 0% of those through | 17% of those through | Yes |
+| Laying down fat doubles survival | "As designed" 57.7% against 27.3% with no way of living | Fat alone: +6.7 points on the careful body, -0.8 on the mammal, +4.4 on the amphibian | Yes |
+| More warning is worse than less | 8 turns 27.1%, 5 turns 33.1% | 0, 3, 5, 8 turns: 17.1, 30.9, 33.1, 34.3% (7,000 runs each, floor 1.5) | Yes |
+| Night and roaming earn nothing | Both at or below no way of living | Night +5.9 points on the mammal; roaming +7.6 on the amphibian (floor 4.1) | Yes |
+| Tending the young | (not a fault before) | Alone, its best is +1.6 points: inside the floor | **No.** See open fault 3 |
+| Moments do not matter | Roads 57.7 / 58.0 / 57.7%; none 58.3% | Roads 29.2 / 26.5 / 28.6%; none 27.9%. The road taken decides whether the lineage comes through on 12.9 ±1.1% of seeds | Yes: no road is right, and the road changes one run in eight |
+| A wide mouth out-eats a deep one everywhere | Wide ahead in Coal and Drying, deep nowhere | At one region, mid-era numbers: deep 41/50/53/65, wide 39/60/82/53. Deep is ahead on the Shore and in the Long Shadow | Partly. See open fault 4 |
+
+### What was changed to do it
+
+- A heavy animal starves more slowly than a slight one; so does one in
+  armour, and a small one that burrows. Starvation is faster overall.
+- Weight counts in standing, so a heavy body that comes through outranks a
+  slight one. The safe body is no longer the one that ranks best.
+- Die-offs take prey hardest.
+- Carrion rises as a die-off begins and fails as it deepens. (A scavenger had
+  been sleeping through the Great Dying on it.)
+- Fat slows starvation less and slows breeding less; the bot lays it down
+  only as the die-off arrives.
+- Night hides more and costs a tenth of all food; roaming is paid for in
+  upkeep, not in slower change.
+- Warm blood, brain, size and armour cost less upkeep.
+- An omnivore's teeth give less on other foods and take more from the
+  mouth's own.
+- Every road of every moment does about twice what it did.
+- The lineages on the ladder were given the small numbers a die-off leaves,
+  as the player has.
+
+### One life, by policy (1,000 seeds each, ±1.6 or less)
+
+| Policy | Past Coal | Past Drying | Past the Great Dying | THROUGH | Top three | Median standing |
+|---|---|---|---|---|---|---|
+| none | 20.1 | 0.0 | 0.0 | 0.0 | 0.0 | |
+| drifter | 46.6 | 13.4 | 3.7 | 0.9 | 0.1 | 469 |
+| eater | 88.9 | 28.9 | 1.4 | 0.4 | 0.0 | 476 |
+| tolerant | 96.1 | 75.2 | 12.4 | 2.4 | 0.0 | 402 |
+| careful | 81.5 | 80.0 | 36.3 | 29.2 | 2.6 | 445 |
+| dinosaur, list / plan | 89.3 / 95.1 | 28.0 / 89.9 | 2.4 / 44.6 | 1.0 / 30.1 | 0.2 / 8.5 | 528 / 476 |
+| crocodile, list / plan | 54.1 / 88.2 | 18.5 / 75.2 | 12.7 / 50.8 | 8.7 / 36.8 | 5.1 / 23.4 | 577 / 632 |
+| mammal, list / plan | 74.0 / 90.1 | 41.3 / 89.1 | 5.7 / 37.1 | 3.1 / 25.4 | 0.0 / 1.1 | 410 / 408 |
+| amphibian, list / plan | 17.4 / 50.7 | 17.0 / 42.9 | 11.0 / 28.6 | 9.3 / 23.9 | 8.7 / 11.7 | 592 / 559 |
+| lizard, list / plan | 73.6 / 90.4 | 69.0 / 89.7 | 16.4 / 55.9 | 8.6 / 47.5 | 2.0 / 13.6 | 478 / 496 |
+| turtle, list / plan | 83.7 / 93.5 | 57.2 / 87.4 | 18.4 / 54.7 | 10.3 / 38.8 | 1.8 / 12.8 | 491 / 489 |
+
+A body followed blind comes through 1.0 to 10.3% of the time; with eyes open,
+23.9 to 47.5%. Everyone passes the Shore (99.8% or more of careful play).
+
+### The ladder
+
+Each scored by the function that scores the player: dinosaurs 616, crocodile
+line 577, lizard line 559, turtle line 540, beaked plant-eaters 522, mammal
+line 507, great amphibians 503.
+
+Of careful play that came through, by place, first to eighth: 17, 9, 6, 7,
+6, 5, 1, 49%. What they most resembled: mammal 22%, lizard 22%, turtle 17%,
+crocodile 16%, dinosaur 13%, amphibian 10%.
+
+### The rest
+
+- **By face of the Great Dying**, careful play through, of those who met it:
+  hot 52.6%, dry 44.2%, waste 38.2%, cold 31.7% (about 1,400 runs each).
+  Graded; no face is a coin toss.
+- **Range**: 1, 2, 3 regions give 27.6, 31.6, 33.5% through and 3.7, 9.3,
+  10.3% in the top three (7,000 runs each).
+- **Switches**: with no rivals 79.7% come through; with no die-offs 96.5%;
+  warning unheeded 11.6%.
+- **Careful survival of those arriving**, by era: Coal 50.7 to 95.1%, Drying
+  84.6 to 99.2%, Great Dying 41.6 to 67.6%, Triassic 67.5 to 85.0%.
+
+### Faults open after round 6
+
+1. **The crocodile's body is the glory pick.** It comes through a little more
+   often than most (36.8%) and reaches the top three two to twenty times as
+   often as the others (23.4%). Weight in standing and a hunter's mouth on
+   grounds rich in prey do it.
+2. **Bodies are not level.** 23.9 to 47.5% through: two to one, from thirty to
+   one. The lizard's is still the safest.
+3. **Tending the young does not earn its place alone** (+1.6 points at best,
+   inside the floor), though every lineage's best pairing in the sweeps
+   included it.
+4. **A deep mouth out-eats a wide one in two eras of five** (the Shore and the
+   Long Shadow), and the wide one survives the Coal Forests more often (78%
+   against 62%). The trade exists; it is not yet the clear one the frame
+   asked for.
+5. **Half of those who come through are last.** 49% stand eighth of eight. A
+   lineage that squeaks through with few numbers on one region scores under
+   every lineage on the ladder.
+6. **Only seven bodies were tested.** The policies make for the ladder's own
+   lineages or for none. A body between them, with ways of living chosen to
+   suit, may beat all of these; a table of every body by every pair of ways
+   (150 seeds) found none above 53%, before the last changes.
+7. **The saved setting has no target since the rebuild** and is uneven: 56.0%
+   (mammal) to 81.0% (lizard).
+
+## Rounds 5 to 1 (the record: an earlier design)
 
 ## Round 5: the saved setting, as far as it goes
 
