@@ -92,6 +92,9 @@ button.primary small { color: var(--accent-ink); }
 .omen { margin-top: .6rem; padding: .5rem .6rem; background: var(--alarm-bg); border: 2px solid var(--alarm-line); font-size: .87rem; }
 .omen strong { color: var(--alarm); }
 .omen.now { border-color: var(--alarm); }
+.outlook { padding: .5rem .6rem; background: var(--panel); border: 2px solid var(--alarm-line); border-top: 0; font-size: .87rem; }
+.outlook ul { margin: .2rem 0 .3rem 1.1rem; padding: 0; }
+.outlook .dim { display: block; font-size: .78rem; }
 
 .row { display: grid; grid-template-columns: 1fr auto; gap: .15rem .6rem; width: 100%; margin-top: .6rem; font-size: .9rem; align-items: center; }
 .row .dim { font-size: .8rem; text-align: right; }

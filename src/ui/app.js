@@ -137,6 +137,14 @@ function playTab(v) {
     ? `<div class="omen"><strong>${esc(cap(DIEOFF_TEXT[v.warning.kinds[0]].name))}, ${v.warning.turns} ${plural(v.warning.turns, 'turn', 'turns')} out.</strong> ${DIEOFF_TEXT[v.warning.kinds[0]].sign} The regions show what it will spare.</div>`
     : `<div class="omen"><strong>Something is coming, ${v.warning.turns} turns out.</strong> It may be ${list(v.warning.kinds.map((k) => DIEOFF_TEXT[k].name))}; it is not yet clear which.</div>`;
 
+  // What the named die-off would leave, and what within reach would leave more.
+  const f = v.forecast;
+  const helpLine = (h) => (h.kind === 'way' ? `${WAY_TEXT[h.id].name.toLowerCase()}${h.swaps ? ' (in place of one of your two)' : ''}` : h.kind === 'trait' ? `${TRAIT_TEXT[h.id].name.toLowerCase()} grown a step, ${h.turns} ${plural(h.turns, 'turn', 'turns')} of pressure` : `settlers sent to the ${REGION_TEXT[h.id].toLowerCase()}`) + `: about ${n0(h.left)}`;
+  const outlookBox = f ? `<div class="outlook"><strong>As you are, about ${f.left >= 50 ? n0(f.left) : 'none'} of your ${n0(f.now)} would be left at the end of it.</strong>
+      ${f.helps.length ? `What would leave more:<ul>${f.helps.map((h) => `<li>${esc(helpLine(h))}</li>`).join('')}</ul>` : f.left < 50 ? ' Nothing within reach changes that. It may still fall otherwise than it looks.' : ' Nothing within reach would leave many more.'}
+      <span class="dim">A reckoning from how things stand now, not a promise.</span></div>` : '';
+  const living = v.ways.filter((w) => w.on);
+  const wayRow = `<button class="row${living.length ? '' : ' empty'}" data-tab="body">${living.length ? `<span>Living: <strong>${living.map((w) => WAY_TEXT[w.id].name.toLowerCase()).join(', ')}</strong></span><span class="dim">${living.some((w) => w.settling) ? 'taking hold' : ''}</span>` : `<span><strong>No way of living chosen.</strong></span><span class="dim">Up to ${v.maxWays} at once, on the Body screen. They matter most when a die-off comes.</span>`}</button>`;
   const p = v.pressure;
   const pressure = p
     ? `<button class="row" data-tab="body"><span>${p.kind === 'shed' ? 'Letting go of' : 'Pressure on'} <strong>${esc(TRAIT_TEXT[p.id].name.toLowerCase())}</strong></span><span class="dim">${p.kind === 'shed' ? '' : `to ${STEP_NAMES[p.to]} · `}${p.left} ${plural(p.left, 'turn', 'turns')} left</span>${p.kind === 'press' ? `<span class="bar"><b style="width:${Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : ''}</button>`
@@ -169,7 +177,9 @@ function playTab(v) {
     ${rivalsNear.length ? `<p class="note">Beside you: ${rivalsNear.map((r) => `${n0(r.pop)} of an animal ${metres(r.length)} long, most like the ${LINEAGE_TEXT[r.like].name.toLowerCase()}`).join('; ')}.</p>` : ''}
     ${lastNote ? `<p class="note">${lastNote}</p>` : ''}
     ${omen}
+    ${outlookBox}
     ${pressure}
+    ${wayRow}
     <h2>This generation offers</h2>
     ${offers}
     <button class="next" data-action="next">${v.offers.length ? 'Keep none, next turn' : 'Next turn'}</button>

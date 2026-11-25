@@ -145,3 +145,23 @@ test('with retries the bot finishes more often than without', () => {
   }
   assert.ok(thrice > once, `${thrice} with retries against ${once} without`);
 });
+
+test('the forecast of a die-off changes nothing, and names only changes that are allowed', () => {
+  let g = newGame({ seed: 21 }), seen = 0;
+  for (let i = 0; i < 70 && !g.over; i++) {
+    const before = JSON.stringify(g), v = view(g);
+    assert.equal(JSON.stringify(g), before, 'view() must not change the game');
+    if (v.forecast) {
+      seen++;
+      assert.ok(Number.isFinite(v.forecast.left) && v.forecast.left >= 0);
+      for (const h of v.forecast.helps) {
+        assert.ok(h.left > v.forecast.left, 'a help leaves more than doing nothing');
+        if (h.kind === 'trait') setPlan(g, { press: h.id });
+        if (h.kind === 'settle') setPlan(g, { spread: h.id });
+      }
+    }
+    if (v.moment) g = meet(g, 0);
+    g = advance(g, decide(g, 'careful')).state;
+  }
+  assert.ok(seen > 3, 'expected the forecast to appear once a die-off was named');
+});

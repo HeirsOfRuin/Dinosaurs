@@ -129,6 +129,16 @@ scenes are first drawings and are meant to be redrawn.
 | `npm run smoke` | Does the real page work on a phone? | Ten turns through the UI, three tabs, no overflow, no raw tokens, the save survives a reload |
 | `npm run check` | All of the above but the long gate | |
 
+## 8a. Since the first playtest (2026-11-25)
+
+This file describes the first build. `docs/FRAME-standing.md` describes what
+replaced its rules of winning, food and turns, and `docs/KILLGATE.md` round 6
+its balance. Added after the author's second run: once a die-off is named,
+the Turn screen says what it would leave of the lineage as it stands and
+which changes within reach would leave more. The figures come from
+`forecast()` in the model, which walks the remaining turns with the feeding
+rule the turn itself uses and changes no state; a test holds that.
+
 ## 9. Known gaps
 
 - **Nobody has played it.** Whether it is fun is not known. That is the next

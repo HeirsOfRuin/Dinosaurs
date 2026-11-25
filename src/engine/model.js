@@ -154,6 +154,37 @@ export function capacity(s, l, traits = l.traits, ways = waysOf(s, l)) {
   return out;
 }
 
+// ---- what the die-off would leave ------------------------------------------------
+
+/**
+ * A projection, not a promise: the lineage's numbers at the end of this era's die-off if it kept
+ * the body and the ways given and nothing else changed. It walks the remaining turns with the
+ * regions as the die-off will make them and the turn's own feeding rule; the rivals are held as
+ * they are now. Changes no state. The author's second run ended in a Great Dying he had been
+ * warned of eight turns out, 18,000 strong, having been told nothing of what would help.
+ */
+export function forecast(s, l, traits = l.traits, ways = waysOf(s, l)) {
+  const era = ERAS[s.era], b = body(traits, ways), rivals = s.lineages.filter((o) => o !== l);
+  let pop = { ...l.pop }, worst = Infinity;
+  for (let t = s.turn; t < era.turns; t++) {
+    const me = { ...l, traits, pop };
+    const at = { ...s, turn: t, lineages: [me, ...rivals], rev: -1 - t };
+    at.regions = regionsNow(at);
+    const caps = capacity(at, me, traits, ways), next = {};
+    let fed = 0;
+    for (const r of at.regions) {
+      const p = pop[r.id] || 0; if (!(p > 0)) continue;
+      const k = caps[r.id] || 0; fed += k;
+      let n = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
+      n *= 1 - 0.3 * r.pred * (1 - b.defence);
+      if (n >= MIN_VIABLE) next[r.id] = n;
+    }
+    worst = Math.min(worst, fed);
+    pop = next;
+  }
+  return { left: Object.values(pop).reduce((a, x) => a + x, 0), worst: worst === Infinity ? 0 : worst };
+}
+
 // ---- standing -----------------------------------------------------------------
 
 /** How many of a body one ground would feed with nobody else on it: the food rule, run to rest. */

@@ -11,7 +11,7 @@
 
 import { FOODS, JAWS, TRAITS, ERAS, MOMENTS, WAYS, MAX_WAYS, WAY_SETTLE, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, MIN_VIABLE, HEADS, LENGTH_M } from '../data/world.data.js';
 import { ERA_TEXT, TRAIT_TEXT } from '../data/text.data.js';
-import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles } from './model.js';
+import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast } from './model.js';
 import { decide } from './policies.js';
 import { freshGame } from './game.js';
 import { parts } from './parts.js';
@@ -162,6 +162,37 @@ export function retry(prev, era) {
 
 const outlookOf = (x) => (x < 0.5 ? 'spared' : x <= 1 ? 'hit' : 'hit hard');
 
+// Once the die-off is named (or under way): what it would leave of the lineage as it stands, and
+// which changes within reach would leave more. Every figure is model.forecast, in heads.
+function outlook(g, s, you, t, ways, H) {
+  if (g.over) return null;
+  const warn = warning(s), era = ERAS[s.era], left0 = era.turns - s.turn;
+  if (!warn || warn.kinds.length !== 1) return null;
+  const base = forecast(s, you, t, ways), helps = [];
+  const planned = (g.plan.ways || []).slice().sort();
+  for (const id of WAYS) {
+    if (planned.includes(id)) continue;
+    const settle = WAY_SETTLE, with_ = [...ways, id].slice(-MAX_WAYS).sort();
+    if (settle >= left0) continue;   // it would not take hold in time
+    helps.push({ kind: 'way', id, left: forecast(s, you, t, with_).left * H, swaps: planned.length >= MAX_WAYS });
+  }
+  const speed = body(t, ways).drag / (1 + RANGE_DRAG * (Math.max(1, held(you).length) - 1));
+  for (const id of Object.keys(t)) {
+    if (pressCheck(s, id)) continue;
+    const turns = Math.ceil((STEP_TURNS[t[id] + 1] - (you.prog[id] || 0)) / speed);
+    if (turns >= left0) continue;    // it would not be grown in time
+    helps.push({ kind: 'trait', id, turns, left: forecast(s, you, { ...t, [id]: t[id] + 1 }, ways).left * H });
+  }
+  for (const r of s.regions) {
+    const sp = spreadPreview(s, r.id);
+    if (!sp.ok || left0 < 2) continue;
+    const pop = { ...you.pop, [sp.from]: you.pop[sp.from] - sp.sends, [r.id]: sp.arrive };
+    helps.push({ kind: 'settle', id: r.id, left: forecast(s, { ...you, pop }, t, ways).left * H });
+  }
+  const now = totalPop(you) * H, left = base.left * H;
+  return { now, left, worst: base.worst * H, helps: helps.filter((h) => h.left > left * 1.1 + 50).sort((a, b) => b.left - a.left).slice(0, 3) };
+}
+
 /** Everything the screens show, computed by the engine. Numbers of animals are in heads (HEADS to one of the model's units). */
 export function view(g) {
   const s = g.s, you = me(s), era = ERAS[s.era], et = ERA_TEXT[era.id];
@@ -210,6 +241,7 @@ export function view(g) {
     warning: warn && s.turn < onset ? { turns: warn.toOnset, named: warn.kinds.length === 1, kinds: warn.kinds } : null,
     dieoff: !g.over && s.turn >= onset ? { kind: s.dieoff.type, left: era.turns - s.turn } : null,
     moment: due ? { id: due, picked: g.plan.pick, roads: MOMENTS[due].options.length } : null,
+    forecast: outlook(g, s, you, t, ways, H),
     pressure: g.plan.shed && !shedCheck(s, g.plan.shed) ? { kind: 'shed', id: g.plan.shed, left: Math.ceil((SHED_TURNS - (you.prog['shed.' + g.plan.shed] || 0)) / speed) }
       : g.plan.press && !pressCheck(s, g.plan.press) ? { kind: 'press', id: g.plan.press, to: lv(t, g.plan.press) + 1, left: Math.ceil((STEP_TURNS[lv(t, g.plan.press) + 1] - (you.prog[g.plan.press] || 0)) / speed), of: Math.ceil(STEP_TURNS[lv(t, g.plan.press) + 1] / speed) }
       : null,

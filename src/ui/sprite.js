@@ -93,8 +93,9 @@ function placed(p, x, k, fade) {
  */
 export function sceneSVG(eraId, palette, p, label, dim, others = []) {
   const bg = (SCENES[eraId] || SCENES.shore).map(([x, y, w, h, i]) => rect([x, y, w, h, palette[i]])).join('');
-  const spots = [[40, 0.75], [0, 0.6]];
-  const rivals = others.slice(0, 2).map((o, i) => placed(o.parts, spots[i][0] + (o.ratio > 1.4 ? -4 : 0), Math.max(0.45, Math.min(1.7, o.ratio)), 0.8)).join('');
+  // Rivals stand behind and to the side, fainter, so they are not taken for the player's own animal.
+  const spots = [[45, 0.75], [-6, 0.6]];
+  const rivals = others.slice(0, 2).map((o, i) => placed(o.parts, spots[i][0] + (o.ratio > 1.4 ? -6 : 0), Math.max(0.45, Math.min(1.7, o.ratio)), 0.55)).join('');
   // Its own kind beside it: one for a herd beginning, two for a herd.
   const kin = [[8, 0.8], [27, 0.7]].slice(0, Math.min(2, p.herd || 0)).map(([x, k]) => placed(p, x, k, 0.9)).join('');
   return `<svg class="scene${dim ? ' dim' : ''}" viewBox="0 0 64 30" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" role="img" aria-label="${label}">${bg}${rivals}${kin}${placed(p, 16, 1)}</svg>`;
