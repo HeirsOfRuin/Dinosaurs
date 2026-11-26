@@ -10,12 +10,86 @@ record and their numbers no longer describe the game.
 
 The gate measures the game's own engine (`src/engine/model.js`,
 `src/data/world.data.js`, `src/engine/policies.js`). Every number in the data
-table is tuned, not sourced. `npm run gate` reproduces round 6 (120,000 runs,
+table is tuned, not sourced. `npm run gate` reproduces round 7 (127,000 runs,
 about an hour); `npm run gate:check` proves the model is deterministic, that
-every run ended and moved its clock, and that every policy part and world
-switch changes the end state (24 parts, each changed 37 to 40 of 40 seeds).
+every run ended and moved its clock, that no lineage wears two coverings,
+holds warm blood without a coat or grew both halves of a closed pair, and
+that every policy part and world switch changes the end state (26 parts;
+watching changes 29 of 40 seeds, the rest 37 to 40).
 
-Round 6a is the current measurement; round 6 is the verdict it updates.
+Round 7 is the current measurement. Rounds 6a and 6 are the same design
+before coverings, and their reading of ways of living, moments and the
+warning still holds where round 7 does not say otherwise.
+
+## Round 7: the tree, coverings, and traits that close each other off (2026-11-26)
+
+The author: "Instead of how it is now, do we change trait selection to a
+tree?" and, to the answer (a tree that is shown, chance still dealing, one
+trait watched for; coverings and the closing pairs with it): "I agree. Do as
+you suggest". What was built is `docs/FRAME-bodies.md` section 6. 127,000
+runs, the seeds of round 6.
+
+**Before any re-levelling** the new rules roughly halved survival: careful
+play by body came through 8 to 34% (300 seeds each) against 24 to 54%. The
+bots were checked first. Watching for traits made no difference on or off;
+the loss was in the rules: a covering is upkeep, warm blood now waits on a
+coat, heat tolerance had been taken from skin, and the Long Shadow's hunter
+had been given a sail in place of warm blood and was cheaper to feed. Eased:
+the starvation rate 0.72 to 0.71 (fat 0.67 to 0.66), warm blood 0.08 to 0.07
+upkeep, skin's heat 0.05 back to 0.06, the hunter given fur and warm blood.
+
+| | Round 6a | Round 7 |
+|---|---|---|
+| Careful play through, one life (7,000 runs) | 34.9 ±0.6% | 34.7 ±0.6% |
+| Top three (7,000 runs) | 11.4 ±0.4% | 11.7 ±0.4% |
+| Turtle body through (1,000 seeds each from here down) | 40.9 | 49.7 ±1.6 |
+| Lizard | 53.6 | 47.9 ±1.6 |
+| Crocodile | 37.5 | 43.5 ±1.6 |
+| Dinosaur | 29.9 | 27.5 ±1.4 |
+| Careful, no body in mind | 29.2 | 26.7 ±1.4 |
+| Amphibian | 23.9 | 24.6 ±1.4 |
+| Mammal | 29.0 | 23.0 ±1.3 |
+| Top three: crocodile / turtle / amphibian | 25.7 / - / - | 23.8 / 20.4 / 18.9 |
+| Top three: lizard / careful / dinosaur / mammal | | 12.4 / 3.5 / 2.0 / 0.8 |
+| Saved setting, three tries an era, by body | 57.5 to 86.8 | 51.2 to 86.7 |
+
+Both targets hold (about 30% and about 10%).
+
+What the round found:
+
+1. **Bodies are not level, and the coated ones are at the bottom.** 23.0 to
+   49.7% through, a little over two to one, as before; but the order has
+   changed. The three scaled bodies lead and the mammal fell six points. Of
+   those who came through, 74% wore scales, 14% fur, 11% feathers and none
+   were bare (2,429 finishers). Fur and feathers cost more than scales and
+   carry warm blood's upkeep besides. Open.
+2. **The warm bodies cannot reach the top.** Mammal 0.8% and dinosaur 2.0% in
+   the top three against crocodile 23.8%. The mammal stands last on the ladder
+   (494) and a lineage like it ranks eighth. This was open as "the crocodile
+   is the glory pick" and is now three bodies wide. Open.
+3. **The Great Dying by cold is the hard face.** Through, of those who met
+   it: hot 54.2 ±1.3%, dry 45.6, waste 45.0, cold 28.2 ±1.2 (1,319 to 1,476
+   runs each). A cold answer now takes a coat and then warm blood. Not a coin
+   toss yet, but the face to watch when coats are re-costed.
+4. **Watching for a trait does not help the bots.** As designed 34.7 ±0.6%,
+   with watching switched off 35.8 ±0.6% (7,000 runs each, floor 1.5): no
+   gain, and within the floor of none. The bots seldom wait long for a
+   mutation, so there is little for it to save them. It is not inert (it
+   changes 29 of 40 seeds). Its case is a person's: it is what makes the tree
+   a plan and not a picture. Only a playtest can say whether it does.
+5. **Ways of living, moments, warning, range: as round 6a.** Night +5.6
+   points at best, roaming +6.8, fat +6.6, tending +1.9 (still open).
+   Warning 0, 3, 5, 8 turns: 16.0, 31.5, 34.7, 36.6%. One, two, three
+   regions: 20.8, 33.0, 34.6%. The road at a moment decides 12.1 ±1.0% of
+   seeds.
+6. **The closing pairs were not measured against their absence.** No bot
+   wants both halves of a pair, so the gate has nothing to say about them.
+   They are checked (no lineage ever grows both) and not weighed.
+
+Open after round 7: bodies not level (1); warm bodies and the top three (2);
+tending earns nothing alone; deep against wide mouths; half of finishers
+rank eighth (52%); only seven bodies tested; the saved setting has no target.
+
 
 ## Round 6a: after mouths were made to turn (2026-11-26)
 
