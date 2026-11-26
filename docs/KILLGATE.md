@@ -21,6 +21,52 @@ Round 7 is the current measurement. Rounds 6a and 6 are the same design
 before coverings, and their reading of ways of living, moments and the
 warning still holds where round 7 does not say otherwise.
 
+## Round 8: carrion contested, coats and warm blood re-costed (2026-11-26)
+
+The author, after his fourth run found a scavenger with armour beating every
+body on the ladder: "Run the balance round." 127,000 runs, the seeds of
+round 7. Changes: a hunter's jaw eats the dead too (0.015 a step) and a
+scavenger's stomach gets less from them (0.22 to 0.18 a step); scales, fur
+and feathers cost 0.015, 0.02 and 0.025 (from 0.02, 0.03, 0.04) and fur's
+cost by size fell to 0.01; warm blood costs 0.06 (from 0.07), holds out more
+cold, and speeds the climb back (0.05 a step on how fast numbers rise); the
+cold Great Dying leaves more insects and plants; the starvation rate back
+to 0.72.
+
+| | Round 7 | Round 8 |
+|---|---|---|
+| Careful play through, one life (7,000 runs) | 34.7 ±0.6% | 34.0 ±0.6% |
+| Top three (7,000 runs) | 11.7 ±0.4% | 9.4 ±0.3% |
+| Turtle body through (1,000 seeds each from here down) | 49.7 | 44.8 ±1.6 |
+| Crocodile | 43.5 | 41.7 ±1.6 |
+| Lizard | 47.9 | 41.5 ±1.6 |
+| Mammal | 23.0 | 35.2 ±1.5 |
+| Dinosaur | 27.5 | 29.0 ±1.4 |
+| Careful, no body in mind | 26.7 | 23.3 ±1.3 |
+| Amphibian | 24.6 | 22.5 ±1.3 |
+| Top three: crocodile / turtle / amphibian / lizard | 23.8 / 20.4 / 18.9 / 12.4 | 20.0 / 15.7 / 12.2 / 7.1 |
+| Top three: mammal / dinosaur / careful | 0.8 / 2.0 / 3.5 | 4.9 / 3.4 / 2.7 |
+| Great Dying by cold / the other three faces | 28.2 / 45.0 to 54.2 | 32.9 / 41.4 to 52.7 |
+| Saved setting, three tries an era, by body | 51.2 to 86.7 | 49.7 to 82.2 |
+| Finishers wearing scales / fur / feathers | 74 / 14 / 11% | 68 / 20 / 12% |
+
+Both targets hold: 34.0% through, 9.4% top three. The playtest's scavenger
+body, made for with eyes open, fell from 49.8% through and 31.5% top three to
+about 43% and 20% (300 seeds; it is not a gate arm): below the turtle.
+
+What moved: the mammal line, 23.0 to 35.2%, from last of the bodies to
+fourth; the spread between bodies narrowed from 23.0 to 49.7% to 22.5 to
+44.8%. The cold face is closer to the others, 32.9% against 41.4 to 52.7%.
+The ladder moved: the dinosaur stands 645 (from 593) and the mammal 559 (from
+494), because warm blood now breeds back faster and standing counts that.
+
+Still open: the warm bodies seldom reach the top three (mammal 4.9%,
+dinosaur 3.4%); half of finishers rank eighth (52%); tending earns nothing
+alone (+0.4); the amphibian dies in the Coal Forests half the time (50.0%
+pass it); the saved setting has no target. A hunter's share of the dead was
+first tried at 0.07 a step and made the crocodile 58% through and 41% top
+three (300 seeds), so it was cut to 0.015.
+
 ## Round 7: the tree, coverings, and traits that close each other off (2026-11-26)
 
 The author: "Instead of how it is now, do we change trait selection to a
