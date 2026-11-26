@@ -17,7 +17,7 @@ export function decide(game, policy = 'careful') {
   const s = structuredClone(game.s), you = s.lineages.find((l) => l.player);
   you.plan = ALL[policy];
   const d = policyDecide(s, you, offersFor(s, you), warning(s));
-  const plan = { spread: d.spread ?? null, ways: d.ways || [], pick: d.pick ?? 0 };
+  const plan = { spread: d.spread ?? null, ways: d.ways || [], pick: d.pick ?? 0, watch: d.watch ?? null };
   if (d.turn) plan.turn = d.turn; else if (d.shed) plan.shed = d.shed; else { plan.shed = null; plan.turn = null; plan.press = d.press ?? null; }
   return { keep: d.keep ?? null, plan };
 }

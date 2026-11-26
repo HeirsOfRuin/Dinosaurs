@@ -182,3 +182,69 @@ test('a mouth is turned, never lost: it works until the new one is ready', () =>
   assert.equal(view(g).mouth, 'jawInsects');
   assert.equal(view(g).pressure, null, 'the order is finished and dropped');
 });
+
+test('a lineage wears one covering, and turns it without going bare', () => {
+  let g = newGame({ seed: 5 });
+  const you = () => g.s.lineages.find((l) => l.player);
+  Object.assign(you().traits, { lungs: 2, skin: 1, fur: 2, warm: 1 });
+  let v = view(g);
+  assert.equal(v.cover, 'fur');
+  assert.equal(v.tree.flatMap((b) => b.traits).find((n) => n.id === 'scales').state, 'closed');
+  assert.throws(() => setPlan(g, { watch: 'scales' }), /not allowed/);
+  assert.equal(setPlan(g, { shed: 'fur' }).plan.shed, 'fur');   // at step 2 it can fade a step and warm blood still has a coat
+});
+
+test('warm blood needs a coat, and goes when the coat is turned to scales', () => {
+  let g = newGame({ seed: 5 });
+  const you = () => g.s.lineages.find((l) => l.player);
+  Object.assign(you().traits, { lungs: 2, skin: 1, warm: 1 });
+  assert.equal(view(g).traits.find((t) => t.id === 'warm').canPress, false);
+  Object.assign(you().traits, { fur: 1 });
+  assert.equal(view(g).traits.find((t) => t.id === 'warm').canPress, true);
+  assert.equal(view(g).traits.find((t) => t.id === 'fur').canShed, false);
+  const to = view(g).traits.find((t) => t.id === 'fur').turns;
+  assert.deepEqual(to.find((o) => o.to === 'scales').loses, ['warm']);
+  assert.deepEqual(to.find((o) => o.to === 'feathers').loses, []);
+  g = setPlan(g, { turn: 'scales' });
+  let seen = false;
+  for (let i = 0; i < 12 && !g.over && !seen; i++) {
+    if (view(g).moment) g = meet(g, 0);
+    const r = advance(g, { keep: null }); g = r.state;
+    assert.ok(view(g).cover, 'never bare while turning');
+    if (r.record.recovered) { seen = true; assert.deepEqual(r.record.recovered, { from: 'fur', to: 'scales' }); }
+  }
+  assert.ok(seen, 'the covering turned');
+  assert.equal(you().traits.warm, undefined);
+});
+
+test('traits that close each other off cannot both be grown', () => {
+  const g = newGame({ seed: 5 });
+  const you = g.s.lineages.find((l) => l.player);
+  Object.assign(you.traits, { lungs: 2, skin: 1, limbs: 2, sail: 1, size: 2, burrow: 1 });
+  const v = view(g), node = (id) => v.tree.flatMap((b) => b.traits).find((n) => n.id === id);
+  assert.equal(node('fur').state, 'closed');
+  assert.match(node('fur').why, /sail/);
+  assert.match(v.traits.find((t) => t.id === 'burrow').pressWhy, /Closed off by a heavier body/);
+  assert.throws(() => setPlan(g, { press: 'burrow' }), /not allowed/);
+  assert.ok(!v.offers.some((o) => o.id === 'fur' || o.id === 'feathers'));
+});
+
+test('a trait watched for is offered within the turns the screen promises', () => {
+  for (const seed of [3, 17, 99, 2024]) {
+    let g = newGame({ seed });
+    g.s.lineages.find((l) => l.player).traits.lungs = 2;
+    assert.equal(view(g).tree.flatMap((b) => b.traits).find((n) => n.id === 'skin').state, 'open');
+    g = setPlan(g, { watch: 'skin' });
+    let got = -1;
+    for (let i = 0; i <= view(g).watchTurns + 1 && got < 0; i++) {
+      const v = view(g);
+      if (v.offers.some((o) => o.id === 'skin')) { got = i; assert.ok(v.offers.find((o) => o.id === 'skin').watched); break; }
+      assert.equal(v.watch.turns <= view(g).watchTurns, true);
+      if (v.moment) g = meet(g, 0);
+      g = advance(g, { keep: null }).state;
+    }
+    assert.ok(got >= 0 && got <= view(g).watchTurns, `seed ${seed}: offered after ${got} turns`);
+    g = advance(view(g).moment ? meet(g, 0) : g, { keep: 'skin' }).state;
+    assert.equal(view(g).watch, null);
+  }
+});

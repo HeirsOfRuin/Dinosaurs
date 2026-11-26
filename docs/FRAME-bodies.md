@@ -1,9 +1,11 @@
 # Frame: more bodies, and choices that close each other off
 
-Status: **proposed 2026-11-26, waiting for the author's approval.** Section 1
-(more art, and colouring) is built, because it changes no rule. Sections 2 to
-4 add and change traits, so they reopen the kill gate; nothing in them is
-built.
+Status: **sections 1 to 3 built (2026-11-26), with the tree in section 6.**
+The author, shown the four decisions at the foot of this file and the tree:
+"I agree. Do as you suggest". Section 4 (weapons and defences) waits for
+acting on rivals; section 5 (randomising what a run offers) is "not yet".
+`docs/KILLGATE.md` round 7 is the measurement. What was built differs from
+what was proposed in three places, listed in section 6.
 
 ## The author's words
 
@@ -109,6 +111,38 @@ Two things he might mean, and they are different:
   early. Runs would differ more and a favourite build could not be repeated.
   The risk is a run that deals an unplayable hand, and it would have to be
   measured that none does.
+
+## 6. Built: the tree, and what differs from the proposal
+
+The author asked: "Instead of how it is now, do we change trait selection to
+a tree?" The answer he agreed to was both. Mutations still arrive three at a
+time, by chance. The Body screen now shows every trait there is, in five
+branches (`TREE` in `src/data/world.data.js`), each marked held, able to turn
+up, resting on something not yet grown, or closed off, with the reason. One
+trait can be marked to **watch for**: once it can be grown and has been
+watched `WATCH_TURNS` (2) turns, it is among the three offered. So chance
+still deals, and a player with a plan is not kept waiting on it.
+
+What differs from sections 2 and 3 as proposed:
+
+- **A covering is not chosen once.** It is turned to another over
+  `COVER_TURNS` (4) turns, the old one working meanwhile and the new arriving
+  a step lower, as a mouth is. It can also be let go, back to bare skin.
+  Turning a coat to scales loses warm blood, and the screen says so first.
+- **Warm blood rests on fur or feathers.** That is the answer to his
+  question about watertight skin and warm blood: they go together, but only
+  under a coat. A coat under warm blood cannot be let go.
+- **Bare skin has no bonus of its own** and feathers no penalty on wet
+  ground. Bare costs nothing; that is its case. Heat tolerance was moved
+  partly from watertight skin (0.07 to 0.06 a step) onto scales (0.05), and
+  cold tolerance partly from warm blood (0.10 to 0.06) onto fur (0.08) and
+  feathers (0.06).
+
+The closing pairs are `BARS` in the data table: a shell against legs under
+the body past the first step and against burrowing; burrowing past the first
+step against size past the first; a sail against fur, feathers and
+burrowing. "A fin tail" is not a trait and was dropped. A body from an old
+save that holds both halves of a pair keeps both and can grow neither.
 
 ## What will be measured
 

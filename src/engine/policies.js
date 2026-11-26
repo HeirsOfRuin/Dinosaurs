@@ -3,23 +3,23 @@
 // (sim/gate-check.js proves it): a plan for the body, the lineage it is making
 // for, how many regions to hold, the ways it lives, whether it heeds the
 // die-off warning, whether it braces for it, and which road it takes at a moment.
-import { TRAITS, JAWS, MAX_REGIONS, MIN_VIABLE, WAY_SETTLE, LINEAGES } from '../data/world.data.js';
-import { body, capacity, held, canRaise, canShed, mouthOf, waysOf } from './model.js';
+import { TRAITS, JAWS, COVERS, MAX_REGIONS, MIN_VIABLE, WAY_SETTLE, LINEAGES } from '../data/world.data.js';
+import { body, capacity, held, canRaise, canShed, canTurn, closedBy, mouthOf, coverOf, waysOf } from './model.js';
 import { streamFor } from './rng.js';
 
 const lv = (t, id) => t[id] || 0;
 const TOLERANT = [['lungs', 2], ['skin', 1], ['egg', 1], ['limbs', 2], ['skin', 2], ['egg', 2], ['burrow', 1], ['brain', 1], ['lungs', 3], ['skin', 3], ['egg', 3], ['brain', 2], ['burrow', 2]];
 // What to grow against each face of a die-off, when it has been named.
 const COUNTER = {
-  cold: [['warm', 1], ['burrow', 2], ['size', 1]], drought: [['lungs', 2], ['skin', 2], ['egg', 2], ['skin', 3]],
-  heat: [['lungs', 2], ['skin', 2], ['burrow', 2], ['skin', 3]], collapse: [['omni', 1], ['brain', 1], ['omni', 2]],
-  greatHot: [['lungs', 2], ['skin', 2], ['egg', 2], ['burrow', 2], ['skin', 3]],
+  cold: [['fur', 1], ['warm', 1], ['burrow', 2], ['size', 1]], drought: [['lungs', 2], ['skin', 2], ['egg', 2], ['scales', 1], ['skin', 3]],
+  heat: [['lungs', 2], ['skin', 2], ['scales', 1], ['burrow', 2], ['skin', 3]], collapse: [['omni', 1], ['brain', 1], ['omni', 2]],
+  greatHot: [['lungs', 2], ['skin', 2], ['scales', 1], ['egg', 2], ['burrow', 2], ['skin', 3]],
   greatDry: [['lungs', 2], ['skin', 2], ['egg', 2], ['skin', 3], ['egg', 3]],
-  greatCold: [['warm', 1], ['burrow', 1], ['burrow', 2], ['warm', 2], ['size', 1]],
+  greatCold: [['fur', 1], ['warm', 1], ['burrow', 1], ['burrow', 2], ['warm', 2], ['size', 1]],
   greatWaste: [['omni', 1], ['scavenge', 1], ['brain', 1], ['omni', 2]],
 };
 // The order a body is built in when making for a lineage: each trait to step 1, then to 2, then to 3.
-const ORDER = ['lungs', 'limbs', 'jawInsects', 'jawFish', 'jawPlants', 'jawPrey', 'skin', 'egg', 'burrow', 'brain', 'herd', 'gait', 'warm', 'size', 'armour', 'omni', 'scavenge', 'crush'];
+const ORDER = ['lungs', 'limbs', 'jawInsects', 'jawFish', 'jawPlants', 'jawPrey', 'skin', 'egg', 'scales', 'fur', 'feathers', 'sail', 'burrow', 'brain', 'herd', 'gait', 'warm', 'size', 'armour', 'omni', 'scavenge', 'crush'];
 // The hungry traits come last: a bot that took warm blood and size as hints on the Shore starved
 // in the Coal Forests in 56 runs of 100.
 const HUNGRY = ['warm', 'size', 'armour', 'herd', 'brain'];
@@ -53,11 +53,16 @@ function follow(l, offers, targets, allow = allowAll, ahead = 3) {
   let unmet = 0;
   for (const [id, n] of targets) {
     if (lv(l.traits, id) >= n || !allow({ ...l.traits, [id]: lv(l.traits, id) + 1 })) continue;
+    if (closedBy(l.traits, id)) continue;                 // closed off by something already grown: not worth waiting for
     if (++unmet > ahead) break;
     want.push(id);
     for (const need of Object.keys(TRAITS[id].needs)) if (lv(l.traits, need) < TRAITS[id].needs[need]) want.push(need);
+    const under = TRAITS[id].under;
+    if (under && !under.some((o) => lv(l.traits, o) > 0)) want.push(under.find((o) => targets.some(([x]) => x === o)) || under[0]);
   }
   d.keep = want.find((id) => offers.includes(id)) || null;
+  // The first thing wanted that has not turned up is watched for, so that it does.
+  d.watch = want.find((id) => !lv(l.traits, id) && id !== d.keep && canRaise(l.traits, id)) || null;
   d.press = want.find((id) => lv(l.traits, id) >= 1 && canRaise(l.traits, id)) || null;
   return d;
 }
@@ -67,6 +72,15 @@ function greedy(s, l, offers, allow = allowAll) {
   const now = worth(s, l), d = { keep: null, press: null };
   let best = now * 1.01;
   for (const id of offers) { const t = { ...l.traits, [id]: 1 }; if (!allow(t)) continue; const w = worth(s, l, t); if (w > best) { best = w; d.keep = id; } }
+  // Nothing offered is worth keeping: watch for whatever would feed it most, as a person would.
+  if (!d.keep) {
+    let top = now * 1.01;
+    for (const id of Object.keys(TRAITS)) {
+      if (lv(l.traits, id) || offers.includes(id) || !canRaise(l.traits, id)) continue;
+      const t = { ...l.traits, [id]: 1 }; if (!allow(t)) continue;
+      const w = worth(s, l, t); if (w > top) { top = w; d.watch = id; }
+    }
+  }
   best = now * 1.005;
   for (const id of Object.keys(l.traits)) {
     const t = { ...l.traits, [id]: l.traits[id] + 1 };
@@ -92,6 +106,9 @@ function towards(s, l, offers, target, allow) {
   if (want && have && have !== want) return { keep: follow(l, offers, roadTo(target), allow).keep, press: null, turn: want };
   if (want && !have) return { keep: offers.includes(want) ? want : null, press: null };
   const d = follow(l, offers, roadTo(target), allow);
+  // The wrong covering is turned to the right one once the body under it is built.
+  const coat = COVERS.find((id) => lv(target, id) > 0);
+  if (coat && coverOf(l.traits) && coverOf(l.traits) !== coat && canTurn(l.traits, coat) && !d.press) return { ...d, turn: coat };
   const done = Object.entries(target).every(([id, n]) => lv(l.traits, id) >= n);
   if (!d.press && !d.keep && done) return greedy(s, l, offers, allow);
   if (!d.press) d.press = greedy(s, l, [], allow).press;
@@ -120,6 +137,7 @@ export function decide(s, l, offers, warn) {
     d = follow(l, offers, TOLERANT.slice(0, 6));
     const g = greedy(s, l, offers);
     if (!d.keep) d.keep = g.keep;
+    if (!d.watch) d.watch = g.watch;
     if (!d.press) { d.press = g.press; d.shed = g.shed; }
   } else if (p.plan === 'recipe') {
     const target = LINEAGES[p.road || 'dinosaur'].traits;
@@ -133,8 +151,11 @@ export function decide(s, l, offers, warn) {
   let ways = p.ways ? [...p.ways] : [];
   const named = p.heed && warn && warn.kinds.length === 1 && warn.sens;
   if (named) {
-    const c = follow(l, offers, COUNTER[warn.kinds[0]], allow, 2);
+    // A lineage making for an animal does not grow another animal's coat against one die-off.
+    const coat = p.plan === 'recipe' ? COVERS.find((id) => lv(LINEAGES[p.road || 'dinosaur'].traits, id) > 0) : null;
+    const c = follow(l, offers, COUNTER[warn.kinds[0]].filter(([id]) => !(TRAITS[id].cover && p.plan === 'recipe' && id !== coat)), allow, 2);
     if (c.keep) d.keep = c.keep;
+    if (c.watch) d.watch = c.watch;
     if (c.press && !d.turn) { d.press = c.press; delete d.shed; }
     if (!p.fixedRange) wantRegions = MAX_REGIONS;
     // Lay down fat for what is coming, but only just before it comes: fat slows breeding. (A bot that

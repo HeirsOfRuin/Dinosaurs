@@ -66,9 +66,17 @@
   animals should be more randomized... it's always the same now"): a
   lineage's colour, pattern and small features of outline come from the seed
   and the era and change nothing. The Body screen says so.
-- `docs/FRAME-bodies.md` proposes coverings, traits that close each other
-  off, weapons and defences. Nothing in its sections 2 to 5 is built until
-  the author approves it.
+- `docs/FRAME-bodies.md`: coverings, the closing pairs and the tree are built
+  (its section 6 says how they differ from the proposal). Weapons and
+  defences (section 4) wait for acting on rivals; randomising what a run
+  offers (section 5) is "not yet". Build neither without the author's word.
+- One covering, as one mouth: scales, fur or feathers, turned to another
+  while the old one works, never two at once. Warm blood rests on fur or
+  feathers. The pairs that close each other off are `BARS` in the data table;
+  a new trait that ought to close another off goes there, not in an `if`.
+- Mutations arrive by chance and the tree shows everything; a watched trait
+  is offered within `WATCH_TURNS`. Do not turn the tree into a shop: nothing
+  is bought, and a trait still has to turn up.
 - The history is from memory until checked. Dates and die-offs are checked
   before they shape a number, and the source goes beside the number.
 - The kit files in `sim/` (`run.js`, `stats.js`, `measure-lib.js`) and

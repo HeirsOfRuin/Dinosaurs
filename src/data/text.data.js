@@ -18,11 +18,23 @@ export const TRAIT_TEXT = {
   crush:      { name: 'Cracking and grinding', does: 'Shell, seed and bone: hard food that other mouths leave.', slot: 'jaw' },
   herd:       { name: 'Living in herds', does: 'Fewer are caught, and prey is easier taken together.', slot: 'skull' },
   size:       { name: 'A heavier body', does: 'Harder to catch and better in the cold. Worse in heat and on insects.', slot: 'trunk' },
-  warm:       { name: 'Warm blood', does: 'Cold ground opens and you move faster. Heat is harder.', slot: 'skin' },
+  warm:       { name: 'Warm blood', does: 'Cold ground opens and you move faster. Heat is harder. It needs fur or feathers over it to hold the heat in.', slot: 'skin' },
+  scales:     { name: 'Scales', does: 'A covering. Hotter and drier ground opens. A lineage wears one covering; it can be turned to another.', slot: 'skin' },
+  fur:        { name: 'Fur', does: 'A covering. Colder ground opens; heat is a little harder. It costs more the bigger the animal. A lineage wears one covering; it can be turned to another.', slot: 'skin' },
+  feathers:   { name: 'Feathers', does: 'A covering. Colder ground opens, and it is light: you move a little faster. A lineage wears one covering; it can be turned to another.', slot: 'skin' },
+  sail:       { name: 'A sail on the back', does: 'Sheds heat at noon and soaks it up at dawn: hotter and colder ground both open. It cannot be worn under fur or feathers, nor taken down a burrow.', slot: 'trunk' },
   gait:       { name: 'Legs under the body', does: 'Much faster: better at hunting, and at not being hunted.', slot: 'limbs' },
-  burrow:     { name: 'Burrowing', does: 'Shelter from heat, cold and drought. Works best in a small body.', slot: 'limbs' },
+  burrow:     { name: 'Burrowing', does: 'Shelter from heat, cold and drought. Works best in a small body, and a big one cannot learn to dig deep.', slot: 'limbs' },
   brain:      { name: 'A bigger brain', does: 'Every food feeds you a little better.', slot: 'skull' },
-  armour:     { name: 'Armour', does: 'Far fewer are caught. Slower.', slot: 'skin' },
+  armour:     { name: 'Armour', does: 'Far fewer are caught. Slower. A full shell closes off running legs and burrowing.', slot: 'skin' },
+};
+// The branches of the tree on the Body screen.
+export const TREE_TEXT = {
+  air:   { name: 'Air and water', line: 'Breathing, holding water in, breeding away from it.' },
+  cover: { name: 'Skin and covering', line: 'One covering at a time. Some of these close each other off.' },
+  legs:  { name: 'Legs', line: 'How it moves, and whether it digs.' },
+  mouth: { name: 'Mouth', line: 'One mouth, and what grows from it.' },
+  frame: { name: 'Frame and wits', line: 'How big, how clever, how many together.' },
 };
 export const STEP_NAMES = ['not begun', 'a hint', 'developed', 'refined'];
 
@@ -134,7 +146,7 @@ export const PART_TEXT = {
   trunk: { slight: 'slight', sturdy: 'sturdy', heavy: 'heavy', massive: 'massive' },
   limbs: { sprawlShort: 'sprawling, short', sprawlStrong: 'sprawling, strong', raised: 'half raised', upright: 'under the body' },
   tail: { fin: 'a fin', plain: 'plain', balance: 'held out for balance' },
-  skin: { wet: 'wet', scaling: 'scaling over', scaled: 'scaled', insulated: 'insulated', armoured: 'armoured' },
+  skin: { wet: 'wet', tight: 'watertight', scaled: 'scaled', furred: 'furred', feathered: 'feathered', armoured: 'armoured' },
 };
 
 // The lineage's colouring, in words. It changes no number: see src/engine/parts.js.

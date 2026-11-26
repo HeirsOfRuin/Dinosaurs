@@ -14,6 +14,12 @@
 // moments and standing. A v2 lineage keeps its strongest jaw as its mouth and
 // loses the others, and is told so; a v2 lineage that was alive at the end has
 // come through, and is given its standing.
+//
+// v4 has coverings (scales, fur, feathers), a sail, pairs of traits that close
+// each other off, and a trait that can be watched for. Warm blood now needs fur
+// or feathers over it: a warm-blooded v3 lineage is given a hint of one (feathers
+// if its legs are under its body, fur otherwise) and is told. A v3 body that
+// holds both halves of a closed pair keeps both.
 
 import { freshGame } from './game.js';
 import { JAWS } from '../data/world.data.js';
@@ -21,7 +27,7 @@ import { regionsNow, ladder, resembles } from './model.js';
 
 export const SAVE_KEY = 'deep-time.save.v1'; // never rename
 export const SHELF_KEY = 'deep-time.shelf.v1'; // lineages set aside by going back to an earlier era
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 export const CODE_PREFIX = 'DEEP1.';
 
 /** MIGRATIONS[v](save) returns the save at version v + 1. Add one per version bump. */
@@ -56,6 +62,28 @@ export const MIGRATIONS = {
     g.note = old.note ? old.note : `The rules have changed since this lineage was saved. A lineage now has one mouth${lost ? ': yours keeps its strongest jaw and has lost the others' : ''}, and the food it eats follows from it. Coming through the end of the Triassic is now the win, and how well is a place on a ladder.`;
     return g;
   },
+};
+
+MIGRATIONS[3] = (old) => {
+  const g = structuredClone(old);
+  let coat = null;
+  const world = (s) => {
+    for (const l of s.lineages) {
+      if (l.traits.warm && !l.traits.fur && !l.traits.feathers) {
+        const c = (l.traits.gait || 0) >= 2 ? 'feathers' : 'fur';
+        delete l.traits.scales; l.traits[c] = 1;
+        if (l.player) coat = c;
+      }
+    }
+    s.rev = (s.rev || 0) + 1;
+    return s;
+  };
+  g.s = world(g.s);
+  g.saves = (g.saves || []).map((x) => (x ? world(x) : x));
+  g.plan = { press: null, shed: null, turn: null, spread: null, ways: [], pick: null, ...g.plan, watch: null };
+  g.v = 4;
+  g.note = old.note ? old.note : `The rules have changed since this lineage was saved. Skin can now grow a covering: scales, fur or feathers, one at a time. Warm blood needs fur or feathers over it${coat ? `, so yours has been given a hint of ${coat}` : ''}. Some traits now close each other off, and the Body screen shows the whole tree: mark a trait there to watch for it.`;
+  return g;
 };
 
 export function migrate(save) {

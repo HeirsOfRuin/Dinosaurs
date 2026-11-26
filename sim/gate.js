@@ -92,5 +92,11 @@ console.log('policy          ' + ['THROUGH', 'top three'].map((h) => h.padStart(
 for (const name of CAREFUL) { const rs = guard(seeds.map((seed) => playSaved(seed, { policy: POLICIES[name] }, 2)).filter((s) => s.outcome !== 'extinct' || true)); console.log(name.padEnd(16) + rate(thr(rs)) + ' ' + rate(top3(rs)) + '  ' + (rs.reduce((a, s) => a + s.retries.reduce((x, y) => x + y, 0), 0) / n).toFixed(2).padStart(10)); }
 console.log(floor());
 
+console.log('\n11. Coverings, and watching for a trait (careful play pooled)');
+console.log('What those who came through wore: ' + ['scales', 'fur', 'feathers'].map((c) => `${c} ${(100 * through.filter((s) => s.eraLog[s.eraLog.length - 1].traits[c]).length / through.length).toFixed(0)}%`).join(', ') + `, bare ${(100 * through.filter((s) => !['scales', 'fur', 'feathers'].some((c) => s.eraLog[s.eraLog.length - 1].traits[c])).length / through.length).toFixed(0)}%`);
+console.log('arm             ' + ['THROUGH', 'top three'].map((h) => h.padStart(10)).join(' '));
+for (const [label, f] of [['as designed', (p) => ({ policy: p })], ['no watching', (p) => ({ policy: p, noWatch: true })]]) { const rs = label === 'as designed' ? allCareful : pooled(f); console.log(label.padEnd(16) + rate(thr(rs), rs.length) + ' ' + rate(top3(rs), rs.length)); }
+console.log(floor(m7));
+
 if (stalled) { console.error(`\n${stalled} run(s) did not end or did not move the clock`); process.exit(1); }
 console.log(`\n${total} runs ended and moved their clocks.`);

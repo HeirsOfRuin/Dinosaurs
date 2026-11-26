@@ -139,6 +139,13 @@ which changes within reach would leave more. The figures come from
 `forecast()` in the model, which walks the remaining turns with the feeding
 rule the turn itself uses and changes no state; a test holds that.
 
+Added 2026-11-26 (`docs/FRAME-bodies.md` section 6): the Body screen's list of
+traits held became the tree, every trait there is in five branches;
+`view.tree` gives each node's state and the reason, and `setPlan({ watch })`
+marks one to be offered. Coverings and the closing pairs are rules in
+`model.js` (`coverOf`, `closedBy`, `canTurn`, `lostOnTurn`); the screens ask
+`view` and decide nothing. Save version 4.
+
 ## 9. Known gaps
 
 - **Nobody has played it.** Whether it is fun is not known. That is the next

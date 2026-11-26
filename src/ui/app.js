@@ -12,7 +12,7 @@ import { SAVE_KEY, SHELF_KEY, serialize, deserialize, toCode, fromCode } from '.
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
 import { animalSVG, sceneSVG } from './sprite.js';
-import { TITLE, TRAIT_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, DIEOFF_TEXT, LINEAGE_TEXT, RANK_TEXT, THROUGH_TEXT, STANDING_TEXT, WAY_TEXT, MOMENT_TEXT, SIZE_TEXT, LOOK_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
+import { TITLE, TRAIT_TEXT, TREE_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, DIEOFF_TEXT, LINEAGE_TEXT, RANK_TEXT, THROUGH_TEXT, STANDING_TEXT, WAY_TEXT, MOMENT_TEXT, SIZE_TEXT, LOOK_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
 
 const SHELF_MAX = 6;
 const app = document.getElementById('app');
@@ -139,7 +139,7 @@ function playTab(v) {
 
   // What the named die-off would leave, and what within reach would leave more.
   const f = v.forecast;
-  const helpLine = (h) => (h.kind === 'way' ? `${WAY_TEXT[h.id].name.toLowerCase()}${h.swaps ? ' (in place of one of your two)' : ''}` : h.kind === 'trait' ? `${TRAIT_TEXT[h.id].name.toLowerCase()} grown a step, ${h.turns} ${plural(h.turns, 'turn', 'turns')} of pressure` : `settlers sent to the ${REGION_TEXT[h.id].toLowerCase()}`) + `: about ${n0(h.left)}`;
+  const helpLine = (h) => (h.kind === 'offer' ? `${TRAIT_TEXT[h.id].name.toLowerCase()}, kept from what is offered this turn` : h.kind === 'way' ? `${WAY_TEXT[h.id].name.toLowerCase()}${h.swaps ? ' (in place of one of your two)' : ''}` : h.kind === 'trait' ? `${TRAIT_TEXT[h.id].name.toLowerCase()} grown a step, ${h.turns} ${plural(h.turns, 'turn', 'turns')} of pressure` : `settlers sent to the ${REGION_TEXT[h.id].toLowerCase()}`) + `: about ${n0(h.left)}`;
   const outlookBox = f ? `<div class="outlook"><strong>As you are, about ${f.left >= 50 ? n0(f.left) : 'none'} of your ${n0(f.now)} would be left at the end of it.</strong>
       ${f.helps.length ? `What would leave more:<ul>${f.helps.map((h) => `<li>${esc(helpLine(h))}</li>`).join('')}</ul>` : f.left < 50 ? ' Nothing within reach changes that. It may still fall otherwise than it looks.' : ' Nothing within reach would leave many more.'}
       <span class="dim">A reckoning from how things stand now, not a promise.</span></div>` : '';
@@ -147,7 +147,7 @@ function playTab(v) {
   const wayRow = `<button class="row${living.length ? '' : ' empty'}" data-tab="body">${living.length ? `<span>Living: <strong>${living.map((w) => WAY_TEXT[w.id].name.toLowerCase()).join(', ')}</strong></span><span class="dim">${living.some((w) => w.settling) ? 'taking hold' : v.fatSlows ? 'The fat is slowing your climb back: the ground would feed many more than there are.' : ''}</span>` : `<span><strong>No way of living chosen.</strong></span><span class="dim">Up to ${v.maxWays} at once, on the Body screen. They matter most when a die-off comes.</span>`}</button>`;
   const p = v.pressure;
   const pressure = p
-    ? `<button class="row" data-tab="body"><span>${p.kind === 'shed' ? 'Letting go of' : p.kind === 'turn' ? 'Turning the mouth to' : 'Pressure on'} <strong>${esc(TRAIT_TEXT[p.id].name.toLowerCase())}</strong></span><span class="dim">${p.kind === 'press' ? `to ${STEP_NAMES[p.to]} · ` : ''}${p.left} ${plural(p.left, 'turn', 'turns')} left</span>${p.kind !== 'shed' ? `<span class="bar"><b style="width:${Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : ''}</button>`
+    ? `<button class="row" data-tab="body"><span>${p.kind === 'shed' ? 'Letting go of' : p.kind === 'turn' ? (p.cover ? 'Turning the covering to' : 'Turning the mouth to') : 'Pressure on'} <strong>${esc(TRAIT_TEXT[p.id].name.toLowerCase())}</strong></span><span class="dim">${p.kind === 'press' ? `to ${STEP_NAMES[p.to]} · ` : ''}${p.left} ${plural(p.left, 'turn', 'turns')} left</span>${p.kind !== 'shed' ? `<span class="bar"><b style="width:${Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : ''}</button>`
     : '<button class="row empty" data-tab="body"><span><strong>Nothing is under pressure.</strong></span><span class="dim">No trait is growing. Choose one on the Body screen.</span></button>';
 
   const eats = Object.entries(v.eats).filter(([, e]) => e > 0.05).sort((a, b) => b[1] - a[1]).map(([f, e]) => `<span class="eat"><i style="width:${Math.round(Math.min(1, e) * 100)}%"></i><em>${FOOD_TEXT[f]}</em></span>`).join('');
@@ -166,7 +166,7 @@ function playTab(v) {
   }
   const offers = v.offers.length ? v.offers.map((o) => `
     <div class="offer">
-      <div><strong>${esc(TRAIT_TEXT[o.id].name)}</strong><small>${esc(TRAIT_TEXT[o.id].does)} Upkeep +${n2(o.cost)}; ${signed(o.feeds)} now.</small></div>
+      <div><strong>${esc(TRAIT_TEXT[o.id].name)}</strong>${o.watched ? ' <em class="tag">watched for</em>' : ''}<small>${esc(TRAIT_TEXT[o.id].does)} Upkeep +${n2(o.cost)}; ${signed(o.feeds)} now.</small></div>
       <button class="primary" data-action="keep:${o.id}">Keep</button>
     </div>`).join('') : '<p class="empty">No new mutation this generation: everything this body could begin, it has begun.</p>';
 
@@ -182,6 +182,7 @@ function playTab(v) {
     ${wayRow}
     <h2>This generation offers</h2>
     ${offers}
+    ${v.watch && !v.watch.offered ? `<p class="hint">Watching for ${esc(TRAIT_TEXT[v.watch.id].name.toLowerCase())}: ${v.watch.open ? (v.watch.turns ? `it will be among these in ${v.watch.turns} ${plural(v.watch.turns, 'turn', 'turns')}.` : 'it will be among these next turn.') : `it cannot turn up yet. ${esc(v.watch.why)}`}</p>` : v.watch ? '' : '<p class="hint">What turns up is chance. To choose, mark a trait to watch for in the tree on the Body screen.</p>'}
     <button class="next" data-action="next">${v.offers.length ? 'Keep none, next turn' : 'Next turn'}</button>
     <h2>Where you live</h2>
     <div class="regions">${regions}</div>
@@ -212,6 +213,7 @@ function turnNote(rec) {
   if (rec.met) bits.push(`${MOMENT_TEXT[rec.met.id].title}: ${MOMENT_TEXT[rec.met.id].roads[rec.met.road].split('.')[0]}.`);
   if (rec.kept) bits.push(`Kept: ${TRAIT_TEXT[rec.kept].name.toLowerCase()}.`);
   if (rec.turned) bits.push(`The mouth has turned: ${TRAIT_TEXT[rec.turned.to].name.toLowerCase()} now.`);
+  if (rec.recovered) bits.push(`The covering has turned: ${TRAIT_TEXT[rec.recovered.to].name.toLowerCase()} now.`);
   for (const id of rec.gained) bits.push(`${TRAIT_TEXT[id].name} is now ${STEP_NAMES[view(state).traits.find((t) => t.id === id)?.level || 1]}.`);
   for (const id of rec.lost) bits.push(`${TRAIT_TEXT[id].name} has faded a step.`);
   for (const id of rec.settled) bits.push(`Settlers reached the ${REGION_TEXT[id].toLowerCase()}.`);
@@ -275,13 +277,23 @@ function endTab(v) {
 // ---- the body -----------------------------------------------------------------
 
 function bodyTab(v) {
-  const slots = ['skull', 'jaw', 'trunk', 'limbs', 'tail', 'skin'].map((k) => `<div class="slot"><span class="dim">${cap(k)}</span>${PART_TEXT[k][v.parts[k]]}${k === 'limbs' && v.parts.claws ? ', digging claws' : ''}</div>`).join('');
+  const slots = ['skull', 'jaw', 'trunk', 'limbs', 'tail', 'skin'].map((k) => `<div class="slot"><span class="dim">${cap(k)}</span>${PART_TEXT[k][v.parts[k]]}${k === 'limbs' && v.parts.claws ? ', digging claws' : ''}${k === 'trunk' && v.parts.sail ? ', a sail on the back' : ''}</div>`).join('');
   const pips = (n, growing) => `<span class="pips">${[1, 2, 3].map((i) => `<i class="${i <= n ? 'on' : growing && i === n + 1 ? 'grow' : ''}"></i>`).join('')}</span>`;
-  const traits = v.traits.map((t) => `
+  const heldRow = (t) => `
     <button class="trait${t.pressing ? ' on' : ''}${t.shedding ? ' fade' : ''}" data-act="trait:${t.id}">
-      <span>${esc(TRAIT_TEXT[t.id].name)}${t.isMouth ? ' <em class="tag">mouth</em>' : ''}</span>
+      <span>${esc(TRAIT_TEXT[t.id].name)}${t.isMouth ? ' <em class="tag">mouth</em>' : t.isCover ? ' <em class="tag">covering</em>' : ''}</span>
       <span class="dim">${t.pressing ? 'under pressure' : t.shedding ? 'letting go' : t.turns && t.turns.some((o) => o.turning) ? 'turning' : STEP_NAMES[t.level]}</span>${pips(t.level, t.pressing)}
-    </button>`).join('');
+    </button>`;
+  // A trait not held: open to turn up, resting on something, or closed off. Tapping says which, and lets it be watched for.
+  const nodeRow = (n) => `
+    <button class="trait node ${n.state}${n.watching ? ' watch' : ''}" data-act="node:${n.id}">
+      <span>${esc(TRAIT_TEXT[n.id].name)}${n.watching ? ' <em class="tag">watching</em>' : ''}</span>
+      <span class="dim">${n.state === 'open' ? 'can turn up' : n.state === 'needs' ? 'not yet' : 'closed off'}</span>${pips(0, false)}
+    </button>`;
+  const tree = v.tree.map((br) => `
+    <h2 class="branch">${esc(TREE_TEXT[br.id].name)}</h2>
+    <p class="hint">${esc(TREE_TEXT[br.id].line)}</p>
+    <div class="traits">${br.traits.map((n) => (n.state === 'held' ? heldRow(v.traits.find((t) => t.id === n.id)) : nodeRow(n))).join('')}</div>`).join('');
   const ways = v.ways.map((w) => `
     <button class="way${w.on ? ' on' : ''}" data-act="way:${w.id}" ${w.full || v.over ? 'disabled' : ''}>
       <strong>${WAY_TEXT[w.id].name}</strong>
@@ -294,8 +306,9 @@ function bodyTab(v) {
     <p class="hint">About ${metres(v.length)} from snout to tail, ${SIZE_TEXT[[0.4, 0.9, 2, 4].indexOf(v.length)] || ''}. The bar under it is ${metres(pic.unit)}. In this era it is ${LOOK_TEXT.hue[v.parts.look.hue]}, ${LOOK_TEXT.pattern[v.parts.look.pattern]}; colouring is the lineage's own and changes nothing.</p>
     <div class="slots">${slots}</div>
     <p class="hint">Upkeep ${n2(v.upkeep)} food a head. ${v.regionsHeld > 1 ? `Holding ${v.regionsHeld} regions, a trait grows at ${Math.round(v.speed * 100)}% of full speed.` : `A trait grows at ${Math.round(v.speed * 100)}% of full speed.`}</p>
-    <h2>Traits held</h2>
-    <div class="traits">${traits}</div>
+    <h2>The tree</h2>
+    <p class="hint">Everything this lineage could become. A new trait turns up as a mutation; mark one to watch for and it will be among what is offered within ${v.watchTurns} turns of when it can be grown. ${v.watch ? `Watching for <strong>${esc(TRAIT_TEXT[v.watch.id].name.toLowerCase())}</strong>.` : 'Nothing is being watched for.'}</p>
+    ${tree}
     <h2>How you live</h2>
     <p class="hint">Ways of living are chosen, not grown. Up to ${v.maxWays} at once.</p>
     <div class="ways">${ways}</div>
@@ -324,10 +337,21 @@ function traitSheet(id) {
     : t.canShed
       ? `<button data-act="shed:${id}">Let it fade a step <small>${signed(t.shedFeeds)}; takes the place of pressure</small></button>`
       : `<p class="empty">Cannot be let go. ${esc(t.shedWhy)}</p>`;
-  const turn = t.turns ? `<h2>Turn the mouth</h2><p class="hint">The mouth you have goes on working until the new one is ready. The new one arrives a step lower. It takes the place of pressure.</p>${t.turns.map((o) => (o.turning
+  const turn = t.turns ? `<h2>Turn the ${t.isCover ? 'covering' : 'mouth'}</h2><p class="hint">The ${t.isCover ? 'covering' : 'mouth'} you have goes on working until the new one is ready. The new one arrives a step lower. It takes the place of pressure.</p>${t.turns.map((o) => (!o.ok ? `<p class="empty">To ${esc(TRAIT_TEXT[o.to].name.toLowerCase())}: ${esc(o.why)}</p>` : o.turning
     ? `<button data-act="turn:none"><strong>Turning to ${esc(TRAIT_TEXT[o.to].name.toLowerCase())}</strong><small>${o.turns} ${plural(o.turns, 'turn', 'turns')} left. Tap to stop.</small></button>`
-    : `<button data-act="turn:${o.to}">To ${esc(TRAIT_TEXT[o.to].name.toLowerCase())}<small>${o.turns} turns; arrives ${STEP_NAMES[o.level]}; then it ${signed(o.feeds)} as things stand.${o.loses.length ? ` Loses ${list(o.loses.map((x) => TRAIT_TEXT[x].name.toLowerCase())).replace(' or ', ' and ')}, which this mouth cannot use.` : ''}</small></button>`)).join('')}` : '';
-  return `<h2>${esc(tx.name)}</h2><p>${esc(tx.does)}</p><p class="dim">${cap(STEP_NAMES[t.level])}. Costs ${n2(t.cost)} food a head, every turn it is held.</p>${v.over ? '' : press + (t.turns ? turn : shed)}<button data-act="close">Close</button>`;
+    : `<button data-act="turn:${o.to}">To ${esc(TRAIT_TEXT[o.to].name.toLowerCase())}<small>${o.turns} turns; arrives ${STEP_NAMES[o.level]}; then ${signed(o.feeds)} as things stand.${o.loses.length ? ` Loses ${list(o.loses.map((x) => TRAIT_TEXT[x].name.toLowerCase())).replace(' or ', ' and ')}, which ${t.isCover ? 'this covering cannot keep warm' : 'this mouth cannot use'}.` : ''}</small></button>`)).join('')}` : '';
+  return `<h2>${esc(tx.name)}</h2><p>${esc(tx.does)}</p><p class="dim">${cap(STEP_NAMES[t.level])}. Costs ${n2(t.cost)} food a head, every turn it is held.</p>${v.over ? '' : press + (t.isMouth ? turn : t.isCover ? turn + shed : shed)}<button data-act="close">Close</button>`;
+}
+
+function nodeSheet(id) {
+  const v = view(state), n = v.tree.flatMap((b) => b.traits).find((x) => x.id === id), tx = TRAIT_TEXT[id];
+  const where = n.state === 'open'
+    ? `<p>Not held. It can turn up as a mutation${n.feeds != null ? `, and a hint of it ${signed(n.feeds)} as things stand` : ''}.</p>`
+    : `<p class="empty">${n.state === 'needs' ? 'Not yet.' : 'Closed off.'} ${esc(n.why)}</p>`;
+  const watch = v.over || n.state === 'closed' ? ''
+    : n.watching ? '<p>Being watched for.</p><button data-act="watch:none">Stop watching for it</button>'
+      : `<button class="primary" data-act="watch:${id}">Watch for this<small>${n.state === 'open' ? `It will be among what a generation offers within ${v.watchTurns} turns.` : 'It will be offered once it can be grown.'} One trait is watched for at a time.</small></button>`;
+  return `<h2>${esc(tx.name)}</h2><p>${esc(tx.does)}</p><p class="dim">A hint of it costs ${n2(n.cost)} food a head, every turn it is held.</p>${where}${watch}<button data-act="close">Close</button>`;
 }
 
 // ---- the menu -----------------------------------------------------------------
@@ -412,6 +436,8 @@ app.addEventListener('click', (e) => {
       }
       else if (act === 'ladder') { modal = ladderSheet(); }
       else if (act === 'trait') { modal = traitSheet(arg); }
+      else if (act === 'node') { modal = nodeSheet(arg); }
+      else if (act === 'watch') { state = setPlan(state, { watch: arg === 'none' ? null : arg }); save(); modal = null; }
       else if (act === 'press') { state = setPlan(state, { press: arg === 'none' ? null : arg }); save(); modal = null; }
       else if (act === 'shed') { state = setPlan(state, { shed: arg === 'none' ? null : arg }); save(); modal = null; }
       else if (act === 'turn') { state = setPlan(state, { turn: arg === 'none' ? null : arg }); save(); modal = null; }

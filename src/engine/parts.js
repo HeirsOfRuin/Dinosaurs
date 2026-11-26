@@ -27,9 +27,12 @@ export function parts(t, ways = []) {
     claws: lv(t, 'burrow') >= 1,
     herd: lv(t, 'herd'),   // how many of its own kind are drawn beside it
     tail: lv(t, 'gait') >= 2 ? 'balance' : lv(t, 'lungs') >= 2 ? 'plain' : 'fin',
-    skin: lv(t, 'armour') >= 1 ? 'armoured' : lv(t, 'warm') >= 2 ? 'insulated' : lv(t, 'skin') >= 2 ? 'scaled' : lv(t, 'skin') === 1 ? 'scaling' : 'wet',
+    skin: lv(t, 'armour') >= 1 ? 'armoured' : lv(t, 'fur') ? 'furred' : lv(t, 'feathers') ? 'feathered' : lv(t, 'scales') ? 'scaled' : lv(t, 'skin') >= 1 ? 'tight' : 'wet',
     armour: lv(t, 'armour'),   // scutes, then plates, then a shell
-    coat: lv(t, 'warm'),       // tufts, then a full coat
+    // The covering and how far it has come: scales, fur or feathers over the skin, or nothing.
+    cover: lv(t, 'fur') ? 'fur' : lv(t, 'feathers') ? 'feathers' : lv(t, 'scales') ? 'scales' : 'bare',
+    coat: lv(t, 'fur') || lv(t, 'feathers') || lv(t, 'scales'),
+    sail: lv(t, 'sail'),       // a low ridge, then a sail, then a tall one
     // Ways of living that show: a night animal's eye, a fat animal's belly, young at heel.
     night: ways.includes('night'), fat: ways.includes('fat'), young: ways.includes('tend'),
   };

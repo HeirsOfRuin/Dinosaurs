@@ -30,7 +30,14 @@ export const TRAITS = {
   crush:    { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawFish', 'jawPlants', 'jawPrey'] }, // cracks shell, seed and bone
   herd:   { cost: 0.05, needs: { brain: 1 } },   // living in herds or packs
   size:   { cost: 0.08, needs: {} },
-  warm:   { cost: 0.08, needs: { skin: 1 } },    // a faster, warmer metabolism
+  // One covering. A lineage's skin grows scales, fur or feathers, or stays bare; it holds one at a
+  // time and can turn it to another, as a mouth is turned. (The author, 2026-11-26: "we should add
+  // more traits and close some off if some are taken... Maybe add feathers or fur?")
+  scales:   { cost: 0.02, needs: { skin: 1 }, cover: true },   // heat and drought
+  fur:      { cost: 0.03, needs: { skin: 1 }, cover: true },   // cold; dearer the bigger the animal
+  feathers: { cost: 0.04, needs: { skin: 1 }, cover: true },   // cold, and light
+  warm:   { cost: 0.07, needs: { skin: 1 }, under: ['fur', 'feathers'] },    // a faster, warmer metabolism; it needs a coat to hold the heat in
+  sail:   { cost: 0.03, needs: { skin: 1 } },    // a sail on the back: sheds heat and soaks it up
   gait:   { cost: 0.04, needs: { limbs: 3 } },   // legs under the body
   burrow: { cost: 0.03, needs: { limbs: 2 } },
   brain:  { cost: 0.05, needs: {} },
@@ -44,12 +51,34 @@ export const SHED_TURNS = 2;                // turns of pressure to lose one lev
 // the new one arrives a step lower. (Until 2026-11-26 a mouth had to be shed to nothing before
 // another could be taken. The author: "Cutting mouths kills you. It just happened to me twice.")
 export const MOUTH_TURNS = 6;
+export const COVERS = ['scales', 'fur', 'feathers'];
+export const COVER_TURNS = 4;   // a covering is turned to another faster than a mouth is
+// Pairs that close each other off: a trait at the first step named cannot be grown while the other
+// stands at its step, and the other way about. A body that already holds both (an old save) keeps both.
+export const BARS = [
+  [['armour', 3], ['gait', 2]],     // a shell is heavy and stiff
+  [['armour', 3], ['burrow', 1]],
+  [['burrow', 2], ['size', 2]],     // a big animal cannot go to ground
+  [['sail', 1], ['fur', 1]],        // a sail is a radiator: it cannot be insulated,
+  [['sail', 1], ['feathers', 1]],
+  [['sail', 1], ['burrow', 1]],     // or dug with
+];
+// A trait a lineage is watching for is among what a generation offers once it has watched this many turns.
+export const WATCH_TURNS = 2;
+// The tree as the Body screen lays it out: branches, each a list of traits in the order they are met.
+export const TREE = [
+  { id: 'air', traits: ['lungs', 'skin', 'egg'] },
+  { id: 'cover', traits: ['scales', 'fur', 'feathers', 'warm', 'sail', 'armour'] },
+  { id: 'legs', traits: ['limbs', 'gait', 'burrow'] },
+  { id: 'mouth', traits: ['jawFish', 'jawInsects', 'jawPlants', 'jawPrey', 'omni', 'scavenge', 'crush'] },
+  { id: 'frame', traits: ['size', 'brain', 'herd'] },
+];
 export const RANGE_DRAG = 0.35;             // each region held beyond the first slows selection
 export const MAX_REGIONS = 3;
 export const HALF_SAT = 20;                 // food competition: claims needed to take half a stock
 export const MIN_VIABLE = 3;                // a region's population below this dies out
 export const LEAST = 1;                     // the lineage ends when its whole number falls below this
-export const STARVE = { plain: 0.72, fat: 0.67, size: 0.075, armour: 0.025, burrow: 0.05 };   // the share of the gap closed each turn when the ground feeds fewer than there are
+export const STARVE = { plain: 0.71, fat: 0.66, size: 0.075, armour: 0.025, burrow: 0.05 };   // the share of the gap closed each turn when the ground feeds fewer than there are
 export const FOOD_FLOOR = 0.05;             // the least a die-off leaves of a food it takes
 
 // Ways of living: behaviours, held two at a time at most. Chosen, not grown, but a new one takes
@@ -98,7 +127,7 @@ export const ERAS = [
     rivals: [{ traits: { lungs: 2, limbs: 2, skin: 2, egg: 1, jawPrey: 2, size: 2 }, home: 'scrub', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 1, jawPlants: 2, size: 2 }, home: 'scrub', plan: 'greedy' }] },
   { id: 'shadow', name: 'The Long Shadow', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['greatHot', 'greatDry', 'greatCold', 'greatWaste'], mag: 1.45, dieoffTurns: 5, lead: 8, sens: [0.4, 1.5],   // named earlier than the rest; and almost nowhere is spared
     regions: [R('river', 0.55, 0.62, 60, 60, 70, 70, 0.45), R('plains', 0.4, 0.65, 50, 0, 120, 110, 0.6), R('dryBasin', 0.2, 0.75, 50, 0, 40, 50, 0.35), R('polarForest', 0.5, 0.3, 50, 0, 100, 50, 0.3)],
-    rivals: [{ traits: { lungs: 2, limbs: 3, skin: 2, egg: 2, jawPrey: 3, size: 3, warm: 1 }, home: 'plains', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, jawPlants: 3, size: 3 }, home: 'plains', plan: 'special' }] },
+    rivals: [{ traits: { lungs: 2, limbs: 3, skin: 2, egg: 2, jawPrey: 3, size: 3, fur: 1, warm: 1 }, home: 'plains', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, jawPlants: 3, size: 3 }, home: 'plains', plan: 'special' }] },
   { id: 'triassic', name: 'The Triassic', turns: 30, dWet: 0, dTemp: 0, dieoffs: ['heat', 'collapse', 'cold'], mag: 1.3, sens: [0.35, 1.5], dieoffTurns: 5,
     recover: 8,                               // turns for food to come back after the Great Dying
     pulse: { from: 12, to: 16, dWet: 0.25, plants: 1.6 },   // the wet episode near 233 Ma
@@ -127,13 +156,13 @@ export const STANDING = { fullAt: 25, grounds: [0.8, 0.9, 1.0], weight: 0.2 };  
 // numbers and ground are what the lineage is taken to have had as the last die-off ended, in the
 // game's terms: like the player's, they are what was left, not what there had been.
 export const LINEAGES = {
-  dinosaur:  { traits: { lungs: 2, limbs: 3, gait: 3, skin: 2, egg: 3, warm: 2, size: 2, jawInsects: 2, omni: 2, herd: 1, brain: 1 }, ways: ['tend'], numbers: 9, ground: 2 },
-  crocodile: { traits: { lungs: 2, limbs: 2, skin: 3, egg: 2, armour: 2, size: 2, jawPrey: 3, scavenge: 1 }, ways: ['tend'], numbers: 6, ground: 1 },
-  mammal:    { traits: { lungs: 2, limbs: 2, skin: 1, egg: 1, warm: 3, brain: 2, burrow: 2, jawInsects: 2, omni: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
+  dinosaur:  { traits: { lungs: 2, limbs: 3, gait: 3, skin: 2, egg: 3, feathers: 1, warm: 2, size: 2, jawInsects: 2, omni: 2, herd: 1, brain: 1 }, ways: ['tend'], numbers: 9, ground: 2 },
+  crocodile: { traits: { lungs: 2, limbs: 2, skin: 3, scales: 2, egg: 2, armour: 2, size: 2, jawPrey: 3, scavenge: 1 }, ways: ['tend'], numbers: 6, ground: 1 },
+  mammal:    { traits: { lungs: 2, limbs: 2, skin: 1, egg: 1, fur: 2, warm: 3, brain: 2, burrow: 2, jawInsects: 2, omni: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
   amphibian: { traits: { lungs: 3, limbs: 2, skin: 1, armour: 1, size: 3, jawFish: 3, burrow: 1 }, ways: ['tend', 'roam'], numbers: 4, ground: 1 },
-  lizard:    { traits: { lungs: 2, limbs: 2, skin: 3, egg: 2, jawInsects: 2, burrow: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
-  turtle:    { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, armour: 3, size: 1, jawPlants: 2, omni: 2, crush: 1 }, ways: ['tend'], numbers: 5, ground: 1 },
-  beaked:    { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, size: 3, jawPlants: 3, crush: 1, herd: 2, brain: 1 }, ways: [], numbers: 2, ground: 1 },
+  lizard:    { traits: { lungs: 2, limbs: 2, skin: 3, scales: 2, egg: 2, jawInsects: 2, burrow: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
+  turtle:    { traits: { lungs: 2, limbs: 2, skin: 2, scales: 1, egg: 2, armour: 3, size: 1, jawPlants: 2, omni: 2, crush: 1 }, ways: ['tend'], numbers: 5, ground: 1 },
+  beaked:    { traits: { lungs: 2, limbs: 2, skin: 2, scales: 1, egg: 2, size: 3, jawPlants: 3, crush: 1, herd: 2, brain: 1 }, ways: [], numbers: 2, ground: 1 },
 };
 
 // ---- Moments ------------------------------------------------------------------

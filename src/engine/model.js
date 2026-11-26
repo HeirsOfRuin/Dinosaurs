@@ -7,19 +7,22 @@
 // (docs/FRAME-standing.md): one mouth, ways of living, moments, and standing
 // in place of four fixed winning bodies.
 import { streamFor } from './rng.js';
-import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
+import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
 
 /** The one jaw a set of traits holds, or null. */
 export const mouthOf = (t) => Object.keys(JAWS).find((id) => lv(t, id) > 0) || null;
+/** The one covering a set of traits holds, or null for bare skin. */
+export const coverOf = (t) => COVERS.find((id) => lv(t, id) > 0) || null;
 
 // The one derivation of what a body is worth: its traits, and the ways it lives.
 export function body(t, ways = []) {
   const size = lv(t, 'size'), warm = lv(t, 'warm'), skin = lv(t, 'skin'), burrow = lv(t, 'burrow'), herd = lv(t, 'herd'), omni = lv(t, 'omni');
   const night = ways.includes('night'), tend = ways.includes('tend'), roam = ways.includes('roam'), fat = ways.includes('fat');
-  const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm - 0.08 * lv(t, 'armour') - 0.03 * size;
+  const scales = lv(t, 'scales'), fur = lv(t, 'fur'), feathers = lv(t, 'feathers'), sail = lv(t, 'sail');
+  const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm + 0.03 * feathers - 0.08 * lv(t, 'armour') - 0.03 * size;
   const mouth = mouthOf(t), own = mouth ? JAWS[mouth] : null;
   const eff = {};
   for (const f of BASE_FOODS) {
@@ -34,10 +37,13 @@ export function body(t, ways = []) {
   if (night) for (const f of FOODS) eff[f] *= 0.9;        // finds less in the dark
   let upkeep = 1 + (tend ? 0.06 : 0) + (roam ? 0.07 : 0);   // young to feed; miles to walk
   for (const id in t) upkeep += TRAITS[id].cost * t[id];
+  upkeep += 0.015 * fur * size;                            // a coat costs more the more animal there is to cover
   return {
-    dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg') + 0.06 * burrow),   // a burrow is damp
-    lo: 0.40 - 0.10 * warm - 0.04 * size - 0.05 * burrow,
-    hi: 0.65 + 0.07 * skin - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
+    dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg') + 0.06 * burrow + 0.04 * scales),   // a burrow is damp; scales keep water in
+    // Cold: a warm metabolism under a coat. Fur holds heat best, feathers nearly; a sail soaks up the morning sun.
+    lo: 0.40 - 0.06 * warm - 0.08 * fur - 0.06 * feathers - 0.03 * sail - 0.04 * size - 0.05 * burrow,
+    // Heat: watertight skin, scales over it, a sail to shed it. A coat is worn in the heat too.
+    hi: 0.65 + 0.06 * skin + 0.05 * scales + 0.05 * sail - 0.02 * fur - 0.01 * feathers - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
     mob, eff, upkeep, mouth,
     defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + (night ? 0.2 : 0)),
     grow: (tend ? 0.68 : 0.5) * (fat ? 0.75 : 1),          // how fast numbers rise toward what the ground feeds
@@ -60,22 +66,48 @@ export const held = (l) => Object.keys(l.pop).filter((id) => l.pop[id] > 0);
 /** The ways of living that have taken hold. A new one does nothing for WAY_SETTLE turns. */
 export const waysOf = (s, l) => Object.keys(l.ways || {}).filter((id) => s.clock - l.ways[id] >= WAY_SETTLE).sort();
 
+/**
+ * What closes a trait's next step off, or null: another covering, or the other half of a pair in
+ * BARS. (The author, 2026-11-26: "add more traits and close some off if some are taken".)
+ */
+export function closedBy(t, id) {
+  const T = TRAITS[id], next = lv(t, id) + 1;
+  if (T.cover) { const c = coverOf(t); if (c && c !== id) return c; }
+  for (const [[a, na], [b, nb]] of BARS) {
+    if (a === id && next >= na && lv(t, b) >= nb && !(lv(t, a) >= na)) return b;
+    if (b === id && next >= nb && lv(t, a) >= na && !(lv(t, b) >= nb)) return a;
+  }
+  return null;
+}
+
 export function canRaise(t, id) {
   const T = TRAITS[id], mouth = mouthOf(t);
   if (lv(t, id) >= 3 || !Object.entries(T.needs).every(([n, k]) => lv(t, n) >= k)) return false;
+  if (T.under && !T.under.some((o) => lv(t, o) > 0)) return false;           // warm blood needs a coat over it
+  if (closedBy(t, id)) return false;
   if (JAWS[id] && mouth && mouth !== id) return false;                       // one mouth
   if (T.jaw && (!mouth || lv(t, mouth) < T.jaw || (T.mouths && !T.mouths.includes(mouth)))) return false;
   return true;
 }
-/** A mouth can be turned to any other food. It is never lost. */
-export const canTurn = (t, to) => !!JAWS[to] && !!mouthOf(t) && mouthOf(t) !== to;
-/** The refinements a mouth turned to `to` could not keep. */
-export const lostOnTurn = (t, to) => Object.keys(t).filter((o) => t[o] > 0 && TRAITS[o].mouths && !TRAITS[o].mouths.includes(to));
+/** What a turn to `to` would replace: the mouth, or the covering. */
+export const turnsFrom = (t, to) => (JAWS[to] ? mouthOf(t) : TRAITS[to]?.cover ? coverOf(t) : null);
+/** A mouth can be turned to any other food, and a covering to any other that nothing closes off. Neither is lost on the way. */
+export function canTurn(t, to) {
+  const from = turnsFrom(t, to);
+  if (!from || from === to) return false;
+  if (JAWS[to]) return true;
+  const bare = { ...t }; delete bare[from];
+  return !closedBy(bare, to);
+}
+export const turnTime = (to) => (JAWS[to] ? MOUTH_TURNS : COVER_TURNS);
+/** What a turn to `to` could not keep: a mouth's refinements, or warm blood when the coat goes. */
+export const lostOnTurn = (t, to) => Object.keys(t).filter((o) => t[o] > 0 && (JAWS[to] ? TRAITS[o].mouths && !TRAITS[o].mouths.includes(to) : TRAITS[o].under && !TRAITS[o].under.includes(to)));
 
 export function canShed(t, id) {
   if (!lv(t, id)) return false;
   if (JAWS[id]) return false;   // a mouth is turned to another food, not let go
   if (Object.keys(t).some((o) => o !== id && t[o] > 0 && (TRAITS[o].needs[id] || 0) >= t[id])) return false;
+  if (t[id] === 1 && Object.keys(t).some((o) => t[o] > 0 && TRAITS[o].under && TRAITS[o].under.includes(id))) return false;   // the coat under warm blood
   return true;
 }
 
@@ -293,11 +325,20 @@ export function newGame(seed, opts = {}) {
 export function offersFor(s, l) {
   const open = Object.keys(TRAITS).filter((id) => lv(l.traits, id) === 0 && canRaise(l.traits, id));
   const pool = mouthOf(l.traits) ? open : open.filter((id) => JAWS[id]);
-  return streamFor(s.seed, `${s.era}.${s.turn}.${s.attempt}`, 'offer.' + l.id).shuffle(pool).slice(0, 3);
+  const three = streamFor(s.seed, `${s.era}.${s.turn}.${s.attempt}`, 'offer.' + l.id).shuffle(pool).slice(0, 3);
+  // A trait the lineage has been watching for turns up once it has watched WATCH_TURNS turns and can grow it.
+  const w = l.watch;
+  if (w && !s.opts.noWatch && pool.includes(w.id) && !three.includes(w.id) && s.clock - w.since >= WATCH_TURNS) three[three.length - 1] = w.id;
+  return three;
 }
 
 function apply(s, l, d, offers) {
   if (d.keep && offers.includes(d.keep)) l.traits[d.keep] = 1;
+  if (d.watch !== undefined) {
+    if (!d.watch || !TRAITS[d.watch]) delete l.watch;
+    else if (!l.watch || l.watch.id !== d.watch) l.watch = { id: d.watch, since: s.clock };
+  }
+  if (l.watch && lv(l.traits, l.watch.id) > 0) delete l.watch;
   if (d.ways) {
     const want = d.ways.filter((id) => WAYS.includes(id)).slice(0, MAX_WAYS);
     for (const id of Object.keys(l.ways)) if (!want.includes(id)) delete l.ways[id];
@@ -305,11 +346,11 @@ function apply(s, l, d, offers) {
   }
   const speed = body(l.traits, waysOf(s, l)).drag / (1 + RANGE_DRAG * (Math.max(1, held(l).length) - 1));
   if (d.turn && canTurn(l.traits, d.turn)) {
-    // The mouth turns: the old jaw goes on working until the new one is ready, which arrives a step lower.
+    // The mouth (or the covering) turns: the old one goes on working until the new one is ready, which arrives a step lower.
     for (const k of Object.keys(l.prog)) if (k.startsWith('turn.') && k !== 'turn.' + d.turn) delete l.prog[k];
     const k = 'turn.' + d.turn; l.prog[k] = (l.prog[k] || 0) + speed;
-    if (l.prog[k] >= MOUTH_TURNS) {
-      const old = mouthOf(l.traits), level = Math.max(1, l.traits[old] - 1);
+    if (l.prog[k] >= turnTime(d.turn)) {
+      const old = turnsFrom(l.traits, d.turn), level = Math.max(1, l.traits[old] - 1);
       for (const o of lostOnTurn(l.traits, d.turn)) delete l.traits[o];
       delete l.traits[old]; delete l.prog[k]; delete l.prog[old];
       l.traits[d.turn] = level;

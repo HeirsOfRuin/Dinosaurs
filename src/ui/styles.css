@@ -134,6 +134,12 @@ button.primary small { color: var(--accent-ink); }
 .trait .dim { font-size: .8rem; }
 .trait.on { background: var(--panel-2); border-color: var(--accent); }
 .trait.fade { border-color: var(--alarm-line); }
+.trait.node { border-style: dashed; border-color: var(--line); background: transparent; color: var(--ink-dim); }
+.trait.node.open { color: var(--ink); }
+.trait.node.closed { opacity: .6; }
+.trait.node.watch { border-style: solid; border-color: var(--moss); }
+h2.branch { font-size: .82rem; margin: .9rem 0 .1rem; color: var(--ink); }
+h2.branch + .hint { margin-bottom: .35rem; }
 .pips { display: flex; gap: 3px; }
 .pips i { width: 12px; height: 12px; background: var(--well); display: block; }
 .pips i.on { background: var(--accent); }

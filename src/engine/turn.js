@@ -2,16 +2,16 @@
 // Math.random(). Same seed and same choices give the same game.
 //
 //   advance(game, { keep })   one turn: keep an offered mutation (or none) and let time pass
-//   setPlan(game, patch)      change a standing order: pressure, ways of living, settlers. No time passes
+//   setPlan(game, patch)      change a standing order: pressure, ways of living, settlers, what is watched for. No time passes
 //   meet(game, road)          choose a road at a moment. No time passes; the turn then resolves with it
 //   retry(game, era)          the saved setting: begin an era again from its opening save
 //   view(game)                everything the screens show. The screens compute nothing
 //
 // The rules are model.js; this file only lets a person drive them.
 
-import { FOODS, JAWS, TRAITS, ERAS, MOMENTS, WAYS, MAX_WAYS, WAY_SETTLE, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, RANGE_DRAG, MAX_REGIONS, MIN_VIABLE, HEADS, LENGTH_M } from '../data/world.data.js';
+import { FOODS, JAWS, TRAITS, ERAS, MOMENTS, WAYS, MAX_WAYS, WAY_SETTLE, STEP_TURNS, SHED_TURNS, COVERS, TREE, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, MIN_VIABLE, HEADS, LENGTH_M } from '../data/world.data.js';
 import { ERA_TEXT, TRAIT_TEXT } from '../data/text.data.js';
-import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast, canTurn, lostOnTurn } from './model.js';
+import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast, canTurn, lostOnTurn, closedBy, coverOf, turnsFrom, turnTime } from './model.js';
 import { decide } from './policies.js';
 import { freshGame } from './game.js';
 import { parts, lookOf } from './parts.js';
@@ -34,8 +34,27 @@ function pressCheck(s, id) {
   if (lack) return `Needs ${TRAIT_TEXT[lack[0]].name.toLowerCase()} at step ${lack[1]} first.`;
   const mouth = mouthOf(t);
   if (TRAITS[id].jaw && (!mouth || lv(t, mouth) < TRAITS[id].jaw)) return `Needs a mouth at step ${TRAITS[id].jaw} first.`;
+  const under = TRAITS[id].under;
+  if (under && !under.some((o) => lv(t, o) > 0)) return `Needs ${under.map((o) => TRAIT_TEXT[o].name.toLowerCase()).join(' or ')} over it.`;
+  const shut = closedBy(t, id);
+  if (shut) return `Closed off by ${TRAIT_TEXT[shut].name.toLowerCase()}.`;
   if (!canRaise(t, id)) return 'This mouth cannot grow it.';
   return null;
+}
+
+// Why a trait not yet held cannot be begun, for the tree: { state, why }. 'open' means it can turn up as a mutation.
+function nodeCheck(t, id) {
+  const T = TRAITS[id], mouth = mouthOf(t), cover = coverOf(t);
+  if (JAWS[id] && mouth) return { state: 'closed', why: `A lineage has one mouth. Yours can be turned to this from ${TRAIT_TEXT[mouth].name.toLowerCase()}.` };
+  if (T.cover && cover) return { state: 'closed', why: `A lineage wears one covering. Yours can be turned to this from ${TRAIT_TEXT[cover].name.toLowerCase()}.` };
+  const shut = closedBy(t, id);
+  if (shut) return { state: 'closed', why: `Closed off by ${TRAIT_TEXT[shut].name.toLowerCase()}. It opens if that is let go.` };
+  if (T.mouths && mouth && !T.mouths.includes(mouth)) return { state: 'closed', why: 'This mouth cannot grow it.' };
+  const lack = Object.entries(T.needs).find(([n, k]) => lv(t, n) < k);
+  if (lack) return { state: 'needs', why: `Rests on ${TRAIT_TEXT[lack[0]].name.toLowerCase()} at step ${lack[1]}.` };
+  if (T.jaw && (!mouth || lv(t, mouth) < T.jaw)) return { state: 'needs', why: `Rests on the mouth at step ${T.jaw}.` };
+  if (T.under && !T.under.some((o) => lv(t, o) > 0)) return { state: 'needs', why: `Needs ${T.under.map((o) => TRAIT_TEXT[o].name.toLowerCase()).join(' or ')} over it.` };
+  return { state: 'open', why: null };
 }
 
 function shedCheck(s, id) {
@@ -44,7 +63,8 @@ function shedCheck(s, id) {
   if (JAWS[id]) return 'A mouth is not let go. It can be turned to another food.';
   if (!canShed(t, id)) {
     const dep = Object.keys(t).find((o) => o !== id && t[o] > 0 && ((TRAITS[o].needs[id] || 0) >= t[id] || (JAWS[id] && TRAITS[o].jaw >= t[id])));
-    return dep ? `${TRAIT_TEXT[dep].name} rests on it.` : 'Something rests on it.';
+    const over = Object.keys(t).find((o) => t[o] > 0 && TRAITS[o].under && TRAITS[o].under.includes(id));
+    return dep ? `${TRAIT_TEXT[dep].name} rests on it.` : over ? `${TRAIT_TEXT[over].name} needs it. It can be turned to another covering that holds heat.` : 'Something rests on it.';
   }
   return null;
 }
@@ -79,7 +99,7 @@ export function setPlan(prev, patch) {
     g.plan.shed = patch.shed ?? null;
   }
   if ('turn' in patch) {
-    if (patch.turn != null) { if (!canTurn(me(s).traits, patch.turn)) throw new Error('not allowed: the mouth cannot be turned to that'); g.plan.press = null; g.plan.shed = null; }
+    if (patch.turn != null) { if (!canTurn(me(s).traits, patch.turn)) throw new Error('not allowed: it cannot be turned to that'); g.plan.press = null; g.plan.shed = null; }
     g.plan.turn = patch.turn ?? null;
   }
   if ('ways' in patch) {
@@ -87,6 +107,15 @@ export function setPlan(prev, patch) {
     if (want.some((id) => !WAYS.includes(id))) throw new Error('not allowed: no such way of living');
     if (want.length > MAX_WAYS) throw new Error(`not allowed: a lineage lives ${MAX_WAYS} ways at most`);
     g.plan.ways = [...want];
+  }
+  if ('watch' in patch) {
+    if (patch.watch != null) {
+      if (!TRAITS[patch.watch]) throw new Error('not allowed: no such trait');
+      if (lv(me(s).traits, patch.watch)) throw new Error('not allowed: already held');
+      const n = nodeCheck(me(s).traits, patch.watch);
+      if (n.state === 'closed') throw new Error(`not allowed: ${n.why}`);
+    }
+    g.plan.watch = patch.watch ?? null;
   }
   if ('pick' in patch) g.plan.pick = patch.pick ?? null;
   if ('spread' in patch) {
@@ -123,23 +152,27 @@ export function advance(prev, input = {}) {
   if (g.plan.shed && shedCheck(s, g.plan.shed)) g.plan.shed = null;
   if (g.plan.spread && !spreadPreview(s, g.plan.spread).ok) g.plan.spread = null;
   if (g.plan.turn && !canTurn(you.traits, g.plan.turn)) g.plan.turn = null;
+  if (g.plan.watch && (lv(you.traits, g.plan.watch) || keep === g.plan.watch || nodeCheck(you.traits, g.plan.watch).state === 'closed')) g.plan.watch = null;
 
   const before = { era: s.era, turn: s.turn, traits: { ...you.traits }, pop: { ...you.pop } };
   const wasDying = s.turn >= ERAS[s.era].turns - dieoffTurns(ERAS[s.era]);
-  step(s, decide, { keep, press: g.plan.press, shed: g.plan.shed, turn: g.plan.turn ?? null, spread: g.plan.spread, ways: g.plan.ways, pick: g.plan.pick ?? 0 });
+  step(s, decide, { keep, press: g.plan.press, shed: g.plan.shed, turn: g.plan.turn ?? null, spread: g.plan.spread, ways: g.plan.ways, pick: g.plan.pick ?? 0, watch: g.plan.watch ?? null });
   g.turns += 1;
   g.plan.spread = null;
   g.plan.pick = null;
 
   const now = me(s);
+  // A covering turned to another (not one begun on bare skin, nor one let go).
+  const recovered = !!coverOf(before.traits) && !!coverOf(now.traits) && coverOf(before.traits) !== coverOf(now.traits);
   const record = {
     era: before.era, turn: before.turn, kept: keep,
     popBefore: sum(before.pop) * HEADS, popAfter: totalPop(now) * HEADS, met: due ? { id: due, road: s.lastMoment.pick } : null,
     // Why the numbers moved: what was bred, what hunger took, what the hunters took. From the turn itself.
     moved: s.moved && s.era === before.era ? { bred: s.moved.bred * HEADS, starved: s.moved.starved * HEADS, caught: s.moved.caught * HEADS, lost: s.moved.lost * HEADS } : null,
     turned: mouthOf(now.traits) !== mouthOf(before.traits) ? { from: mouthOf(before.traits), to: mouthOf(now.traits) } : null,
-    gained: Object.keys(now.traits).filter((id) => lv(now.traits, id) > lv(before.traits, id) && id !== keep && !JAWS[id]),
-    lost: Object.keys(before.traits).filter((id) => lv(now.traits, id) < lv(before.traits, id) && !JAWS[id]),
+    recovered: recovered ? { from: coverOf(before.traits), to: coverOf(now.traits) } : null,
+    gained: Object.keys(now.traits).filter((id) => lv(now.traits, id) > lv(before.traits, id) && id !== keep && !JAWS[id] && !(recovered && COVERS.includes(id))),
+    lost: Object.keys(before.traits).filter((id) => lv(now.traits, id) < lv(before.traits, id) && !JAWS[id] && !(recovered && COVERS.includes(id))),
     settled: s.era === before.era ? Object.keys(now.pop).filter((id) => !(before.pop[id] > 0)) : [],
     emptied: s.era === before.era ? Object.keys(before.pop).filter((id) => !(now.pop[id] > 0)) : [],
     dieoffBegan: null, eraEnded: null, ended: null,
@@ -163,7 +196,7 @@ export function retry(prev, era) {
   g.tries[era] += 1;
   g.s = rerollEra(structuredClone(g.saves[era]), g.tries[era]);
   g.saves = g.saves.slice(0, era + 1);
-  g.plan = { press: null, shed: null, turn: null, spread: null, ways: Object.keys(me(g.s).ways || {}), pick: null };
+  g.plan = { press: null, shed: null, turn: null, spread: null, ways: Object.keys(me(g.s).ways || {}), pick: null, watch: me(g.s).watch?.id ?? null };
   g.over = false; g.outcome = null; g.note = null;
   return g;
 }
@@ -193,6 +226,8 @@ function outlook(g, s, you, t, ways, H) {
     if (turns >= left0) continue;    // it would not be grown in time
     helps.push({ kind: 'trait', id, turns, left: forecast(s, you, { ...t, [id]: t[id] + 1 }, ways).left * H });
   }
+  // A hint on offer this turn: a coat before a cold, scales before a heat.
+  for (const id of offersFor(s, you)) helps.push({ kind: 'offer', id, left: forecast(s, you, { ...t, [id]: 1 }, ways).left * H });
   for (const r of s.regions) {
     const sp = spreadPreview(s, r.id);
     if (!sp.ok || left0 < 2) continue;
@@ -252,7 +287,7 @@ export function view(g) {
     dieoff: !g.over && s.turn >= onset ? { kind: s.dieoff.type, left: era.turns - s.turn } : null,
     moment: due ? { id: due, picked: g.plan.pick, roads: MOMENTS[due].options.length } : null,
     forecast: outlook(g, s, you, t, ways, H),
-    pressure: g.plan.turn && canTurn(t, g.plan.turn) ? { kind: 'turn', id: g.plan.turn, left: Math.ceil((MOUTH_TURNS - (you.prog['turn.' + g.plan.turn] || 0)) / speed), of: Math.ceil(MOUTH_TURNS / speed) }
+    pressure: g.plan.turn && canTurn(t, g.plan.turn) ? { kind: 'turn', id: g.plan.turn, cover: !JAWS[g.plan.turn], left: Math.ceil((turnTime(g.plan.turn) - (you.prog['turn.' + g.plan.turn] || 0)) / speed), of: Math.ceil(turnTime(g.plan.turn) / speed) }
       : g.plan.shed && !shedCheck(s, g.plan.shed) ? { kind: 'shed', id: g.plan.shed, left: Math.ceil((SHED_TURNS - (you.prog['shed.' + g.plan.shed] || 0)) / speed) }
       : g.plan.press && !pressCheck(s, g.plan.press) ? { kind: 'press', id: g.plan.press, to: lv(t, g.plan.press) + 1, left: Math.ceil((STEP_TURNS[lv(t, g.plan.press) + 1] - (you.prog[g.plan.press] || 0)) / speed), of: Math.ceil(STEP_TURNS[lv(t, g.plan.press) + 1] / speed) }
       : null,
@@ -260,21 +295,37 @@ export function view(g) {
       const why = pressCheck(s, id), shedWhy = shedCheck(s, id);
       const down = { ...t, [id]: t[id] - 1 }; if (!down[id]) delete down[id];
       return {
-        id, level: t[id], cost: TRAITS[id].cost * t[id], isMouth: !!JAWS[id],
+        id, level: t[id], cost: TRAITS[id].cost * t[id], isMouth: !!JAWS[id], isCover: !!TRAITS[id].cover,
         canPress: !why, pressWhy: why, pressing: g.plan.press === id,
         pressTurns: why ? null : Math.ceil((STEP_TURNS[t[id] + 1] - (you.prog[id] || 0)) / speed),
         pressFeeds: why ? null : (worth({ ...t, [id]: t[id] + 1 }) - feeds) * H,
         canShed: !shedWhy, shedWhy, shedding: g.plan.shed === id,
         shedFeeds: shedWhy ? null : (worth(down) - feeds) * H,
         // For the mouth: the three foods it could be turned to, and what each would cost and bring.
-        turns: JAWS[id] ? Object.keys(JAWS).filter((to) => to !== id).map((to) => {
+        // The same for a covering. One that something closes off is listed with what closes it.
+        turns: JAWS[id] || TRAITS[id].cover ? (JAWS[id] ? Object.keys(JAWS) : COVERS).filter((to) => to !== id).map((to) => {
           const after = { ...t }; for (const o of lostOnTurn(t, to)) delete after[o];
           delete after[id]; after[to] = Math.max(1, t[id] - 1);
-          return { to, turning: g.plan.turn === to, turns: Math.ceil((MOUTH_TURNS - (you.prog['turn.' + to] || 0)) / speed), level: after[to], loses: lostOnTurn(t, to), feeds: (worth(after) - feeds) * H };
+          const ok = canTurn(t, to), bare = { ...t }; delete bare[id];
+          return { to, ok, why: ok ? null : `Closed off by ${TRAIT_TEXT[closedBy(bare, to)].name.toLowerCase()}.`, turning: g.plan.turn === to, turns: Math.ceil((turnTime(to) - (you.prog['turn.' + to] || 0)) / speed), level: after[to], loses: lostOnTurn(t, to), feeds: (worth(after) - feeds) * H };
         }) : null,
       };
     }),
-    offers: offers.map((id) => ({ id, cost: TRAITS[id].cost, feeds: (worth({ ...t, [id]: 1 }) - feeds) * H, isMouth: !!JAWS[id] })),
+    offers: offers.map((id) => ({ id, cost: TRAITS[id].cost, feeds: (worth({ ...t, [id]: 1 }) - feeds) * H, isMouth: !!JAWS[id], watched: g.plan.watch === id })),
+    // The tree: every trait there is, by branch, with where the lineage stands on each. A trait not
+    // held is open (it can turn up), resting on something not yet grown, or closed off by something that is.
+    tree: TREE.map((br) => ({ id: br.id, traits: br.traits.map((id) => {
+      if (lv(t, id)) return { id, level: t[id], state: 'held', why: null, watching: false };
+      const n = nodeCheck(t, id);
+      return { id, level: 0, state: n.state, why: n.why, cost: TRAITS[id].cost, watching: g.plan.watch === id, feeds: n.state === 'open' ? (worth({ ...t, [id]: 1 }) - feeds) * H : null };
+    }) })),
+    // What is being watched for, and how long before it is among what a generation offers.
+    watch: g.plan.watch && !lv(t, g.plan.watch) ? (() => {
+      const n = nodeCheck(t, g.plan.watch), since = you.watch && you.watch.id === g.plan.watch ? you.watch.since : s.clock;
+      return { id: g.plan.watch, open: n.state === 'open', why: n.why, turns: Math.max(0, since + WATCH_TURNS - s.clock), offered: offers.includes(g.plan.watch) };
+    })() : null,
+    watchTurns: WATCH_TURNS,
+    cover: coverOf(t),
     ways: WAYS.map((id) => {
       const held_ = (g.plan.ways || []).includes(id), since = you.ways[id];
       const settling = held_ && !ways.includes(id) ? (since == null ? WAY_SETTLE : Math.max(1, WAY_SETTLE - (s.clock - since))) : 0;

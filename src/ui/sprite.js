@@ -5,11 +5,11 @@
 
 // Colouring: a hue from the lineage's look, shaded by what its skin is. [hue, saturation, lightness].
 const HUE = [[150, 28, 48], [95, 36, 45], [45, 46, 47], [22, 48, 46], [205, 24, 50], [330, 20, 50], [70, 32, 40], [180, 30, 42]];
-const SHADE = { wet: [0, 8, 4], scaling: [0, 0, 0], scaled: [0, 6, -2], insulated: [0, -8, -4], armoured: [0, -14, -9] };
+const SHADE = { wet: [0, 8, 4], tight: [0, 0, 0], scaled: [0, 6, -3], furred: [0, -8, -4], feathered: [0, 4, 2], armoured: [0, -14, -9] };
 const hsl = (h, s, l) => `hsl(${Math.round(h)} ${Math.max(4, Math.min(90, Math.round(s)))}% ${Math.max(8, Math.min(92, Math.round(l)))}%)`;
 function colours(p) {
   const [h0, s0, l0] = HUE[(p.look?.hue ?? 0) % HUE.length], [dh, ds, dl] = SHADE[p.skin] || SHADE.wet;
-  const h = p.skin === 'insulated' ? (h0 + 28 * 2) / 3 : h0 + dh, s = s0 + ds, l = l0 + dl;   // a coat pulls every hue toward brown
+  const h = p.skin === 'furred' ? (h0 + 28 * 2) / 3 : h0 + dh, s = s0 + ds, l = l0 + dl;   // fur pulls every hue toward brown
   return { body: hsl(h, s, l), dark: hsl(h, s + 4, l - 22), belly: hsl(h + 10, s - 12, l + 30), limb: hsl(h, s, l - 8), pale: hsl(h + 10, s - 10, l + 16) };
 }
 const SIZE = { slight: [10, 3], sturdy: [12, 4], heavy: [13, 5], massive: [14, 6] };
@@ -75,9 +75,28 @@ export function animalRects(p) {
   if (p.armour === 1) for (let x = x0 + 1; x < x0 + L; x += 2) put(x, top - 1, 1, 1, c.dark);
   else if (p.armour === 2) put(x0 + 1, top - 1, L - 2, 1, c.dark);
   else if (p.armour >= 3) { put(x0, top - 1, L, 1, c.dark); put(x0 + 2, top - 2, L - 4, 1, c.dark); put(x0, top, 1, hgt, c.dark); put(x0 + L - 1, top, 1, hgt, c.dark); }
-  // A warm animal's covering: tufts, then a coat.
-  if (p.coat === 1) for (let x = x0 + 1; x < x0 + L - 1; x += 5) put(x, top, 2, 1, c.pale);
-  else if (p.coat >= 2 && p.armour < 2) for (let x = x0; x < x0 + L; x += 2) put(x, top - (p.armour ? 2 : 1), 1, 1, c.pale);
+  // A sail on the back: spines with skin between, taller as it grows. Drawn before the coverings so they sit on it.
+  if (p.sail) {
+    const sx = x0 + Math.floor(L / 4), sw = Math.max(3, Math.ceil(L / 2)), sh = 1 + p.sail;
+    put(sx, top - sh, sw, sh, c.pale); put(sx + 1, top - sh - 1, sw - 2, 1, c.pale);
+    for (let x = sx; x < sx + sw; x += 2) put(x, top - sh - (x > sx && x < sx + sw - 1 ? 1 : 0), 1, sh + 1, c.limb);
+  }
+  // The covering. Fur: tufts, then a coat standing off the back and the tail.
+  if (p.cover === 'fur') {
+    if (p.coat === 1) for (let x = x0 + 1; x < x0 + L - 1; x += 4) put(x, top, 2, 1, c.pale);
+    else { if (p.armour < 2 && !p.sail) for (let x = x0; x < x0 + L; x += 2) put(x, top - (p.armour ? 2 : 1), 1, 1, c.pale); for (let x = x0 - 5; x < x0; x += 2) put(x, top + (upright ? 0 : 0), 1, 1, c.pale); }
+    if (p.coat >= 3) for (let x = x0 + 1; x < x0 + L - 1; x += 2) put(x, top + hgt, 1, 1, c.pale);
+  // Feathers: a crest, then quills along the arm and the tail, then a fan at the tail's end.
+  } else if (p.cover === 'feathers') {
+    put(headX, headY - 1, 2, 1, c.pale); put(headX - 1, headY, 1, 1, c.pale);
+    if (p.coat >= 2) { for (let x = x0 - 6; x < x0 - 1; x += 2) put(x, top + (upright ? 0 : 0), 1, 1, c.pale); for (let x = x0 + 2; x < x0 + L - 2; x += 3) put(x, top + hgt - 1, 2, 1, c.pale); }
+    if (p.coat >= 3) { put(x0 - 10, top, 2, 1, c.pale); put(x0 - 10, top + 3, 2, 1, c.pale); put(headX, headY - 2, 1, 1, c.pale); }
+  // Scales: rows of darker plates low on the flank, closer set as they thicken.
+  } else if (p.cover === 'scales') {
+    const gap = p.coat >= 3 ? 2 : p.coat === 2 ? 3 : 4;
+    for (let x = x0 + 1; x < x0 + L - 1; x += gap) put(x, top + hgt - 1, 1, 1, c.dark);
+    if (p.coat >= 2) for (let x = x0 - 5; x < x0; x += gap) put(x, top + 2, 1, 1, c.dark);
+  }
   // Fat laid down: a deeper belly.
   if (p.fat) put(x0 + 2, top + hgt + 1, L - 4, 1, c.belly);
   return out;
