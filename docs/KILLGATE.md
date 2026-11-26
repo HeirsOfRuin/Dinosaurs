@@ -10,16 +10,85 @@ record and their numbers no longer describe the game.
 
 The gate measures the game's own engine (`src/engine/model.js`,
 `src/data/world.data.js`, `src/engine/policies.js`). Every number in the data
-table is tuned, not sourced. `npm run gate` reproduces round 7 (127,000 runs,
-about an hour); `npm run gate:check` proves the model is deterministic, that
+table is tuned, not sourced. `npm run gate` reproduces round 9 (169,000 runs,
+about an hour and a half); `npm run gate:check` proves the model is deterministic, that
 every run ended and moved its clock, that no lineage wears two coverings,
 holds warm blood without a coat or grew both halves of a closed pair, and
 that every policy part and world switch changes the end state (26 parts;
 watching changes 29 of 40 seeds, the rest 37 to 40).
 
-Round 7 is the current measurement. Rounds 6a and 6 are the same design
-before coverings, and their reading of ways of living, moments and the
-warning still holds where round 7 does not say otherwise.
+Round 9 is the current measurement: the game with rivals that act. Round 8
+is the same game the turn before rivals were built, on the same seeds.
+Rounds 7, 6a and 6 are earlier tunings of the same design, and their reading
+of ways of living, moments and the warning still holds where a later round
+does not say otherwise.
+
+## Round 9: rivals that act, and are acted on (2026-11-26)
+
+The author: "Then I want to do the rival update we talked about, then run
+another balance test after that to see what it changed". Built as
+`docs/FRAME-rivals.md`: four stances toward a rival, rivals that hunt a
+smaller player and push back, four weapons. No number was re-tuned for it.
+169,000 runs, the seeds of round 8, so every difference below is what the
+rivals layer changed.
+
+| | Round 8 | Round 9 |
+|---|---|---|
+| Careful play through, one life (7,000 runs) | 34.0 ±0.6% | 34.5 ±0.6% |
+| Top three (7,000 runs) | 9.4 ±0.3% | 9.8 ±0.4% |
+| Lizard body through (1,000 seeds each from here down) | 41.5 | 49.4 ±1.6 |
+| Crocodile | 41.7 | 38.8 ±1.5 |
+| Turtle | 44.8 | 38.7 ±1.5 |
+| Mammal | 35.2 | 35.6 ±1.5 |
+| Dinosaur | 29.0 | 28.0 ±1.4 |
+| Careful, no body in mind | 23.3 | 27.8 ±1.4 |
+| Amphibian | 22.5 | 23.0 ±1.3 |
+| Top three: crocodile / turtle / amphibian / lizard | 20.0 / 15.7 / 12.2 / 7.1 | 21.3 / 12.9 / 12.4 / 10.3 |
+| Top three: mammal / dinosaur / careful | 4.9 / 3.4 / 2.7 | 5.1 / 3.1 / 3.8 |
+| Great Dying by cold / the other three faces | 32.9 / 41.4 to 52.7 | 33.5 / 41.0 to 54.4 |
+| Saved setting, three tries an era, by body | 49.7 to 82.2 | 51.8 to 88.5 |
+
+**Rivals and stances** (careful play pooled, 7,000 runs an arm; floor 1.5
+points):
+
+| Arm | Through | Top three |
+|---|---|---|
+| As designed | 34.5 ±0.6 | 9.8 ±0.4 |
+| No stances | 33.0 ±0.6 | 9.0 ±0.3 |
+| Push only | 33.7 | 9.3 |
+| Prey only | 33.3 | 9.6 |
+| Follow only | 33.6 | 9.2 |
+| Keep out of the way only | 32.9 | 9.0 |
+| Rivals passive (they never hunt or push) | 36.7 ±0.6 | 10.6 ±0.4 |
+
+What the rivals changed:
+
+1. **The targets still hold.** 34.5% through and 9.8% top three, against
+   34.0 and 9.4 before: within the floor. Nothing needed re-tuning.
+2. **Rivals that act cost the player 2.2 points** (34.5 against 36.7 with
+   them passive). A hunter bigger than you hunts you on about a quarter of
+   your turns (careful bot, 60 runs, 4,533 turns), taking about 30 a turn.
+3. **The stances, as the bots use them, are worth 1.5 points together** (34.5
+   against 33.0 with none), and **none of the four alone clears the floor.**
+   No stance dominates, which was the claim to test, but none has yet been
+   shown to be best anywhere either. The bots seldom take one (each under
+   4% of turns): push needs four-fifths of the strength, and the rivals
+   usually outnumber the player many times over. Whether they matter is
+   now a question for a person reading the Rivals screen, not the bots.
+4. **The bodies moved, and the spread did not narrow.** Lizard up 7.9
+   points, careful up 4.5; turtle down 6.1 and crocodile down 2.9. The
+   turtle and the crocodile are slow and are now hunted; the lizard is small
+   and lives at night, which hides it. Spread 23.0 to 49.4%, against 22.5
+   to 44.8%.
+5. **Unchanged:** the cold face (33.5%), ways of living (night +11.7 at
+   best, roaming +9.5, fat +9.0, tending +0.7), the moment's road (decides
+   13.2% of seeds), warning and range.
+
+Open after round 9: stances not shown best anywhere (3); the lizard pulling
+away again (4); warm bodies seldom in the top three (mammal 5.1%, dinosaur
+3.1%); half of finishers rank eighth (51%); tending earns nothing alone; the
+amphibian dies in the Coal Forests (46.1% pass it); the saved setting has no
+target.
 
 ## Round 8: carrion contested, coats and warm blood re-costed (2026-11-26)
 

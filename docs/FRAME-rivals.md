@@ -88,6 +88,10 @@ Kill gate round 9, the same seeds as round 8:
    rivals passive.
 4. Bodies, the face of the Great Dying, ways of living, moments: as round 8.
 
+**Measured: `docs/KILLGATE.md` round 9.** Targets hold (34.5% through,
+9.8% top three). Rivals that act cost 2.2 points; the stances, as the bots
+use them, give 1.5 together and none alone clears the floor.
+
 ## What it costs
 
 - Save version 5 (a stance in the plan; nothing to carry over).
