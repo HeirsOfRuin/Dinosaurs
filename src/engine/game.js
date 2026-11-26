@@ -17,7 +17,7 @@ export function freshGame({ seed = 1, setting = 'saved' } = {}) {
     setting,
     s,
     // Standing orders: they hold from turn to turn so a quiet turn is one tap.
-    plan: { press: null, shed: null, spread: null, ways: [], pick: null },
+    plan: { press: null, shed: null, turn: null, spread: null, ways: [], pick: null },
     // saves[e] is the world as era e opened. Kept only on the saved setting.
     saves: setting === 'saved' ? [structuredClone(s)] : [],
     tries: [0, 0, 0, 0, 0],

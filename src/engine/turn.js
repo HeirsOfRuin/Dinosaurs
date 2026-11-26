@@ -9,9 +9,9 @@
 //
 // The rules are model.js; this file only lets a person drive them.
 
-import { FOODS, JAWS, TRAITS, ERAS, MOMENTS, WAYS, MAX_WAYS, WAY_SETTLE, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, MIN_VIABLE, HEADS, LENGTH_M } from '../data/world.data.js';
+import { FOODS, JAWS, TRAITS, ERAS, MOMENTS, WAYS, MAX_WAYS, WAY_SETTLE, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, RANGE_DRAG, MAX_REGIONS, MIN_VIABLE, HEADS, LENGTH_M } from '../data/world.data.js';
 import { ERA_TEXT, TRAIT_TEXT } from '../data/text.data.js';
-import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast } from './model.js';
+import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast, canTurn, lostOnTurn } from './model.js';
 import { decide } from './policies.js';
 import { freshGame } from './game.js';
 import { parts } from './parts.js';
@@ -41,6 +41,7 @@ function pressCheck(s, id) {
 function shedCheck(s, id) {
   const you = me(s), t = you.traits;
   if (!lv(t, id)) return 'Not held.';
+  if (JAWS[id]) return 'A mouth is not let go. It can be turned to another food.';
   if (!canShed(t, id)) {
     const dep = Object.keys(t).find((o) => o !== id && t[o] > 0 && ((TRAITS[o].needs[id] || 0) >= t[id] || (JAWS[id] && TRAITS[o].jaw >= t[id])));
     return dep ? `${TRAIT_TEXT[dep].name} rests on it.` : 'Something rests on it.';
@@ -68,13 +69,18 @@ function spreadPreview(s, id) {
 export function setPlan(prev, patch) {
   if (prev.over) throw new Error('the lineage has ended');
   const g = structuredClone(prev), s = g.s;
+  // Pressure is on one thing at a time: growing a trait, letting one fade, or turning the mouth.
   if ('press' in patch) {
-    if (patch.press != null) { const why = pressCheck(s, patch.press); if (why) throw new Error(`not allowed: ${why}`); g.plan.shed = null; }
+    if (patch.press != null) { const why = pressCheck(s, patch.press); if (why) throw new Error(`not allowed: ${why}`); g.plan.shed = null; g.plan.turn = null; }
     g.plan.press = patch.press ?? null;
   }
   if ('shed' in patch) {
-    if (patch.shed != null) { const why = shedCheck(s, patch.shed); if (why) throw new Error(`not allowed: ${why}`); g.plan.press = null; }
+    if (patch.shed != null) { const why = shedCheck(s, patch.shed); if (why) throw new Error(`not allowed: ${why}`); g.plan.press = null; g.plan.turn = null; }
     g.plan.shed = patch.shed ?? null;
+  }
+  if ('turn' in patch) {
+    if (patch.turn != null) { if (!canTurn(me(s).traits, patch.turn)) throw new Error('not allowed: the mouth cannot be turned to that'); g.plan.press = null; g.plan.shed = null; }
+    g.plan.turn = patch.turn ?? null;
   }
   if ('ways' in patch) {
     const want = patch.ways || [];
@@ -116,10 +122,11 @@ export function advance(prev, input = {}) {
   if (g.plan.press && pressCheck(s, g.plan.press)) g.plan.press = null;
   if (g.plan.shed && shedCheck(s, g.plan.shed)) g.plan.shed = null;
   if (g.plan.spread && !spreadPreview(s, g.plan.spread).ok) g.plan.spread = null;
+  if (g.plan.turn && !canTurn(you.traits, g.plan.turn)) g.plan.turn = null;
 
   const before = { era: s.era, turn: s.turn, traits: { ...you.traits }, pop: { ...you.pop } };
   const wasDying = s.turn >= ERAS[s.era].turns - dieoffTurns(ERAS[s.era]);
-  step(s, decide, { keep, press: g.plan.press, shed: g.plan.shed, spread: g.plan.spread, ways: g.plan.ways, pick: g.plan.pick ?? 0 });
+  step(s, decide, { keep, press: g.plan.press, shed: g.plan.shed, turn: g.plan.turn ?? null, spread: g.plan.spread, ways: g.plan.ways, pick: g.plan.pick ?? 0 });
   g.turns += 1;
   g.plan.spread = null;
   g.plan.pick = null;
@@ -128,8 +135,9 @@ export function advance(prev, input = {}) {
   const record = {
     era: before.era, turn: before.turn, kept: keep,
     popBefore: sum(before.pop) * HEADS, popAfter: totalPop(now) * HEADS, met: due ? { id: due, road: s.lastMoment.pick } : null,
-    gained: Object.keys(now.traits).filter((id) => lv(now.traits, id) > lv(before.traits, id) && id !== keep),
-    lost: Object.keys(before.traits).filter((id) => lv(now.traits, id) < lv(before.traits, id)),
+    turned: mouthOf(now.traits) !== mouthOf(before.traits) ? { from: mouthOf(before.traits), to: mouthOf(now.traits) } : null,
+    gained: Object.keys(now.traits).filter((id) => lv(now.traits, id) > lv(before.traits, id) && id !== keep && !JAWS[id]),
+    lost: Object.keys(before.traits).filter((id) => lv(now.traits, id) < lv(before.traits, id) && !JAWS[id]),
     settled: s.era === before.era ? Object.keys(now.pop).filter((id) => !(before.pop[id] > 0)) : [],
     emptied: s.era === before.era ? Object.keys(before.pop).filter((id) => !(now.pop[id] > 0)) : [],
     dieoffBegan: null, eraEnded: null, ended: null,
@@ -153,7 +161,7 @@ export function retry(prev, era) {
   g.tries[era] += 1;
   g.s = rerollEra(structuredClone(g.saves[era]), g.tries[era]);
   g.saves = g.saves.slice(0, era + 1);
-  g.plan = { press: null, shed: null, spread: null, ways: Object.keys(me(g.s).ways || {}), pick: null };
+  g.plan = { press: null, shed: null, turn: null, spread: null, ways: Object.keys(me(g.s).ways || {}), pick: null };
   g.over = false; g.outcome = null; g.note = null;
   return g;
 }
@@ -242,7 +250,8 @@ export function view(g) {
     dieoff: !g.over && s.turn >= onset ? { kind: s.dieoff.type, left: era.turns - s.turn } : null,
     moment: due ? { id: due, picked: g.plan.pick, roads: MOMENTS[due].options.length } : null,
     forecast: outlook(g, s, you, t, ways, H),
-    pressure: g.plan.shed && !shedCheck(s, g.plan.shed) ? { kind: 'shed', id: g.plan.shed, left: Math.ceil((SHED_TURNS - (you.prog['shed.' + g.plan.shed] || 0)) / speed) }
+    pressure: g.plan.turn && canTurn(t, g.plan.turn) ? { kind: 'turn', id: g.plan.turn, left: Math.ceil((MOUTH_TURNS - (you.prog['turn.' + g.plan.turn] || 0)) / speed), of: Math.ceil(MOUTH_TURNS / speed) }
+      : g.plan.shed && !shedCheck(s, g.plan.shed) ? { kind: 'shed', id: g.plan.shed, left: Math.ceil((SHED_TURNS - (you.prog['shed.' + g.plan.shed] || 0)) / speed) }
       : g.plan.press && !pressCheck(s, g.plan.press) ? { kind: 'press', id: g.plan.press, to: lv(t, g.plan.press) + 1, left: Math.ceil((STEP_TURNS[lv(t, g.plan.press) + 1] - (you.prog[g.plan.press] || 0)) / speed), of: Math.ceil(STEP_TURNS[lv(t, g.plan.press) + 1] / speed) }
       : null,
     traits: Object.keys(TRAITS).filter((id) => lv(t, id)).map((id) => {
@@ -255,6 +264,12 @@ export function view(g) {
         pressFeeds: why ? null : (worth({ ...t, [id]: t[id] + 1 }) - feeds) * H,
         canShed: !shedWhy, shedWhy, shedding: g.plan.shed === id,
         shedFeeds: shedWhy ? null : (worth(down) - feeds) * H,
+        // For the mouth: the three foods it could be turned to, and what each would cost and bring.
+        turns: JAWS[id] ? Object.keys(JAWS).filter((to) => to !== id).map((to) => {
+          const after = { ...t }; for (const o of lostOnTurn(t, to)) delete after[o];
+          delete after[id]; after[to] = Math.max(1, t[id] - 1);
+          return { to, turning: g.plan.turn === to, turns: Math.ceil((MOUTH_TURNS - (you.prog['turn.' + to] || 0)) / speed), level: after[to], loses: lostOnTurn(t, to), feeds: (worth(after) - feeds) * H };
+        }) : null,
       };
     }),
     offers: offers.map((id) => ({ id, cost: TRAITS[id].cost, feeds: (worth({ ...t, [id]: 1 }) - feeds) * H, isMouth: !!JAWS[id] })),

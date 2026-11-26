@@ -147,7 +147,7 @@ function playTab(v) {
   const wayRow = `<button class="row${living.length ? '' : ' empty'}" data-tab="body">${living.length ? `<span>Living: <strong>${living.map((w) => WAY_TEXT[w.id].name.toLowerCase()).join(', ')}</strong></span><span class="dim">${living.some((w) => w.settling) ? 'taking hold' : ''}</span>` : `<span><strong>No way of living chosen.</strong></span><span class="dim">Up to ${v.maxWays} at once, on the Body screen. They matter most when a die-off comes.</span>`}</button>`;
   const p = v.pressure;
   const pressure = p
-    ? `<button class="row" data-tab="body"><span>${p.kind === 'shed' ? 'Letting go of' : 'Pressure on'} <strong>${esc(TRAIT_TEXT[p.id].name.toLowerCase())}</strong></span><span class="dim">${p.kind === 'shed' ? '' : `to ${STEP_NAMES[p.to]} · `}${p.left} ${plural(p.left, 'turn', 'turns')} left</span>${p.kind === 'press' ? `<span class="bar"><b style="width:${Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : ''}</button>`
+    ? `<button class="row" data-tab="body"><span>${p.kind === 'shed' ? 'Letting go of' : p.kind === 'turn' ? 'Turning the mouth to' : 'Pressure on'} <strong>${esc(TRAIT_TEXT[p.id].name.toLowerCase())}</strong></span><span class="dim">${p.kind === 'press' ? `to ${STEP_NAMES[p.to]} · ` : ''}${p.left} ${plural(p.left, 'turn', 'turns')} left</span>${p.kind !== 'shed' ? `<span class="bar"><b style="width:${Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : ''}</button>`
     : '<button class="row empty" data-tab="body"><span><strong>Nothing is under pressure.</strong></span><span class="dim">No trait is growing. Choose one on the Body screen.</span></button>';
 
   const eats = Object.entries(v.eats).filter(([, e]) => e > 0.05).sort((a, b) => b[1] - a[1]).map(([f, e]) => `<span class="eat"><i style="width:${Math.round(Math.min(1, e) * 100)}%"></i><em>${FOOD_TEXT[f]}</em></span>`).join('');
@@ -211,6 +211,7 @@ function turnNote(rec) {
   const bits = [];
   if (rec.met) bits.push(`${MOMENT_TEXT[rec.met.id].title}: ${MOMENT_TEXT[rec.met.id].roads[rec.met.road].split('.')[0]}.`);
   if (rec.kept) bits.push(`Kept: ${TRAIT_TEXT[rec.kept].name.toLowerCase()}.`);
+  if (rec.turned) bits.push(`The mouth has turned: ${TRAIT_TEXT[rec.turned.to].name.toLowerCase()} now.`);
   for (const id of rec.gained) bits.push(`${TRAIT_TEXT[id].name} is now ${STEP_NAMES[view(state).traits.find((t) => t.id === id)?.level || 1]}.`);
   for (const id of rec.lost) bits.push(`${TRAIT_TEXT[id].name} has faded a step.`);
   for (const id of rec.settled) bits.push(`Settlers reached the ${REGION_TEXT[id].toLowerCase()}.`);
@@ -271,7 +272,7 @@ function bodyTab(v) {
   const traits = v.traits.map((t) => `
     <button class="trait${t.pressing ? ' on' : ''}${t.shedding ? ' fade' : ''}" data-act="trait:${t.id}">
       <span>${esc(TRAIT_TEXT[t.id].name)}${t.isMouth ? ' <em class="tag">mouth</em>' : ''}</span>
-      <span class="dim">${t.pressing ? 'under pressure' : t.shedding ? 'letting go' : STEP_NAMES[t.level]}</span>${pips(t.level, t.pressing)}
+      <span class="dim">${t.pressing ? 'under pressure' : t.shedding ? 'letting go' : t.turns && t.turns.some((o) => o.turning) ? 'turning' : STEP_NAMES[t.level]}</span>${pips(t.level, t.pressing)}
     </button>`).join('');
   const ways = v.ways.map((w) => `
     <button class="way${w.on ? ' on' : ''}" data-act="way:${w.id}" ${w.full || v.over ? 'disabled' : ''}>
@@ -315,7 +316,10 @@ function traitSheet(id) {
     : t.canShed
       ? `<button data-act="shed:${id}">Let it fade a step <small>${signed(t.shedFeeds)}; takes the place of pressure</small></button>`
       : `<p class="empty">Cannot be let go. ${esc(t.shedWhy)}</p>`;
-  return `<h2>${esc(tx.name)}</h2><p>${esc(tx.does)}</p><p class="dim">${cap(STEP_NAMES[t.level])}. Costs ${n2(t.cost)} food a head, every turn it is held.</p>${v.over ? '' : press + shed}<button data-act="close">Close</button>`;
+  const turn = t.turns ? `<h2>Turn the mouth</h2><p class="hint">The mouth you have goes on working until the new one is ready. The new one arrives a step lower. It takes the place of pressure.</p>${t.turns.map((o) => (o.turning
+    ? `<button data-act="turn:none"><strong>Turning to ${esc(TRAIT_TEXT[o.to].name.toLowerCase())}</strong><small>${o.turns} ${plural(o.turns, 'turn', 'turns')} left. Tap to stop.</small></button>`
+    : `<button data-act="turn:${o.to}">To ${esc(TRAIT_TEXT[o.to].name.toLowerCase())}<small>${o.turns} turns; arrives ${STEP_NAMES[o.level]}; then it ${signed(o.feeds)} as things stand.${o.loses.length ? ` Loses ${list(o.loses.map((x) => TRAIT_TEXT[x].name.toLowerCase())).replace(' or ', ' and ')}, which this mouth cannot use.` : ''}</small></button>`)).join('')}` : '';
+  return `<h2>${esc(tx.name)}</h2><p>${esc(tx.does)}</p><p class="dim">${cap(STEP_NAMES[t.level])}. Costs ${n2(t.cost)} food a head, every turn it is held.</p>${v.over ? '' : press + (t.turns ? turn : shed)}<button data-act="close">Close</button>`;
 }
 
 // ---- the menu -----------------------------------------------------------------
@@ -402,6 +406,7 @@ app.addEventListener('click', (e) => {
       else if (act === 'trait') { modal = traitSheet(arg); }
       else if (act === 'press') { state = setPlan(state, { press: arg === 'none' ? null : arg }); save(); modal = null; }
       else if (act === 'shed') { state = setPlan(state, { shed: arg === 'none' ? null : arg }); save(); modal = null; }
+      else if (act === 'turn') { state = setPlan(state, { turn: arg === 'none' ? null : arg }); save(); modal = null; }
       else if (act === 'retry') { state = retry(state, Number(arg)); save(); tab = 'play'; lastNote = null; modal = null; }
       else if (act === 'back') {
         const kept = shelf();

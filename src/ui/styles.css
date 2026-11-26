@@ -151,6 +151,8 @@ button.primary small { color: var(--accent-ink); }
 .scrim { position: fixed; inset: 0; background: rgb(0 0 0 / .6); display: flex; align-items: flex-end; justify-content: center; z-index: 5; }
 .sheet { background: var(--panel); width: 100%; max-width: 600px; border-top: 2px solid var(--accent); padding: 1rem 1rem calc(1rem + var(--sa-bottom)); max-height: 85dvh; overflow: auto; }
 .sheet h2 { margin-top: 0; color: var(--ink); font-weight: 700; font-size: 1.1rem; }
+.sheet h2 + .hint { margin-top: .2rem; }
+.sheet button + h2 { margin-top: 1.1rem; }
 .sheet button { width: 100%; margin-top: .4rem; }
 .sheet button:not(.primary) { text-align: center; }
 textarea { width: 100%; font: 12px/1.3 ui-monospace, monospace; background: var(--bg); color: var(--ink); border: 2px solid var(--line); }

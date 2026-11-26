@@ -4,7 +4,7 @@
 // for, how many regions to hold, the ways it lives, whether it heeds the
 // die-off warning, whether it braces for it, and which road it takes at a moment.
 import { TRAITS, JAWS, MAX_REGIONS, MIN_VIABLE, WAY_SETTLE, LINEAGES } from '../data/world.data.js';
-import { body, capacity, held, totalPop, canRaise, canShed, mouthOf, waysOf } from './model.js';
+import { body, capacity, held, canRaise, canShed, mouthOf, waysOf } from './model.js';
 import { streamFor } from './rng.js';
 
 const lv = (t, id) => t[id] || 0;
@@ -85,17 +85,11 @@ function greedy(s, l, offers, allow = allowAll) {
   return d;
 }
 
-// Making for a lineage's body. If it has the wrong mouth, the old one goes first: its
-// refinements, then the jaw; then the new mouth is taken when a generation offers it.
+// Making for a lineage's body. If it has the wrong mouth, that is turned first.
 function towards(s, l, offers, target, allow) {
   const have = mouthOf(l.traits), want = mouthOf(target);
-  // The old mouth is let go only once there are enough to live through the lean turns without one.
-  // (Bots that changed mouths on the first turn, twelve strong, starved on the Shore half the time.)
-  if (want && have && have !== want && totalPop(l) < 25) return greedy(s, l, offers.filter((id) => !JAWS[id]), allow);
-  if (want && have && have !== want) {
-    const rest = Object.keys(l.traits).find((id) => TRAITS[id].jaw && canShed(l.traits, id));
-    return { keep: null, press: null, shed: rest || (canShed(l.traits, have) ? have : null) };
-  }
+  // The wrong mouth is turned to the right one; hints for the rest of the body are taken meanwhile.
+  if (want && have && have !== want) return { keep: follow(l, offers, roadTo(target), allow).keep, press: null, turn: want };
   if (want && !have) return { keep: offers.includes(want) ? want : null, press: null };
   const d = follow(l, offers, roadTo(target), allow);
   const done = Object.entries(target).every(([id, n]) => lv(l.traits, id) >= n);
@@ -141,7 +135,7 @@ export function decide(s, l, offers, warn) {
   if (named) {
     const c = follow(l, offers, COUNTER[warn.kinds[0]], allow, 2);
     if (c.keep) d.keep = c.keep;
-    if (c.press) { d.press = c.press; delete d.shed; }
+    if (c.press && !d.turn) { d.press = c.press; delete d.shed; }
     if (!p.fixedRange) wantRegions = MAX_REGIONS;
     // Lay down fat for what is coming, but only just before it comes: fat slows breeding. (A bot that
     // braced the moment the die-off was named came through less often with eight turns of warning than with five.)

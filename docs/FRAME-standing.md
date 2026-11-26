@@ -163,6 +163,17 @@ when a die-off takes one food.
 **What goes.** "Eat mostly" on the Turn screen, and holding several jaws at
 once.
 
+**Changed 2026-11-26: a mouth is turned, not shed.** As first built, a
+different mouth meant letting the old jaw fade to nothing, living with no
+mouth until a generation offered the new one, and growing it from a hint. The
+author, after two runs: "Cutting mouths kills you. It just happened to me
+twice. It should be easier". Now the mouth is turned from the Body screen: six
+turns of pressure, during which the old jaw goes on working; the new jaw
+arrives one step lower than the old; refinements the new mouth cannot use are
+lost, and the screen says which before it is done. A lineage is never without
+a mouth, and a jaw cannot be let go. The bots turn their mouths the same
+way.
+
 ## 4. What the author added on approving it
 
 2026-11-25, with a picture of his end screen:

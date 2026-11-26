@@ -40,6 +40,10 @@ export const START_TRAITS = { lungs: 1, limbs: 1, jawFish: 1 };
 export const START_POP = 12;
 export const STEP_TURNS = { 2: 4, 3: 6 };   // turns of full pressure to reach level 2, level 3
 export const SHED_TURNS = 2;                // turns of pressure to lose one level
+// Turns of pressure to turn the mouth to another food. The old jaw works until it is done, and
+// the new one arrives a step lower. (Until 2026-11-26 a mouth had to be shed to nothing before
+// another could be taken. The author: "Cutting mouths kills you. It just happened to me twice.")
+export const MOUTH_TURNS = 6;
 export const RANGE_DRAG = 0.35;             // each region held beyond the first slows selection
 export const MAX_REGIONS = 3;
 export const HALF_SAT = 20;                 // food competition: claims needed to take half a stock

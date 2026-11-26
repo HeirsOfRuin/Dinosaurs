@@ -44,6 +44,9 @@
 - One mouth. The author: "You shouldn't be able to change what you eat
   constantly, that's unrealistic." A lineage holds one jaw; what it eats
   follows from it; refinements grow from it. Do not add a choice of food.
+  A mouth is turned to another food while the old one goes on working; it is
+  never shed and a lineage is never without one. Shedding it to change it
+  killed the author twice ("Cutting mouths kills you... It should be easier").
 - Ways of living are chosen, not grown, and take turns to settle. Herding is
   a trait (the author: "Herd mentality should be a trait").
 - A moment comes once in a run and has three roads, none a refusal and none

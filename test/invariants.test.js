@@ -27,7 +27,7 @@ test('no number is ever NaN, infinite or below nothing', () => {
         assert.ok(Number.isFinite(totalPop(l)), `numbers at seed ${seed}`);
         for (const p of Object.values(l.pop)) assert.ok(p >= 0);
         for (const [id, n] of Object.entries(l.traits)) { assert.ok(TRAITS[id], id); assert.ok(Number.isInteger(n) && n >= 1 && n <= 3, `${id} at ${n}`); }
-        assert.ok(Object.keys(l.traits).filter((id) => JAWS[id]).length <= 1, 'one mouth');
+        assert.equal(Object.keys(l.traits).filter((id) => JAWS[id]).length, 1, 'one mouth, and never none');
         assert.ok(Object.keys(l.ways).length <= MAX_WAYS);
       }
       const v = view(g);
@@ -164,4 +164,21 @@ test('the forecast of a die-off changes nothing, and names only changes that are
     g = advance(g, decide(g, 'careful')).state;
   }
   assert.ok(seen > 3, 'expected the forecast to appear once a die-off was named');
+});
+
+test('a mouth is turned, never lost: it works until the new one is ready', () => {
+  let g = newGame({ seed: 4 });
+  assert.throws(() => setPlan(g, { shed: 'jawFish' }), /not let go/);
+  assert.throws(() => setPlan(g, { turn: 'jawFish' }), /not allowed/);
+  g = setPlan(g, { turn: 'jawInsects' });
+  let turned = null;
+  for (let i = 0; i < 12 && !turned; i++) {
+    if (view(g).moment) g = meet(g, 0);
+    const r = advance(g, { keep: null }); g = r.state; turned = r.record.turned;
+    const jaws = Object.keys(g.s.lineages.find((l) => l.player).traits).filter((id) => JAWS[id]);
+    assert.equal(jaws.length, 1, 'never without a mouth, never with two');
+  }
+  assert.deepEqual(turned, { from: 'jawFish', to: 'jawInsects' });
+  assert.equal(view(g).mouth, 'jawInsects');
+  assert.equal(view(g).pressure, null, 'the order is finished and dropped');
 });

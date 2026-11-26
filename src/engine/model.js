@@ -7,7 +7,7 @@
 // (docs/FRAME-standing.md): one mouth, ways of living, moments, and standing
 // in place of four fixed winning bodies.
 import { streamFor } from './rng.js';
-import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
+import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
@@ -67,11 +67,15 @@ export function canRaise(t, id) {
   if (T.jaw && (!mouth || lv(t, mouth) < T.jaw || (T.mouths && !T.mouths.includes(mouth)))) return false;
   return true;
 }
+/** A mouth can be turned to any other food. It is never lost. */
+export const canTurn = (t, to) => !!JAWS[to] && !!mouthOf(t) && mouthOf(t) !== to;
+/** The refinements a mouth turned to `to` could not keep. */
+export const lostOnTurn = (t, to) => Object.keys(t).filter((o) => t[o] > 0 && TRAITS[o].mouths && !TRAITS[o].mouths.includes(to));
+
 export function canShed(t, id) {
   if (!lv(t, id)) return false;
+  if (JAWS[id]) return false;   // a mouth is turned to another food, not let go
   if (Object.keys(t).some((o) => o !== id && t[o] > 0 && (TRAITS[o].needs[id] || 0) >= t[id])) return false;
-  // A mouth cannot fade below what its refinements rest on.
-  if (JAWS[id] && Object.keys(t).some((o) => t[o] > 0 && TRAITS[o].jaw && TRAITS[o].jaw >= t[id])) return false;
   return true;
 }
 
@@ -300,7 +304,17 @@ function apply(s, l, d, offers) {
     for (const id of want) if (!(id in l.ways)) l.ways[id] = s.clock;
   }
   const speed = body(l.traits, waysOf(s, l)).drag / (1 + RANGE_DRAG * (Math.max(1, held(l).length) - 1));
-  if (d.shed && canShed(l.traits, d.shed)) {
+  if (d.turn && canTurn(l.traits, d.turn)) {
+    // The mouth turns: the old jaw goes on working until the new one is ready, which arrives a step lower.
+    for (const k of Object.keys(l.prog)) if (k.startsWith('turn.') && k !== 'turn.' + d.turn) delete l.prog[k];
+    const k = 'turn.' + d.turn; l.prog[k] = (l.prog[k] || 0) + speed;
+    if (l.prog[k] >= MOUTH_TURNS) {
+      const old = mouthOf(l.traits), level = Math.max(1, l.traits[old] - 1);
+      for (const o of lostOnTurn(l.traits, d.turn)) delete l.traits[o];
+      delete l.traits[old]; delete l.prog[k]; delete l.prog[old];
+      l.traits[d.turn] = level;
+    }
+  } else if (d.shed && canShed(l.traits, d.shed)) {
     const k = 'shed.' + d.shed; l.prog[k] = (l.prog[k] || 0) + speed;
     if (l.prog[k] >= SHED_TURNS) { l.prog[k] = 0; l.traits[d.shed] -= 1; if (!l.traits[d.shed]) delete l.traits[d.shed]; }
   } else if (d.press && lv(l.traits, d.press) >= 1 && canRaise(l.traits, d.press)) {
@@ -331,7 +345,7 @@ function feed(s) {
 
 // One turn. `decide` is the policy function (policies.js), passed in so that this file and that
 // one do not import each other. `mine`, when given, is the player's own decision for this turn
-// ({ keep, press, shed, spread, ways, pick }) and the policy is not asked for the player.
+// ({ keep, press, shed, turn, spread, ways, pick }) and the policy is not asked for the player.
 export function step(s, decide, mine) {
   const you = s.lineages.find((l) => l.player);
   const turns = s.lineages.map((l) => { const offers = offersFor(s, l); return [l, l.player && mine ? mine : decide(s, l, offers, warning(s)), offers]; });

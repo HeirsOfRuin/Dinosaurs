@@ -18,7 +18,7 @@ export function decide(game, policy = 'careful') {
   you.plan = ALL[policy];
   const d = policyDecide(s, you, offersFor(s, you), warning(s));
   const plan = { spread: d.spread ?? null, ways: d.ways || [], pick: d.pick ?? 0 };
-  if (d.shed) plan.shed = d.shed; else { plan.shed = null; plan.press = d.press ?? null; }
+  if (d.turn) plan.turn = d.turn; else if (d.shed) plan.shed = d.shed; else { plan.shed = null; plan.turn = null; plan.press = d.press ?? null; }
   return { keep: d.keep ?? null, plan };
 }
 
