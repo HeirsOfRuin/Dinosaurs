@@ -86,7 +86,15 @@ What the round found:
    wants both halves of a pair, so the gate has nothing to say about them.
    They are checked (no lineage ever grows both) and not weighed.
 
-Open after round 7: bodies not level (1); warm bodies and the top three (2);
+**Found after round 7, by the author's fourth run** (`docs/SPEC.md`,
+2026-11-26): an eighth body beats all seven on the ladder. An insect mouth
+refined to a scavenger, with armour, made for with eyes open: 49.8% through
+and 31.5% top three (400 seeds), crocodile 39.5 and 21.5 on the same seeds.
+Without its scales and sail it does better still, 67.8% through. Carrion is
+eaten by no rival, so a scavenger's food is uncontested; and for this body a
+covering costs more than it gives.
+
+Open after round 7: a scavenger with armour beats every body on the ladder; bodies not level (1); warm bodies and the top three (2);
 tending earns nothing alone; deep against wide mouths; half of finishers
 rank eighth (52%); only seven bodies tested; the saved setting has no target.
 
