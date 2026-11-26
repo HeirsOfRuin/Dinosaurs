@@ -33,10 +33,10 @@ export const TRAITS = {
   // One covering. A lineage's skin grows scales, fur or feathers, or stays bare; it holds one at a
   // time and can turn it to another, as a mouth is turned. (The author, 2026-11-26: "we should add
   // more traits and close some off if some are taken... Maybe add feathers or fur?")
-  scales:   { cost: 0.02, needs: { skin: 1 }, cover: true },   // heat and drought
-  fur:      { cost: 0.03, needs: { skin: 1 }, cover: true },   // cold; dearer the bigger the animal
-  feathers: { cost: 0.04, needs: { skin: 1 }, cover: true },   // cold, and light
-  warm:   { cost: 0.07, needs: { skin: 1 }, under: ['fur', 'feathers'] },    // a faster, warmer metabolism; it needs a coat to hold the heat in
+  scales:   { cost: 0.015, needs: { skin: 1 }, cover: true },   // heat and drought
+  fur:      { cost: 0.02, needs: { skin: 1 }, cover: true },   // cold; dearer the bigger the animal
+  feathers: { cost: 0.025, needs: { skin: 1 }, cover: true },   // cold, and light
+  warm:   { cost: 0.06, needs: { skin: 1 }, under: ['fur', 'feathers'] },    // a faster, warmer metabolism; it needs a coat to hold the heat in
   sail:   { cost: 0.03, needs: { skin: 1 } },    // a sail on the back: sheds heat and soaks it up
   gait:   { cost: 0.04, needs: { limbs: 3 } },   // legs under the body
   burrow: { cost: 0.03, needs: { limbs: 2 } },
@@ -52,6 +52,12 @@ export const SHED_TURNS = 2;                // turns of pressure to lose one lev
 // another could be taken. The author: "Cutting mouths kills you. It just happened to me twice.")
 export const MOUTH_TURNS = 6;
 export const COVERS = ['scales', 'fur', 'feathers'];
+// What each step of scavenging, and each step of a hunter's jaw, makes of the dead.
+export const CARRION = { scavenge: 0.18, hunter: 0.015 };
+// Fur's extra upkeep for each step of fur and each step of size.
+export const COAT_SIZE = 0.01;
+// How much faster each step of warm blood lets numbers climb back: a warm body grows and breeds faster.
+export const WARM_GROW = 0.05;
 export const COVER_TURNS = 4;   // a covering is turned to another faster than a mouth is
 // Pairs that close each other off: a trait at the first step named cannot be grown while the other
 // stands at its step, and the other way about. A body that already holds both (an old save) keeps both.
@@ -78,7 +84,7 @@ export const MAX_REGIONS = 3;
 export const HALF_SAT = 20;                 // food competition: claims needed to take half a stock
 export const MIN_VIABLE = 3;                // a region's population below this dies out
 export const LEAST = 1;                     // the lineage ends when its whole number falls below this
-export const STARVE = { plain: 0.71, fat: 0.66, size: 0.075, armour: 0.025, burrow: 0.05 };   // the share of the gap closed each turn when the ground feeds fewer than there are
+export const STARVE = { plain: 0.72, fat: 0.67, size: 0.075, armour: 0.025, burrow: 0.05 };   // the share of the gap closed each turn when the ground feeds fewer than there are
 export const FOOD_FLOOR = 0.05;             // the least a die-off leaves of a food it takes
 
 // Ways of living: behaviours, held two at a time at most. Chosen, not grown, but a new one takes
@@ -108,7 +114,7 @@ export const DIEOFFS = {
   greatHot: { dWet: -0.30, dTemp: 0.40,  food: { plants: 0.3, prey: 0.25, fish: 0.3, insects: 0.6 } },
   greatDry: { dWet: -0.50, dTemp: 0.25,  food: { plants: 0.25, prey: 0.25, fish: 0.2, insects: 0.6 } },
   // Two more faces of the Great Dying, so that it does not always favour the dry, scaled body.
-  greatCold:  { dWet: 0,   dTemp: -0.65, food: { plants: 0.2, insects: 0.25, prey: 0.25, fish: 0.5 } },
+  greatCold:  { dWet: 0,   dTemp: -0.65, food: { plants: 0.25, insects: 0.4, prey: 0.25, fish: 0.5 } },
   greatWaste: { dWet: 0.05, dTemp: 0.05, food: { plants: 0.1, prey: 0.12, insects: 0.25, fish: 0.5 } },
 };
 export const HARSH = 2.6;                   // every die-off's strength, one dial

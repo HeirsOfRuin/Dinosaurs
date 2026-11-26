@@ -7,7 +7,7 @@
 // (docs/FRAME-standing.md): one mouth, ways of living, moments, and standing
 // in place of four fixed winning bodies.
 import { streamFor } from './rng.js';
-import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
+import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
@@ -32,21 +32,23 @@ export function body(t, ways = []) {
     if (f === 'plants') e += 0.05 * size;
     eff[f] = Math.max(0.05, e);
   }
-  eff.carrion = 0.22 * lv(t, 'scavenge');                 // nothing, without the stomach for it
+  // The dead: a scavenger's food, and a hunter's too, which eats what it finds as well as what it kills.
+  // (A scavenger once had them to itself: the author's fourth run came first of eight on it.)
+  eff.carrion = CARRION.scavenge * lv(t, 'scavenge') + (mouth === 'jawPrey' ? CARRION.hunter * lv(t, 'jawPrey') : 0);
   eff.hard = lv(t, 'crush') ? 0.2 * lv(t, 'crush') + 0.03 * size : 0;
   if (night) for (const f of FOODS) eff[f] *= 0.9;        // finds less in the dark
   let upkeep = 1 + (tend ? 0.06 : 0) + (roam ? 0.07 : 0);   // young to feed; miles to walk
   for (const id in t) upkeep += TRAITS[id].cost * t[id];
-  upkeep += 0.015 * fur * size;                            // a coat costs more the more animal there is to cover
+  upkeep += COAT_SIZE * fur * size;                            // a coat costs more the more animal there is to cover
   return {
     dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg') + 0.06 * burrow + 0.04 * scales),   // a burrow is damp; scales keep water in
     // Cold: a warm metabolism under a coat. Fur holds heat best, feathers nearly; a sail soaks up the morning sun.
-    lo: 0.40 - 0.06 * warm - 0.08 * fur - 0.06 * feathers - 0.03 * sail - 0.04 * size - 0.05 * burrow,
+    lo: 0.40 - 0.07 * warm - 0.10 * fur - 0.08 * feathers - 0.03 * sail - 0.04 * size - 0.05 * burrow,
     // Heat: watertight skin, scales over it, a sail to shed it. A coat is worn in the heat too.
     hi: 0.65 + 0.06 * skin + 0.05 * scales + 0.05 * sail - 0.02 * fur - 0.01 * feathers - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
     mob, eff, upkeep, mouth,
     defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + (night ? 0.2 : 0)),
-    grow: (tend ? 0.68 : 0.5) * (fat ? 0.75 : 1),          // how fast numbers rise toward what the ground feeds
+    grow: ((tend ? 0.68 : 0.5) + WARM_GROW * warm) * (fat ? 0.75 : 1),   // how fast numbers rise toward what the ground feeds; a warm body breeds faster
     // A heavy animal starves more slowly than a slight one; so does a slow one in armour, and one that has laid down fat.
     starve: (fat ? STARVE.fat : STARVE.plain) * (1 - STARVE.size * size - STARVE.armour * lv(t, 'armour') - STARVE.burrow * burrow * (3 - size) / 3),   // and a small one gone to ground                            // how fast they fall toward it
     ease: roam ? 0.55 : 1,                                 // how much of bad ground's harm is felt
