@@ -27,7 +27,7 @@ import { regionsNow, ladder, resembles } from './model.js';
 
 export const SAVE_KEY = 'deep-time.save.v1'; // never rename
 export const SHELF_KEY = 'deep-time.shelf.v1'; // lineages set aside by going back to an earlier era
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 export const CODE_PREFIX = 'DEEP1.';
 
 /** MIGRATIONS[v](save) returns the save at version v + 1. Add one per version bump. */
@@ -83,6 +83,19 @@ MIGRATIONS[3] = (old) => {
   g.plan = { press: null, shed: null, turn: null, spread: null, ways: [], pick: null, ...g.plan, watch: null };
   g.v = 4;
   g.note = old.note ? old.note : `The rules have changed since this lineage was saved. Skin can now grow a covering: scales, fur or feathers, one at a time. Warm blood needs fur or feathers over it${coat ? `, so yours has been given a hint of ${coat}` : ''}. Some traits now close each other off, and the Body screen shows the whole tree: mark a trait there to watch for it.`;
+  return g;
+};
+
+// v5 adds stances toward rivals (docs/FRAME-rivals.md) and four weapons. Nothing
+// in a v4 save is lost: every lineage starts without a stance.
+MIGRATIONS[4] = (old) => {
+  const g = structuredClone(old);
+  const world = (s) => { for (const l of s.lineages) l.stance = null; s.rev = (s.rev || 0) + 1; return s; };
+  g.s = world(g.s);
+  g.saves = (g.saves || []).map((x) => (x ? world(x) : x));
+  g.plan = { ...g.plan, stance: null };
+  g.v = 5;
+  g.note = old.note ? old.note : 'The rules have changed since this lineage was saved. You can now act on the rivals you share ground with, from the new Rivals screen, and they can act on you: a hunter bigger than you will hunt you. Four weapons have been added to the tree.';
   return g;
 };
 

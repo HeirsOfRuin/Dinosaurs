@@ -53,8 +53,13 @@
   the right answer. The gate measures the three roads against each other.
 - Animals are shown in heads: `HEADS` to one unit of the model, applied in
   `view` and nowhere else. The author asked for "500 instead of 5".
-- Acting on rivals is wanted and not built. The notes are in
-  `docs/FRAME-standing.md` section 5. Build a rivals screen first.
+- Acting on rivals is built (`docs/FRAME-rivals.md`): four stances, one
+  toward one rival at a time, resolved by `contact()` in `model.js` for the
+  player and the rivals alike. A rival hunts a smaller player and pushes back
+  against one that pushes or hunts it; rivals do not act on each other yet.
+  Camouflage and display are not built: they would make colour mean
+  something, and colour is free at the author's word. Ask before building
+  them.
 - The author's targets: about 30% of careful play comes through on one life,
   about 10% reaches the top three rungs. A replayed era rolls a new die-off.
 - A win rate can be right and still be a coin toss. One tuning read 27% and

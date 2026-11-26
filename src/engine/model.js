@@ -7,7 +7,7 @@
 // (docs/FRAME-standing.md): one mouth, ways of living, moments, and standing
 // in place of four fixed winning bodies.
 import { streamFor } from './rng.js';
-import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
+import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, SHADOW, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
@@ -22,12 +22,13 @@ export function body(t, ways = []) {
   const size = lv(t, 'size'), warm = lv(t, 'warm'), skin = lv(t, 'skin'), burrow = lv(t, 'burrow'), herd = lv(t, 'herd'), omni = lv(t, 'omni');
   const night = ways.includes('night'), tend = ways.includes('tend'), roam = ways.includes('roam'), fat = ways.includes('fat');
   const scales = lv(t, 'scales'), fur = lv(t, 'fur'), feathers = lv(t, 'feathers'), sail = lv(t, 'sail');
-  const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm + 0.03 * feathers - 0.08 * lv(t, 'armour') - 0.03 * size;
+  const small = (3 - size) / 3, claws = lv(t, 'claws'), horns = lv(t, 'horns'), club = lv(t, 'tailClub'), venom = lv(t, 'venom') * small;
+  const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm + 0.03 * feathers - 0.08 * lv(t, 'armour') - 0.03 * size - 0.03 * horns;
   const mouth = mouthOf(t), own = mouth ? JAWS[mouth] : null;
   const eff = {};
   for (const f of BASE_FOODS) {
     let e = 0.35 + (f === own ? 0.25 * lv(t, mouth) - 0.08 * omni : 0.06 * omni) + 0.05 * lv(t, 'brain');
-    if (f === 'prey') e = e * (0.55 + 0.6 * mob) + 0.08 * size + 0.04 * herd;
+    if (f === 'prey') e = e * (0.55 + 0.6 * mob) + 0.08 * size + 0.04 * herd + 0.05 * claws + 0.08 * venom;
     if (f === 'insects') e = e * (0.8 + 0.25 * mob) - 0.08 * size;
     if (f === 'plants') e += 0.05 * size;
     eff[f] = Math.max(0.05, e);
@@ -47,7 +48,9 @@ export function body(t, ways = []) {
     // Heat: watertight skin, scales over it, a sail to shed it. A coat is worn in the heat too.
     hi: 0.65 + 0.06 * skin + 0.05 * scales + 0.05 * sail - 0.02 * fur - 0.01 * feathers - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
     mob, eff, upkeep, mouth,
-    defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + (night ? 0.2 : 0)),
+    defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + 0.04 * claws + 0.05 * horns + 0.08 * club + 0.05 * venom + (night ? 0.2 : 0)),
+    // Fight a head, for a push between lineages.
+    fight: FIGHT.base + FIGHT.size * size + FIGHT.armour * lv(t, 'armour') + FIGHT.herd * herd + FIGHT.horns * horns + FIGHT.claws * claws + FIGHT.tailClub * club + FIGHT.venom * venom,
     grow: ((tend ? 0.68 : 0.5) + WARM_GROW * warm) * (fat ? 0.75 : 1),   // how fast numbers rise toward what the ground feeds; a warm body breeds faster
     // A heavy animal starves more slowly than a slight one; so does a slow one in armour, and one that has laid down fat.
     starve: (fat ? STARVE.fat : STARVE.plain) * (1 - STARVE.size * size - STARVE.armour * lv(t, 'armour') - STARVE.burrow * burrow * (3 - size) / 3),   // and a small one gone to ground                            // how fast they fall toward it
@@ -171,8 +174,8 @@ function claims(s) {
     const ob = body(o.traits, waysOf(s, o)), m = {};
     for (const r of s.regions) {
       const p = o.pop[r.id] || 0; if (!(p > 0)) continue;
-      const k = p * fit(ob, r); m[r.id] = {};
-      for (const f of FOODS) { m[r.id][f] = k * ob.eff[f]; t.total[r.id][f] += m[r.id][f]; }
+      const k = p * fit(ob, r), eff = effIn(s, o, r.id, ob.eff); m[r.id] = {};
+      for (const f of FOODS) { m[r.id][f] = k * eff[f]; t.total[r.id][f] += m[r.id][f]; }
     }
     t.mine.set(o, m);
   }
@@ -180,16 +183,95 @@ function claims(s) {
   return t;
 }
 
-export function capacity(s, l, traits = l.traits, ways = waysOf(s, l)) {
+export function capacity(s, l, traits = l.traits, ways = waysOf(s, l), stance = l.stance) {
   const b = body(traits, ways), out = {}, t = claims(s), was = t.mine.get(l) || {};
   for (const r of s.regions) {
     const p = l.pop[r.id] || 0; if (!(p > 0)) continue;
-    const k = p * fit(b, r);
+    const k = p * fit(b, r), eff = effIn(s, { ...l, traits, stance }, r.id, b.eff);
     let got = 0;
-    for (const f of FOODS) { const c = k * b.eff[f]; if (c > 0) got += r.food[f] * c / (t.total[r.id][f] - (was[r.id]?.[f] || 0) + c); }
+    for (const f of FOODS) { const c = k * eff[f]; if (c > 0) got += r.food[f] * c / (t.total[r.id][f] - (was[r.id]?.[f] || 0) + c); }
     out[r.id] = got / b.upkeep;
   }
   return out;
+}
+
+// ---- rivals: stances (docs/FRAME-rivals.md) ---------------------------------------
+
+export const byId = (s, id) => s.lineages.find((l) => l.id === id) || null;
+/** The regions two lineages both hold. */
+export const sharedGround = (a, b) => held(a).filter((r) => b.pop[r] > 0);
+/** The food a lineage eats best, as a body. */
+export const bestFood = (s, l) => { const e = body(l.traits, waysOf(s, l)).eff; return FOODS.reduce((x, f) => (e[f] > e[x] ? f : x)); };
+
+/** Why lineage l cannot take stance `act` toward lineage R, or null. Asked by the player's verbs, the view, the bots and the rivals alike. */
+export function stanceWhy(s, l, R, act) {
+  if (!STANCES.includes(act)) return 'No such stance.';
+  if (!R || R === l) return 'No such rival.';
+  if (!sharedGround(l, R).length) return 'You share no ground with them.';
+  if (act === 'prey') {
+    if (mouthOf(l.traits) !== 'jawPrey') return "Only a hunter's mouth preys on other animals.";
+    if (lv(R.traits, 'size') >= lv(l.traits, 'size')) return 'Only on an animal smaller than you.';
+  }
+  if (act === 'shadow') {
+    if (mouthOf(R.traits) !== 'jawPrey') return 'They do not hunt: there is nothing left behind to eat.';
+    if (lv(R.traits, 'size') <= lv(l.traits, 'size')) return 'Only a bigger hunter leaves enough behind.';
+  }
+  return null;
+}
+/** The stance l holds, if it still holds: toward a rival on ground r (or anywhere, with r null). */
+function stanceOn(s, l, r, st = l.stance) {
+  if (!st) return null;
+  const R = byId(s, st.id);
+  if (!R || (r && !(R.pop[r] > 0 && l.pop[r] > 0)) || stanceWhy(s, l, R, st.act)) return null;
+  return { R, act: st.act };
+}
+/** l's share of the strength on ground r if it pushed R there. */
+export function pushShare(s, l, R, r) {
+  const a = (l.pop[r] || 0) * body(l.traits, waysOf(s, l)).fight, b = (R.pop[r] || 0) * body(R.traits, waysOf(s, R)).fight;
+  return a + b > 0 ? a / (a + b) : 0;
+}
+/** R avoids l on ground r: then l can neither push nor prey on R there. */
+const avoids = (s, R, l, r) => { const x = stanceOn(s, R, r); return !!x && x.act === 'avoid' && x.R === l; };
+
+// What a lineage makes of each food on ground r, its stance counted: an avoided rival's best food
+// is left to it; a shadowed hunter leaves more of the dead.
+function effIn(s, l, r, eff) {
+  const x = stanceOn(s, l, r);
+  if (!x) return eff;
+  if (x.act === 'avoid') return { ...eff, [bestFood(s, x.R)]: 0 };
+  if (x.act === 'shadow') return { ...eff, carrion: eff.carrion + SHADOW.carrion };
+  return eff;
+}
+
+/**
+ * What the lineages' stances do this turn, before they breed: what each loses on each ground
+ * to a push or to being preyed on, what a hunter gains by preying, and who is driven out of where.
+ * The one derivation: feed() resolves it and the view previews it.
+ */
+export function contact(s, caps) {
+  const lose = new Map(), gain = new Map(), out = [], log = [];
+  const add = (m, l, r, x) => { const o = m.get(l) || {}; o[r] = (o[r] || 0) + x; m.set(l, o); };
+  for (const l of s.lineages) {
+    const x = stanceOn(s, l, null);
+    if (!x || (x.act !== 'push' && x.act !== 'prey')) continue;
+    const R = x.R, bl = body(l.traits, waysOf(s, l)), bR = body(R.traits, waysOf(s, R));
+    for (const r of sharedGround(l, R)) {
+      if (avoids(s, R, l, r)) continue;
+      const a = l.pop[r], b = R.pop[r];
+      if (x.act === 'prey') {
+        const taken = PREY.rate * Math.min(b, PREY.reach * a) * Math.min(1, bl.eff.prey) * (1 - bR.defence);
+        add(lose, R, r, taken); add(gain, l, r, taken * PREY.worth / bl.upkeep);
+        log.push({ by: l.id, on: R.id, act: 'prey', r, n: taken });
+      } else {
+        const sa = a * bl.fight, sb = b * bR.fight, share = sa / (sa + sb);
+        add(lose, l, r, a * PUSH.loss * (1 - share)); add(lose, R, r, b * PUSH.loss * share);
+        log.push({ by: l.id, on: R.id, act: 'push', r, share, n: b * PUSH.loss * share, cost: a * PUSH.loss * (1 - share) });
+        if (share < PUSH.yield) out.push([l, r]); else if (1 - share < PUSH.yield) out.push([R, r]);
+      }
+    }
+  }
+  if (caps) s.lineages.forEach((l, i) => { const g = gain.get(l); if (g) for (const r in g) caps[i][r] = (caps[i][r] || 0) + g[r]; });
+  return { lose, gain, out, log };
 }
 
 // ---- what the die-off would leave ------------------------------------------------
@@ -208,10 +290,10 @@ export function forecast(s, l, traits = l.traits, ways = waysOf(s, l)) {
     const me = { ...l, traits, pop };
     const at = { ...s, turn: t, lineages: [me, ...rivals], rev: -1 - t };
     at.regions = regionsNow(at);
-    const caps = capacity(at, me, traits, ways), next = {};
+    const caps = capacity(at, me, traits, ways), next = {}, lose = contact(at, null).lose.get(me) || {};
     let fed = 0;
     for (const r of at.regions) {
-      const p = pop[r.id] || 0; if (!(p > 0)) continue;
+      const p = Math.max(0, (pop[r.id] || 0) - (lose[r.id] || 0)); if (!(p > 0)) continue;
       const k = caps[r.id] || 0; fed += k;
       let n = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
       n *= 1 - 0.3 * r.pred * (1 - b.defence);
@@ -311,14 +393,15 @@ export function startEra(s) {
   s.dieoff = { type: rng.pick(era.dieoffs), sens: Object.fromEntries(era.regions.map((r) => [r.id, rng.float((s.opts.sens || era.sens || SENS)[0], (s.opts.sens || era.sens || SENS)[1])])) };
   s.lineages = s.lineages.filter((l) => l.player);
   s.faces = { ...(s.faces || {}), [s.era]: s.dieoff.type };
-  if (!s.opts.noRivals) era.rivals.forEach((rv, i) => s.lineages.push({ id: 'rival' + i, player: false, plan: { plan: rv.plan, regions: 2 }, traits: { ...rv.traits }, prog: {}, ways: {}, pop: { [rv.home]: 15 } }));
+  if (!s.opts.noRivals) era.rivals.forEach((rv, i) => s.lineages.push({ id: 'rival' + i, player: false, plan: { plan: rv.plan, regions: 2 }, traits: { ...rv.traits }, prog: {}, ways: {}, stance: null, pop: { [rv.home]: 15 } }));
+  for (const l of s.lineages) l.stance = null;   // a new era, new neighbours
   s.rev = (s.rev || 0) + 1;
   s.regions = regionsNow(s);
 }
 
 export function newGame(seed, opts = {}) {
   const s = { seed, opts, era: 0, turn: 0, attempt: 0, clock: 0, ended: false, outcome: null, lineages: [], log: [], eraLog: [], seen: [], mods: [] };
-  s.lineages.push({ id: 'you', player: true, plan: opts.policy ?? null, traits: { ...START_TRAITS }, prog: {}, ways: {}, pop: { shallows: START_POP } });
+  s.lineages.push({ id: 'you', player: true, plan: opts.policy ?? null, traits: { ...START_TRAITS }, prog: {}, ways: {}, stance: null, pop: { shallows: START_POP } });
   startEra(s);
   return s;
 }
@@ -336,6 +419,10 @@ export function offersFor(s, l) {
 
 function apply(s, l, d, offers) {
   if (d.keep && offers.includes(d.keep)) l.traits[d.keep] = 1;
+  if (d.stance !== undefined) {
+    const R = d.stance && byId(s, d.stance.id);
+    l.stance = d.stance && !stanceWhy(s, l, R, d.stance.act) ? { id: d.stance.id, act: d.stance.act } : null;
+  }
   if (d.watch !== undefined) {
     if (!d.watch || !TRAITS[d.watch]) delete l.watch;
     else if (!l.watch || l.watch.id !== d.watch) l.watch = { id: d.watch, since: s.clock };
@@ -374,26 +461,40 @@ function apply(s, l, d, offers) {
 
 function feed(s) {
   const caps = s.lineages.map((l) => capacity(s, l));
+  // What the stances do first: pushes, and hunters preying on other lineages (docs/FRAME-rivals.md).
+  const c = contact(s, caps);
+  s.was = Object.fromEntries(s.lineages.map((l) => [l.id, totalPop(l)]));
   // What moved the player's numbers this turn, kept for the turn's report: bred, starved, caught,
-  // and the last of a region dying out. It records the turn; it decides nothing.
-  const moved = { bred: 0, starved: 0, caught: 0, lost: 0 };
+  // lost to rivals, and the last of a region dying out. It records the turn; it decides nothing.
+  const moved = { bred: 0, starved: 0, caught: 0, lost: 0, rivals: 0 };
   s.lineages.forEach((l, i) => {
-    const b = body(l.traits, waysOf(s, l));
+    const b = body(l.traits, waysOf(s, l)), lose = c.lose.get(l) || {};
     for (const r of s.regions) {
-      const p = l.pop[r.id] || 0; if (!(p > 0)) continue;
-      const k = caps[i][r.id];
+      const p0 = l.pop[r.id] || 0; if (!(p0 > 0)) continue;
+      const p = Math.max(0, p0 - (lose[r.id] || 0)), k = caps[i][r.id];
       const fed = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
-      const n = fed * (1 - 0.3 * r.pred * (1 - b.defence));
-      if (l.player) { if (fed > p) moved.bred += fed - p; else moved.starved += p - fed; moved.caught += fed - n; if (n < MIN_VIABLE) moved.lost += n; }
+      const shadow = stanceOn(s, l, r.id)?.act === 'shadow' ? SHADOW.pred : 0;   // close behind a hunter, more are caught
+      const n = fed * (1 - 0.3 * Math.min(1, r.pred + shadow) * (1 - b.defence));
+      if (l.player) { moved.rivals += p0 - p; if (fed > p) moved.bred += fed - p; else moved.starved += p - fed; moved.caught += fed - n; if (n < MIN_VIABLE) moved.lost += n; }
       if (n < MIN_VIABLE) delete l.pop[r.id]; else l.pop[r.id] = n;
     }
   });
+  // Driven out by a push: half reach the lineage's largest other ground; with nowhere to go, it stays.
+  const driven = [];
+  for (const [l, r] of c.out) {
+    if (!(l.pop[r] > 0)) continue;
+    const to = held(l).filter((x) => x !== r).sort((a, b) => l.pop[b] - l.pop[a])[0];
+    if (!to) continue;
+    l.pop[to] += l.pop[r] * 0.5; delete l.pop[r];
+    driven.push({ who: l.id, r, to });
+  }
+  s.contact = { log: c.log, driven };
   s.moved = moved;
 }
 
 // One turn. `decide` is the policy function (policies.js), passed in so that this file and that
 // one do not import each other. `mine`, when given, is the player's own decision for this turn
-// ({ keep, press, shed, turn, spread, ways, pick }) and the policy is not asked for the player.
+// ({ keep, press, shed, turn, spread, ways, pick, watch, stance }) and the policy is not asked for the player.
 export function step(s, decide, mine) {
   const you = s.lineages.find((l) => l.player);
   const turns = s.lineages.map((l) => { const offers = offersFor(s, l); return [l, l.player && mine ? mine : decide(s, l, offers, warning(s)), offers]; });

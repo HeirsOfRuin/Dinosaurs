@@ -47,6 +47,7 @@ const parts = {
   'moment: second road': { policy: { ...basePolicy, pick: 1 } }, 'moment: third road': { policy: { ...basePolicy, pick: 2 } }, 'no moments': { policy: basePolicy, noMoments: true },
   'warning lead 0': { policy: basePolicy, lead: 0 }, 'warning lead 8': { policy: basePolicy, lead: 8 },
   'no watching': { policy: basePolicy, noWatch: true }, 'road: mammal': { policy: { ...basePolicy, plan: 'recipe', road: 'mammal' } },
+  'stances: off': { policy: { ...basePolicy, act: false } }, 'rivals passive': { policy: basePolicy, passiveRivals: true },
   'no rivals': { policy: basePolicy, noRivals: true }, 'no die-offs': { policy: basePolicy, noDieoff: true },
 };
 let inert = 0;

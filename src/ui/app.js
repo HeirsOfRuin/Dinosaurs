@@ -12,7 +12,7 @@ import { SAVE_KEY, SHELF_KEY, serialize, deserialize, toCode, fromCode } from '.
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
 import { animalSVG, sceneSVG } from './sprite.js';
-import { TITLE, TRAIT_TEXT, TREE_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, DIEOFF_TEXT, LINEAGE_TEXT, RANK_TEXT, THROUGH_TEXT, STANDING_TEXT, WAY_TEXT, MOMENT_TEXT, SIZE_TEXT, LOOK_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
+import { TITLE, TRAIT_TEXT, TREE_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, STANCE_TEXT, DIEOFF_TEXT, LINEAGE_TEXT, RANK_TEXT, THROUGH_TEXT, STANDING_TEXT, WAY_TEXT, MOMENT_TEXT, SIZE_TEXT, LOOK_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
 
 const SHELF_MAX = 6;
 const app = document.getElementById('app');
@@ -78,7 +78,7 @@ function title() {
 function render() {
   if (!state) return title();
   const v = view(state);
-  const tabs = [['play', 'Turn'], ['body', 'Body'], ['menu', 'Menu']];
+  const tabs = [['play', 'Turn'], ['body', 'Body'], ['rivals', 'Rivals'], ['menu', 'Menu']];
   app.innerHTML = `
     <header class="hud">
       <div class="hud-top"><h1>${esc(v.era.name)}</h1><span class="turn">Turn ${v.era.turn} of ${v.era.turns}</span></div>
@@ -86,7 +86,7 @@ function render() {
       <div class="hud-sub"><span class="ma"><b id="ma" data-to="${ma(v.era.ma)}">${ma(shownMa ?? v.era.ma)}</b> million years ago</span><span>${ma(v.era.perTurn)} million years a turn</span></div>
     </header>
     ${banner ? `<p class="banner">${esc(banner)} <button data-act="dismiss">OK</button></p>` : ''}
-    <main class="panel">${tab === 'play' ? playTab(v) : tab === 'body' ? bodyTab(v) : menuTab(v)}</main>
+    <main class="panel">${tab === 'play' ? playTab(v) : tab === 'body' ? bodyTab(v) : tab === 'rivals' ? rivalsTab(v) : menuTab(v)}</main>
     <nav class="tabs">${tabs.map(([id, label]) => `<button data-tab="${id}" class="${tab === id ? 'on' : ''}">${label}</button>`).join('')}</nav>
     ${modal ? `<div class="scrim"><div class="sheet">${modal}</div></div>` : ''}`;
   runCalendar(v.era.ma);
@@ -176,6 +176,7 @@ function playTab(v) {
     </div>
     ${rivalsNear.length ? `<p class="note">Beside you: ${rivalsNear.map((r) => `${n0(r.pop)} of an animal ${metres(r.length)} long, most like the ${LINEAGE_TEXT[r.like].name.toLowerCase()}`).join('; ')}.</p>` : ''}
     ${lastNote ? `<p class="note">${lastNote}</p>` : ''}
+    ${v.rivals.filter((r) => r.toYou).map((r) => `<button class="row alarmrow" data-tab="rivals"><span><strong>${r.toYou === 'prey' ? 'Hunted' : 'Pushed'}</strong> by the animal most like the ${esc(LINEAGE_TEXT[r.like].name.toLowerCase())}.</span><span class="dim">${r.lastTurn.filter((e) => e.by === r.id).reduce((a, e) => a + e.n, 0) >= 50 ? `${n0(r.lastTurn.filter((e) => e.by === r.id).reduce((a, e) => a + e.n, 0))} taken last turn. ` : ''}What to do about it: the Rivals screen.</span></button>`).join('')}
     ${omen}
     ${outlookBox}
     ${pressure}
@@ -218,6 +219,7 @@ function turnNote(rec) {
   for (const id of rec.lost) bits.push(`${TRAIT_TEXT[id].name} has faded a step.`);
   for (const id of rec.settled) bits.push(`Settlers reached the ${REGION_TEXT[id].toLowerCase()}.`);
   for (const id of rec.emptied) bits.push(`None of you are left in the ${REGION_TEXT[id].toLowerCase()}.`);
+  for (const d of rec.rivals?.driven || []) bits.push(d.who === 'you' ? `Driven out of the ${REGION_TEXT[d.r].toLowerCase()}; some reached the ${REGION_TEXT[d.to].toLowerCase()}.` : `A rival was driven out of the ${REGION_TEXT[d.r].toLowerCase()}.`);
   const d = rec.popAfter - rec.popBefore;
   // Why they moved, when it is worth saying: the turn's own account of bred, starved and caught.
   const m = rec.moved, why = [];
@@ -225,6 +227,7 @@ function turnNote(rec) {
     if (m.bred >= 50) why.push(`${n0(m.bred)} bred`);
     if (m.starved >= 50) why.push(`hunger took ${n0(m.starved)}`);
     if (m.caught >= 50) why.push(`hunters took ${n0(m.caught)}`);
+    if (m.rivals >= 50) why.push(`rivals took ${n0(m.rivals)}`);
     if (m.lost >= 50) why.push(`the last ${n0(m.lost)} somewhere died out`);
   }
   bits.push((Math.abs(d) < 50 ? 'Numbers held' : d > 0 ? `Numbers up ${n0(d)}` : `Numbers down ${n0(-d)}`) + (why.length ? `: ${why.join(', ')}.` : '.'));
@@ -272,6 +275,35 @@ function endTab(v) {
     <p class="dim">${esc(v.era.name)}, ${ma(v.era.ma)} million years ago. ${v.pop >= 50 ? n0(v.pop) : 'None'} alive at the end, after ${v.clock.turn} ${plural(v.clock.turn, 'turn', 'turns')} of ${v.clock.of}.</p>
     ${won}${again}
     <div class="stack last"><button ${again ? '' : 'class="primary"'} data-act="new">New lineage</button></div>`;
+}
+
+// ---- the rivals ---------------------------------------------------------------
+
+function rivalsTab(v) {
+  const stanceLine = v.stance ? (() => { const r = v.rivals.find((x) => x.id === v.stance.id); return `${STANCE_TEXT[v.stance.act].doing} the animal most like the ${esc(LINEAGE_TEXT[r.like].name.toLowerCase())}.`; })() : 'No stance taken toward either rival. One at a time; it holds until changed.';
+  const cards = v.rivals.map((r) => {
+    const eats = r.mouth ? FOOD_TEXT[r.best] : 'little';
+    const trend = r.trend == null || Math.abs(r.trend) < 50 ? 'holding steady' : r.trend > 0 ? `up ${n0(r.trend)} last turn` : `down ${n0(-r.trend)} last turn`;
+    const where = r.ground.length ? `Shares the ${list(r.ground.map((id) => REGION_TEXT[id].toLowerCase())).replace(' or ', ' and ')} with you.` : `Lives in the ${list(r.home.map((id) => REGION_TEXT[id].toLowerCase())).replace(' or ', ' and ')}; none of your ground.`;
+    const doing = r.toYou ? `<p class="omen"><strong>${r.toYou === 'prey' ? 'It is hunting you' : 'It is pushing you'}</strong> where you share ground.${r.lastTurn.filter((e) => e.by === r.id).length ? ` Last turn it took ${n0(r.lastTurn.filter((e) => e.by === r.id).reduce((a, e) => a + e.n, 0))}.` : ''}</p>` : '';
+    const opts = r.stances.map((x) => {
+      if (!x.ok) return `<p class="empty"><strong>${STANCE_TEXT[x.act].name}.</strong> ${esc(x.why)}</p>`;
+      const what = x.act === 'push'
+        ? x.push.map((p) => `${REGION_TEXT[p.r]}: you would have ${Math.round(100 * p.share)}% of the strength${p.out === 'you' ? ', and it is you who would be driven out' : p.out === 'them' ? ', enough to drive them out' : ''}; about ${n0(p.cost)} of you lost a turn`).join('. ') + '.'
+        : x.act === 'prey' ? `About ${n0(x.takes)} of them taken a turn; ${signed(x.feeds)}.`
+          : `${cap(signed(x.feeds))} as things stand${x.act === 'shadow' ? '; more of you caught' : ''}.`;
+      return x.on
+        ? `<button class="way on" data-act="stance:none:${r.id}"><strong>${STANCE_TEXT[x.act].name}</strong><small>${esc(what)}</small><small class="state">Doing this now. Tap to stop.</small></button>`
+        : `<button class="way" data-act="stance:${x.act}:${r.id}"><strong>${STANCE_TEXT[x.act].name}</strong><small>${STANCE_TEXT[x.act].does}</small><small class="state">${esc(what)}</small></button>`;
+    }).join('');
+    return `<div class="rival">
+      <h2 class="branch">Most like the ${esc(LINEAGE_TEXT[r.like].name.toLowerCase())}</h2>
+      <p>${metres(r.length)} long, ${n0(r.pop)} of them, ${trend}. Eats ${eats} best. ${where}</p>
+      ${doing}
+      <div class="ways">${opts}</div>
+    </div>`;
+  }).join('');
+  return `<h2>Rivals</h2><p class="hint">${stanceLine}</p>${cards || '<p class="empty">No rivals are left in this era.</p>'}`;
 }
 
 // ---- the body -----------------------------------------------------------------
@@ -437,6 +469,7 @@ app.addEventListener('click', (e) => {
       else if (act === 'ladder') { modal = ladderSheet(); }
       else if (act === 'trait') { modal = traitSheet(arg); }
       else if (act === 'node') { modal = nodeSheet(arg); }
+      else if (act === 'stance') { const [, a, id] = t.dataset.act.split(':'); state = setPlan(state, { stance: a === 'none' ? null : { id, act: a } }); save(); }
       else if (act === 'watch') { state = setPlan(state, { watch: arg === 'none' ? null : arg }); save(); modal = null; }
       else if (act === 'press') { state = setPlan(state, { press: arg === 'none' ? null : arg }); save(); modal = null; }
       else if (act === 'shed') { state = setPlan(state, { shed: arg === 'none' ? null : arg }); save(); modal = null; }

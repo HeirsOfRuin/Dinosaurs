@@ -37,7 +37,12 @@ export const TRAITS = {
   fur:      { cost: 0.02, needs: { skin: 1 }, cover: true },   // cold; dearer the bigger the animal
   feathers: { cost: 0.025, needs: { skin: 1 }, cover: true },   // cold, and light
   warm:   { cost: 0.06, needs: { skin: 1 }, under: ['fur', 'feathers'] },    // a faster, warmer metabolism; it needs a coat to hold the heat in
-  sail:   { cost: 0.03, needs: { skin: 1 } },    // a sail on the back: sheds heat and soaks it up
+  sail:   { cost: 0.03, needs: { skin: 1 } },
+  // Weapons and defences (docs/FRAME-rivals.md section 4): they make a contest with a rival one of bodies.
+  claws:    { cost: 0.02, needs: { limbs: 2 } },
+  horns:    { cost: 0.04, needs: { size: 1 } },
+  tailClub: { cost: 0.03, needs: { armour: 1 } },
+  venom:    { cost: 0.03, needs: {} },    // a sail on the back: sheds heat and soaks it up
   gait:   { cost: 0.04, needs: { limbs: 3 } },   // legs under the body
   burrow: { cost: 0.03, needs: { limbs: 2 } },
   brain:  { cost: 0.05, needs: {} },
@@ -68,6 +73,8 @@ export const BARS = [
   [['sail', 1], ['fur', 1]],        // a sail is a radiator: it cannot be insulated,
   [['sail', 1], ['feathers', 1]],
   [['sail', 1], ['burrow', 1]],     // or dug with
+  [['tailClub', 1], ['gait', 3]],   // a club is no balancing tail
+  [['venom', 1], ['size', 2]],      // venom is a small animal's weapon
 ];
 // A trait a lineage is watching for is among what a generation offers once it has watched this many turns.
 export const WATCH_TURNS = 2;
@@ -78,6 +85,7 @@ export const TREE = [
   { id: 'legs', traits: ['limbs', 'gait', 'burrow'] },
   { id: 'mouth', traits: ['jawFish', 'jawInsects', 'jawPlants', 'jawPrey', 'omni', 'scavenge', 'crush'] },
   { id: 'frame', traits: ['size', 'brain', 'herd'] },
+  { id: 'arms', traits: ['claws', 'horns', 'tailClub', 'venom'] },
 ];
 export const RANGE_DRAG = 0.35;             // each region held beyond the first slows selection
 export const MAX_REGIONS = 3;
@@ -101,6 +109,19 @@ export const MOMENT_AT = 3;
 export const HEADS = 100;
 // Snout to tail, in metres, at each step of size. For the drawing and the words; the rules use the step.
 export const LENGTH_M = [0.4, 0.9, 2, 4];
+
+// ---- Rivals (docs/FRAME-rivals.md) ---------------------------------------------
+export const STANCES = ['push', 'prey', 'shadow', 'avoid'];
+// Fight a head: what each step of a trait adds. Strength in a region is numbers times fight.
+export const FIGHT = { base: 0.5, size: 0.35, armour: 0.15, herd: 0.2, horns: 0.3, claws: 0.15, tailClub: 0.15, venom: 0.25 };
+// Push: each side loses `loss` of its numbers there times the other's share of the strength;
+// a side left with under `yield` of the strength is driven out. A rival pushes back.
+export const PUSH = { loss: 0.12, yield: 0.3 };
+// Prey on a rival: `rate` of their numbers there a turn, at most `reach` times your own numbers'
+// worth, times your skill at prey and their want of defence; `worth` of what is taken feeds you.
+export const PREY = { rate: 0.1, reach: 2, worth: 0.6 };
+// Shadow a bigger hunter: more of the dead for you, and more of you caught.
+export const SHADOW = { carrion: 0.12, pred: 0.1 };
 
 // region: [id, wet, temp, insects, fish, plants, prey, predators]
 const R = (id, wet, temp, insects, fish, plants, prey, pred) => ({ id, wet, temp, food: { insects, fish, plants, prey }, pred });

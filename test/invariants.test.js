@@ -248,3 +248,59 @@ test('a trait watched for is offered within the turns the screen promises', () =
     assert.equal(view(g).watch, null);
   }
 });
+
+// ---- rivals (docs/FRAME-rivals.md) ----
+import { contact, stanceWhy, byId } from '../src/engine/model.js';
+
+function sharedStart(seed) {
+  // A game with a rival on the player's ground, found by playing the careful bot forward.
+  let g = newGame({ seed });
+  for (let i = 0; i < 60 && !g.over; i++) {
+    const r = view(g).rivals.find((x) => x.ground.length);
+    if (r) return { g, r };
+    if (view(g).moment) g = meet(g, 0);
+    g = advance(g, decide(g, 'careful')).state;
+  }
+  return null;
+}
+
+test('a stance the Rivals screen marks as not allowed is refused, with its reason', () => {
+  const found = sharedStart(11);
+  assert.ok(found, 'expected a rival on shared ground');
+  const { g, r } = found;
+  for (const x of r.stances) {
+    if (x.ok) assert.equal(setPlan(g, { stance: { id: r.id, act: x.act } }).plan.stance.act, x.act);
+    else assert.throws(() => setPlan(g, { stance: { id: r.id, act: x.act } }), /not allowed/);
+  }
+  const far = view(g).rivals.find((x) => !x.ground.length);
+  if (far) assert.throws(() => setPlan(g, { stance: { id: far.id, act: 'push' } }), /share no ground/);
+});
+
+test('a pushed rival pushes back, by the same rules', () => {
+  const found = sharedStart(11);
+  let { g, r } = found;
+  g = setPlan(g, { stance: { id: r.id, act: 'push' } });
+  if (view(g).moment) g = meet(g, 0);
+  const first = advance(g, { keep: null });
+  assert.ok(first.record.rivals.log.some((e) => e.by === 'you' && e.act === 'push'), 'the push was resolved');
+  // The rival decides at the start of a turn, so it answers on the next one, as the player would.
+  let h = first.state;
+  if (view(h).moment) h = meet(h, 0);
+  if (!view(h).stance) return;   // the push ended it: one side was driven out
+  const second = advance(h, { keep: null }).state, R = byId(second.s, r.id);
+  assert.ok(R, 'the rival is still there');
+  assert.deepEqual(R.stance, { id: 'you', act: 'push' });
+});
+
+test('keeping out of a hunter\'s way stops it hunting you there, at a cost in food', () => {
+  // Two lineages on one ground: a big hunter and a small player.
+  const s = { seed: 1, opts: {}, era: 0, turn: 0, attempt: 0, clock: 0, rev: 1, lineages: [], regions: [{ id: 'a', wet: 0.6, temp: 0.5, pred: 0.2, food: { insects: 40, fish: 40, plants: 40, prey: 40, carrion: 5, hard: 5 } }] };
+  const you = { id: 'you', player: true, traits: { lungs: 2, limbs: 2, jawInsects: 2 }, prog: {}, ways: {}, stance: null, pop: { a: 30 } };
+  const R = { id: 'rival0', player: false, traits: { lungs: 2, limbs: 2, jawPrey: 2, size: 2 }, prog: {}, ways: {}, stance: { id: 'you', act: 'prey' }, pop: { a: 60 } };
+  s.lineages = [you, R];
+  assert.equal(stanceWhy(s, R, you, 'prey'), null);
+  assert.ok((contact(s, null).lose.get(you) || {}).a > 0, 'hunted');
+  you.stance = { id: 'rival0', act: 'avoid' };
+  assert.equal((contact(s, null).lose.get(you) || {}).a || 0, 0, 'not hunted while keeping out of the way');
+  assert.match(stanceWhy(s, you, R, 'prey'), /hunter's mouth/);
+});

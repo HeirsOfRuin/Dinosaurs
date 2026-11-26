@@ -146,6 +146,12 @@ marks one to be offered. Coverings and the closing pairs are rules in
 `model.js` (`coverOf`, `closedBy`, `canTurn`, `lostOnTurn`); the screens ask
 `view` and decide nothing. Save version 4.
 
+Added 2026-11-26 (`docs/FRAME-rivals.md`): a fourth tab, Rivals. Stances are
+rules in `model.js` (`stanceWhy`, `contact`, `pushShare`, and `effIn` inside
+the food claims), chosen by the player through `setPlan({ stance })`, by the
+rivals and the bots through `chooseStance` in `policies.js`. `view().rivals`
+carries each stance's preview from the same functions. Save version 5.
+
 ## 9. Known gaps
 
 - **Nobody has played it.** Whether it is fun is not known. That is the next

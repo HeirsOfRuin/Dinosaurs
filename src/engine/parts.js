@@ -24,7 +24,9 @@ export function parts(t, ways = []) {
     teeth: { mixed: lv(t, 'omni') > 0, beak: lv(t, 'crush') > 0, hook: lv(t, 'scavenge') > 0 },
     trunk: ['slight', 'sturdy', 'heavy', 'massive'][lv(t, 'size')],
     limbs: lv(t, 'gait') >= 2 ? 'upright' : lv(t, 'gait') === 1 ? 'raised' : lv(t, 'limbs') >= 2 ? 'sprawlStrong' : 'sprawlShort',
-    claws: lv(t, 'burrow') >= 1,
+    claws: lv(t, 'burrow') >= 1,   // digging claws
+    // Weapons: hooked claws on the feet, horns on the head, a club on the tail, fangs.
+    talons: lv(t, 'claws'), horns: lv(t, 'horns'), club: lv(t, 'tailClub'), fangs: lv(t, 'venom') > 0,
     herd: lv(t, 'herd'),   // how many of its own kind are drawn beside it
     tail: lv(t, 'gait') >= 2 ? 'balance' : lv(t, 'lungs') >= 2 ? 'plain' : 'fin',
     skin: lv(t, 'armour') >= 1 ? 'armoured' : lv(t, 'fur') ? 'furred' : lv(t, 'feathers') ? 'feathered' : lv(t, 'scales') ? 'scaled' : lv(t, 'skin') >= 1 ? 'tight' : 'wet',

@@ -12,12 +12,12 @@ export function freshGame({ seed = 1, setting = 'saved' } = {}) {
   const s = newWorld(seed >>> 0, {});
   s.lineages.find((l) => l.player).plan = null;   // the player's lineage has no policy; a save must not hold `undefined`
   return {
-    v: 4,
+    v: 5,
     seed: seed >>> 0,
     setting,
     s,
     // Standing orders: they hold from turn to turn so a quiet turn is one tap.
-    plan: { press: null, shed: null, turn: null, spread: null, ways: [], pick: null, watch: null },
+    plan: { press: null, shed: null, turn: null, spread: null, ways: [], pick: null, watch: null, stance: null },
     // saves[e] is the world as era e opened. Kept only on the saved setting.
     saves: setting === 'saved' ? [structuredClone(s)] : [],
     tries: [0, 0, 0, 0, 0],

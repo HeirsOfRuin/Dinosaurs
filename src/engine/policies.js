@@ -4,7 +4,7 @@
 // for, how many regions to hold, the ways it lives, whether it heeds the
 // die-off warning, whether it braces for it, and which road it takes at a moment.
 import { TRAITS, JAWS, COVERS, MAX_REGIONS, MIN_VIABLE, WAY_SETTLE, LINEAGES } from '../data/world.data.js';
-import { body, capacity, held, canRaise, canShed, canTurn, closedBy, mouthOf, coverOf, waysOf } from './model.js';
+import { body, capacity, held, canRaise, canShed, canTurn, closedBy, mouthOf, coverOf, waysOf, stanceWhy, sharedGround, pushShare } from './model.js';
 import { streamFor } from './rng.js';
 
 const lv = (t, id) => t[id] || 0;
@@ -31,12 +31,12 @@ export const POLICIES = {
   eater:   { plan: 'greedy', regions: 2 },
   tolerant: { plan: 'tolerant', regions: 3 },
   // A careful player with no animal in mind: tolerance first, then whatever feeds it, eyes open.
-  careful: { plan: 'mixed', regions: 2, heed: true, brace: true, ways: ['tend'] },
+  careful: { plan: 'mixed', regions: 2, heed: true, brace: true, ways: ['tend'], act: true },
 };
 export const ROADS = Object.keys(LINEAGES).filter((id) => id !== 'beaked');
 for (const road of ROADS) {
   POLICIES[road + '.list'] = { plan: 'recipe', road, regions: 1, ways: LINEAGES[road].ways };
-  POLICIES[road + '.plan'] = { plan: 'recipe', road, regions: 2, heed: true, brace: true, ways: LINEAGES[road].ways };
+  POLICIES[road + '.plan'] = { plan: 'recipe', road, regions: 2, heed: true, brace: true, ways: LINEAGES[road].ways, act: true };
 }
 
 const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
@@ -115,6 +115,33 @@ function towards(s, l, offers, target, allow) {
   return d;
 }
 
+// A stance toward a rival (docs/FRAME-rivals.md). A rival answers the player: it pushes back against
+// a player that pushes or preys on it, and a hunter preys on a smaller player. A bot reads as a person
+// would: avoid a rival whose hunting costs more than its food would; prey where it can; push only
+// where it is far the stronger; shadow a bigger hunter when that feeds more.
+const sumCap = (s, l, stance) => sum(capacity(s, l, l.traits, waysOf(s, l), stance));
+export function chooseStance(s, l, p) {
+  const others = s.lineages.filter((o) => o !== l);
+  if (!l.player) {
+    const you = others.find((o) => o.player);
+    if (!you || s.opts.passiveRivals) return null;
+    const hit = you.stance && you.stance.id === l.id && (you.stance.act === 'push' || you.stance.act === 'prey') && !stanceWhy(s, you, l, you.stance.act);
+    if (hit && !stanceWhy(s, l, you, 'push')) return { id: you.id, act: 'push' };
+    if (!stanceWhy(s, l, you, 'prey')) return { id: you.id, act: 'prey' };
+    return null;
+  }
+  if (!p.act) return null;
+  const may = (act) => !p.only || p.only === act;   // the gate measures each stance alone
+  const now = sumCap(s, l, null);
+  const takenBy = (R) => (s.contact?.log || []).filter((e) => e.by === R.id && e.on === l.id).reduce((a, e) => a + e.n, 0);
+  for (const R of others) if (may('avoid') && takenBy(R) > 0 && !stanceWhy(s, l, R, 'avoid') && now - sumCap(s, l, { id: R.id, act: 'avoid' }) < takenBy(R)) return { id: R.id, act: 'avoid' };
+  const prey = others.filter((R) => !stanceWhy(s, l, R, 'prey')).sort((a, b) => sum(b.pop) - sum(a.pop))[0];
+  if (prey && may('prey')) return { id: prey.id, act: 'prey' };
+  for (const R of others) if (may('push') && !stanceWhy(s, l, R, 'push') && sharedGround(l, R).every((r) => pushShare(s, l, R, r) >= 0.8)) return { id: R.id, act: 'push' };
+  for (const R of others) if (may('shadow') && !stanceWhy(s, l, R, 'shadow') && sumCap(s, l, { id: R.id, act: 'shadow' }) > now * 1.05) return { id: R.id, act: 'shadow' };
+  return null;
+}
+
 export function decide(s, l, offers, warn) {
   const p = l.plan || POLICIES.none;
   let d = {};
@@ -164,6 +191,7 @@ export function decide(s, l, offers, warn) {
   }
   d.ways = ways;
   d.pick = p.pick ?? 0;
+  d.stance = chooseStance(s, l, p);
   const mine = held(l), b = body(l.traits, waysOf(s, l)), arrive = Math.max(0, Math.min(1, 0.3 + 0.6 * b.mob));
   const big = Math.max(0, ...mine.map((id) => l.pop[id]));
   // What a region would feed if `n` of the lineage arrived, with everyone already there counted.

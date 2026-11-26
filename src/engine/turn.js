@@ -9,9 +9,9 @@
 //
 // The rules are model.js; this file only lets a person drive them.
 
-import { FOODS, JAWS, TRAITS, ERAS, MOMENTS, WAYS, MAX_WAYS, WAY_SETTLE, STEP_TURNS, SHED_TURNS, COVERS, TREE, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, MIN_VIABLE, HEADS, LENGTH_M } from '../data/world.data.js';
+import { FOODS, JAWS, TRAITS, ERAS, MOMENTS, WAYS, MAX_WAYS, WAY_SETTLE, STEP_TURNS, SHED_TURNS, COVERS, TREE, WATCH_TURNS, STANCES, PUSH, RANGE_DRAG, MAX_REGIONS, MIN_VIABLE, HEADS, LENGTH_M } from '../data/world.data.js';
 import { ERA_TEXT, TRAIT_TEXT } from '../data/text.data.js';
-import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast, canTurn, lostOnTurn, closedBy, coverOf, turnsFrom, turnTime } from './model.js';
+import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast, canTurn, lostOnTurn, closedBy, coverOf, turnsFrom, turnTime, byId, stanceWhy, sharedGround, pushShare, bestFood, contact } from './model.js';
 import { decide } from './policies.js';
 import { freshGame } from './game.js';
 import { parts, lookOf } from './parts.js';
@@ -117,6 +117,11 @@ export function setPlan(prev, patch) {
     }
     g.plan.watch = patch.watch ?? null;
   }
+  if ('stance' in patch) {
+    const st = patch.stance;
+    if (st != null) { const why = stanceWhy(s, me(s), byId(s, st.id), st.act); if (why) throw new Error(`not allowed: ${why}`); }
+    g.plan.stance = st ? { id: st.id, act: st.act } : null;
+  }
   if ('pick' in patch) g.plan.pick = patch.pick ?? null;
   if ('spread' in patch) {
     if (patch.spread != null) { const p = spreadPreview(s, patch.spread); if (!p.ok) throw new Error(`not allowed: ${p.why}`); }
@@ -152,11 +157,12 @@ export function advance(prev, input = {}) {
   if (g.plan.shed && shedCheck(s, g.plan.shed)) g.plan.shed = null;
   if (g.plan.spread && !spreadPreview(s, g.plan.spread).ok) g.plan.spread = null;
   if (g.plan.turn && !canTurn(you.traits, g.plan.turn)) g.plan.turn = null;
+  if (g.plan.stance && stanceWhy(s, you, byId(s, g.plan.stance.id), g.plan.stance.act)) g.plan.stance = null;
   if (g.plan.watch && (lv(you.traits, g.plan.watch) || keep === g.plan.watch || nodeCheck(you.traits, g.plan.watch).state === 'closed')) g.plan.watch = null;
 
   const before = { era: s.era, turn: s.turn, traits: { ...you.traits }, pop: { ...you.pop } };
   const wasDying = s.turn >= ERAS[s.era].turns - dieoffTurns(ERAS[s.era]);
-  step(s, decide, { keep, press: g.plan.press, shed: g.plan.shed, turn: g.plan.turn ?? null, spread: g.plan.spread, ways: g.plan.ways, pick: g.plan.pick ?? 0, watch: g.plan.watch ?? null });
+  step(s, decide, { keep, press: g.plan.press, shed: g.plan.shed, turn: g.plan.turn ?? null, spread: g.plan.spread, ways: g.plan.ways, pick: g.plan.pick ?? 0, watch: g.plan.watch ?? null, stance: g.plan.stance ?? null });
   g.turns += 1;
   g.plan.spread = null;
   g.plan.pick = null;
@@ -168,12 +174,17 @@ export function advance(prev, input = {}) {
     era: before.era, turn: before.turn, kept: keep,
     popBefore: sum(before.pop) * HEADS, popAfter: totalPop(now) * HEADS, met: due ? { id: due, road: s.lastMoment.pick } : null,
     // Why the numbers moved: what was bred, what hunger took, what the hunters took. From the turn itself.
-    moved: s.moved && s.era === before.era ? { bred: s.moved.bred * HEADS, starved: s.moved.starved * HEADS, caught: s.moved.caught * HEADS, lost: s.moved.lost * HEADS } : null,
+    moved: s.moved && s.era === before.era ? { bred: s.moved.bred * HEADS, starved: s.moved.starved * HEADS, caught: s.moved.caught * HEADS, lost: s.moved.lost * HEADS, rivals: s.moved.rivals * HEADS } : null,
     turned: mouthOf(now.traits) !== mouthOf(before.traits) ? { from: mouthOf(before.traits), to: mouthOf(now.traits) } : null,
     recovered: recovered ? { from: coverOf(before.traits), to: coverOf(now.traits) } : null,
     gained: Object.keys(now.traits).filter((id) => lv(now.traits, id) > lv(before.traits, id) && id !== keep && !JAWS[id] && !(recovered && COVERS.includes(id))),
     lost: Object.keys(before.traits).filter((id) => lv(now.traits, id) < lv(before.traits, id) && !JAWS[id] && !(recovered && COVERS.includes(id))),
     settled: s.era === before.era ? Object.keys(now.pop).filter((id) => !(before.pop[id] > 0)) : [],
+    // What passed between the player and the rivals this turn: pushes, hunting, and who was driven from where.
+    rivals: s.era === before.era && s.contact ? {
+      log: s.contact.log.filter((e) => e.by === 'you' || e.on === 'you').map((e) => ({ ...e, n: e.n * HEADS, cost: e.cost != null ? e.cost * HEADS : null })),
+      driven: s.contact.driven.filter((d) => d.who === 'you' || (s.contact.log.some((e) => e.by === 'you' && e.on === d.who))),
+    } : null,
     emptied: s.era === before.era ? Object.keys(before.pop).filter((id) => !(now.pop[id] > 0)) : [],
     dieoffBegan: null, eraEnded: null, ended: null,
   };
@@ -196,7 +207,7 @@ export function retry(prev, era) {
   g.tries[era] += 1;
   g.s = rerollEra(structuredClone(g.saves[era]), g.tries[era]);
   g.saves = g.saves.slice(0, era + 1);
-  g.plan = { press: null, shed: null, turn: null, spread: null, ways: Object.keys(me(g.s).ways || {}), pick: null, watch: me(g.s).watch?.id ?? null };
+  g.plan = { press: null, shed: null, turn: null, spread: null, ways: Object.keys(me(g.s).ways || {}), pick: null, watch: me(g.s).watch?.id ?? null, stance: null };
   g.over = false; g.outcome = null; g.note = null;
   return g;
 }
@@ -236,6 +247,35 @@ function outlook(g, s, you, t, ways, H) {
   }
   const now = totalPop(you) * H, left = base.left * H;
   return { now, left, worst: base.worst * H, helps: helps.filter((h) => h.left > left * 1.1 + 50).sort((a, b) => b.left - a.left).slice(0, 3) };
+}
+
+// One rival as the Rivals screen shows it, with what each stance toward it would do as things stand.
+// Every figure is from the rules: contact() for pushes and hunting, capacity() for food.
+function rivalView(g, s, you, R, caps, H) {
+  const sizeOf = (tr) => LENGTH_M[lv(tr, 'size')];
+  const ground = sharedGround(you, R), feeds = sum(caps), was = s.was?.[R.id];
+  const toYou = R.stance && R.stance.id === 'you' && !stanceWhy(s, R, you, R.stance.act) ? R.stance.act : null;
+  const lastTurn = (s.contact?.log || []).filter((e) => (e.by === R.id && e.on === 'you') || (e.by === 'you' && e.on === R.id)).map((e) => ({ by: e.by, act: e.act, r: e.r, n: e.n * H, cost: e.cost != null ? e.cost * H : null }));
+  const as = (act) => ({ ...s, lineages: s.lineages.map((l) => (l === you ? { ...you, stance: { id: R.id, act } } : l)), rev: -1e9 - s.clock });
+  const stances = STANCES.map((act) => {
+    const why = g.over ? 'The lineage has ended.' : stanceWhy(s, you, R, act);
+    const on = !!g.plan.stance && g.plan.stance.id === R.id && g.plan.stance.act === act;
+    if (why) return { act, ok: false, why, on: false };
+    const hyp = as(act), mine = hyp.lineages.find((l) => l.player);
+    const feedsAfter = sum(capacity(hyp, mine, mine.traits, waysOf(hyp, mine), mine.stance));
+    const c = contact(hyp, null), mineLog = c.log.filter((e) => e.by === 'you');
+    return {
+      act, ok: true, why: null, on,
+      feeds: (feedsAfter - feeds + (act === 'prey' ? sum(c.gain.get(mine) || {}) : 0)) * H,
+      takes: act === 'prey' ? mineLog.reduce((a, e) => a + e.n, 0) * H : null,
+      push: act === 'push' ? ground.map((r) => { const share = pushShare(s, you, R, r); return { r, share, out: share < PUSH.yield ? 'you' : 1 - share < PUSH.yield ? 'them' : null, cost: (you.pop[r] || 0) * (1 - share) * PUSH.loss * H }; }) : null,
+    };
+  });
+  return {
+    id: R.id, parts: { ...parts(R.traits, waysOf(s, R)), look: lookOf(s.seed, s.era, R.id) }, length: sizeOf(R.traits), pop: totalPop(R) * H,
+    trend: was != null ? (totalPop(R) - was) * H : null, near: ground.length > 0, like: resembles(R.traits), mouth: mouthOf(R.traits), best: bestFood(s, R),
+    ground, home: held(R), toYou, lastTurn, stances,
+  };
 }
 
 /** Everything the screens show, computed by the engine. Numbers of animals are in heads (HEADS to one of the model's units). */
@@ -282,7 +322,8 @@ export function view(g) {
       };
     }),
     // The other animals on the ground, for the scene: what they are built like and how many there are.
-    rivals: s.lineages.filter((l) => !l.player).map((l) => ({ id: l.id, parts: { ...parts(l.traits, waysOf(s, l)), look: lookOf(s.seed, s.era, l.id) }, length: sizeOf(l.traits), pop: totalPop(l) * H, near: held(l).some((id) => you.pop[id] > 0), like: resembles(l.traits) })),
+    rivals: s.lineages.filter((l) => !l.player).map((l) => rivalView(g, s, you, l, caps, H)),
+    stance: g.plan.stance && !g.over && !stanceWhy(s, you, byId(s, g.plan.stance.id), g.plan.stance.act) ? { ...g.plan.stance } : null,
     warning: warn && s.turn < onset ? { turns: warn.toOnset, named: warn.kinds.length === 1, kinds: warn.kinds } : null,
     dieoff: !g.over && s.turn >= onset ? { kind: s.dieoff.type, left: era.turns - s.turn } : null,
     moment: due ? { id: due, picked: g.plan.pick, roads: MOMENTS[due].options.length } : null,

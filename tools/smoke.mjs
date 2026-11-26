@@ -10,7 +10,7 @@
 // ---- ADAPT THESE to the game's screens (the rest is generic) ---------------
 export const START = ['[data-act="new"]', '[data-act="start-saved"]', '.scrim [data-act="close"]'];   // clicks that begin a game
 export const CLOCK = '.hud .turn';                    // element whose text is the game clock
-export const TABS = ['[data-tab="play"]', '[data-tab="body"]', '[data-tab="menu"]'];
+export const TABS = ['[data-tab="play"]', '[data-tab="body"]', '[data-tab="rivals"]', '[data-tab="menu"]'];
 export const TURNS = Number(process.env.TURNS || 10);
 
 /** Take one turn the way a player would; return true if the clock moved. */

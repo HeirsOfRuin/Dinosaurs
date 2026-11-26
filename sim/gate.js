@@ -98,5 +98,12 @@ console.log('arm             ' + ['THROUGH', 'top three'].map((h) => h.padStart(
 for (const [label, f] of [['as designed', (p) => ({ policy: p })], ['no watching', (p) => ({ policy: p, noWatch: true })]]) { const rs = label === 'as designed' ? allCareful : pooled(f); console.log(label.padEnd(16) + rate(thr(rs), rs.length) + ' ' + rate(top3(rs), rs.length)); }
 console.log(floor(m7));
 
+console.log('\n12. Rivals: stances, and rivals that answer (careful play pooled)');
+console.log('arm             ' + ['THROUGH', 'top three'].map((h) => h.padStart(10)).join(' '));
+for (const [label, f] of [['as designed', null], ['no stances', (p) => ({ policy: { ...p, act: false } })], ...['push', 'prey', 'shadow', 'avoid'].map((a) => [a + ' only', (p) => ({ policy: { ...p, only: a } })]), ['rivals passive', (p) => ({ policy: p, passiveRivals: true })]]) {
+  const rs = f ? pooled(f) : allCareful; console.log(label.padEnd(16) + rate(thr(rs), rs.length) + ' ' + rate(top3(rs), rs.length));
+}
+console.log(floor(m7));
+
 if (stalled) { console.error(`\n${stalled} run(s) did not end or did not move the clock`); process.exit(1); }
 console.log(`\n${total} runs ended and moved their clocks.`);

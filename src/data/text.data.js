@@ -26,6 +26,10 @@ export const TRAIT_TEXT = {
   gait:       { name: 'Legs under the body', does: 'Much faster: better at hunting, and at not being hunted.', slot: 'limbs' },
   burrow:     { name: 'Burrowing', does: 'Shelter from heat, cold and drought. Works best in a small body, and a big one cannot learn to dig deep.', slot: 'limbs' },
   brain:      { name: 'A bigger brain', does: 'Every food feeds you a little better.', slot: 'skull' },
+  claws:      { name: 'Claws', does: 'Prey a little easier to take, fewer of you caught, and more fight in a push.', slot: 'limbs' },
+  horns:      { name: 'Horns', does: 'Much more fight in a push, and fewer caught. A heavy head: a little slower.', slot: 'skull' },
+  tailClub:   { name: 'A clubbed tail', does: 'Fewer caught, and more fight in a push. A club is no balancing tail: it closes off legs fully under the body.', slot: 'tail' },
+  venom:      { name: 'Venom', does: 'Prey easier to take, fewer caught, more fight. Only in a small body: it closes off growing large.', slot: 'jaw' },
   armour:     { name: 'Armour', does: 'Far fewer are caught. Slower. A full shell closes off running legs and burrowing.', slot: 'skin' },
 };
 // The branches of the tree on the Body screen.
@@ -35,6 +39,14 @@ export const TREE_TEXT = {
   legs:  { name: 'Legs', line: 'How it moves, and whether it digs.' },
   mouth: { name: 'Mouth', line: 'One mouth, and what grows from it.' },
   frame: { name: 'Frame and wits', line: 'How big, how clever, how many together.' },
+  arms:  { name: 'Weapons', line: 'For a contest with a rival, and against being caught.' },
+};
+// What can be done about a rival (docs/FRAME-rivals.md).
+export const STANCE_TEXT = {
+  push:   { name: 'Push them out', does: 'Contest the ground you share. Both sides lose numbers; the weaker side, under a third of the strength, is driven out.', doing: 'Pushing' },
+  prey:   { name: 'Prey on them', does: 'Hunt them where you share ground. They are smaller than you; what you take feeds you. They will push back.', doing: 'Preying on' },
+  shadow: { name: 'Follow them', does: 'Keep close behind a bigger hunter and eat what it leaves. More of you are caught.', doing: 'Following' },
+  avoid:  { name: 'Keep out of their way', does: 'Leave them the food they eat best where you share ground. They cannot push you or hunt you there.', doing: 'Keeping out of the way of' },
 };
 export const STEP_NAMES = ['not begun', 'a hint', 'developed', 'refined'];
 

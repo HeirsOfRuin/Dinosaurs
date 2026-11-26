@@ -200,7 +200,10 @@ way.
 
 ## 5. Acting on rivals: notes for when it is built
 
-The author wants this. It is not built. What is known:
+**Built 2026-11-26: see `docs/FRAME-rivals.md`, which supersedes these notes.**
+They are kept as written.
+
+The author wants this. It was not built when this was written. What was known:
 
 - **What exists.** Two rival lineages an era, steered by policies through the
   player's own rules. They eat the same food on the same ground, which is the

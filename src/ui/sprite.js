@@ -97,6 +97,14 @@ export function animalRects(p) {
     for (let x = x0 + 1; x < x0 + L - 1; x += gap) put(x, top + hgt - 1, 1, 1, c.dark);
     if (p.coat >= 2) for (let x = x0 - 5; x < x0; x += gap) put(x, top + 2, 1, 1, c.dark);
   }
+  // Weapons. Hooked claws: a pale point at each foot, longer as they grow.
+  if (p.talons) for (const fx of upright ? [x0 + 6, x0 + 7] : [x0 + 2, x1 - 1]) put(fx, 17 - (p.talons >= 2 ? 1 : 0), 1, 1 + (p.talons >= 2 ? 1 : 0), '#f4f0e0');
+  // Horns: a nub, then a horn, then a long one, off the top of the skull.
+  if (p.horns) { put(headX + 1, headY - 1, 1, 1, '#e8dcc0'); if (p.horns >= 2) put(headX, headY - 2, 1, 1, '#e8dcc0'); if (p.horns >= 3) put(headX - 1, headY - 3, 1, 1, '#e8dcc0'); }
+  // A clubbed tail: a knob of bone at its end, heavier by step.
+  if (p.club) { const tx = upright ? x0 - 10 : x0 - 9, ty = upright ? top + 1 : top + 1; put(tx, ty, 2 + (p.club >= 2 ? 1 : 0), 2 + (p.club >= 3 ? 1 : 0), c.dark); }
+  // Fangs: two pale points below the jaw.
+  if (p.fangs) { put(headX + hw - 1, headY + hh, 1, 2, '#f4f0e0'); }
   // Fat laid down: a deeper belly.
   if (p.fat) put(x0 + 2, top + hgt + 1, L - 4, 1, c.belly);
   return out;
