@@ -15,7 +15,42 @@ about an hour); `npm run gate:check` proves the model is deterministic, that
 every run ended and moved its clock, and that every policy part and world
 switch changes the end state (24 parts, each changed 37 to 40 of 40 seeds).
 
-Round 6 is the current model and verdict.
+Round 6a is the current measurement; round 6 is the verdict it updates.
+
+## Round 6a: after mouths were made to turn (2026-11-26)
+
+The author: "Cutting mouths kills you. It just happened to me twice. It
+should be easier". A mouth is now turned to another food over six turns while
+the old jaw goes on working (`docs/FRAME-standing.md` section 3). The bots
+change mouths the same way, so the gate was run again: 120,000 runs, same
+seeds as round 6. This is the current measurement; round 6's tables below are
+from the day before.
+
+| | Round 6 | Round 6a |
+|---|---|---|
+| Careful play through, one life (7,000 runs) | 33.1 ±0.6% | 34.9 ±0.6% |
+| Top three (7,000 runs) | 10.5 ±0.4% | 11.4 ±0.4% |
+| Lizard body through (1,000 seeds each from here down) | 47.5 | 53.6 |
+| Turtle | 38.8 | 40.9 |
+| Crocodile | 36.8 | 37.5 |
+| Dinosaur | 30.1 | 29.9 |
+| Careful, no body in mind | 29.2 | 29.2 |
+| Mammal | 25.4 | 29.0 |
+| Amphibian (keeps the mouth it starts with) | 23.9 | 23.9 |
+| Crocodile, top three | 23.4 | 25.7 |
+| Saved setting, three tries an era, by body | 56.0 to 81.0 | 57.5 to 86.8 |
+
+Both targets still hold. Bodies that change their mouth gained a little, the
+lizard most, so the spread between bodies widened again: 23.9 to 53.6%, a
+little over two to one. The ways of living, the moments, the warning and
+range read as in round 6 (night +7.0 points at best, roaming +7.6, fat +6.7,
+tending +1.8; warning 0, 3, 5, 8 turns 15.7, 30.9, 34.9, 37.5%; 1, 2, 3
+regions 25.6, 33.1, 35.1%). The open faults are round 6's, with the second
+(bodies not level) a little worse.
+
+A blind list that turns its mouth to prey on the Shore, where there is almost
+none, dies there: the crocodile list passes the Shore 70.5% of the time. The
+Body screen shows what a turn would feed before it is ordered.
 
 ## Round 6: after the first playtest
 
