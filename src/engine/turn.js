@@ -14,7 +14,7 @@ import { ERA_TEXT, TRAIT_TEXT } from '../data/text.data.js';
 import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast, canTurn, lostOnTurn } from './model.js';
 import { decide } from './policies.js';
 import { freshGame } from './game.js';
-import { parts } from './parts.js';
+import { parts, lookOf } from './parts.js';
 
 export const newGame = freshGame;
 
@@ -247,7 +247,7 @@ export function view(g) {
       };
     }),
     // The other animals on the ground, for the scene: what they are built like and how many there are.
-    rivals: s.lineages.filter((l) => !l.player).map((l) => ({ id: l.id, parts: parts(l.traits), length: sizeOf(l.traits), pop: totalPop(l) * H, near: held(l).some((id) => you.pop[id] > 0), like: resembles(l.traits) })),
+    rivals: s.lineages.filter((l) => !l.player).map((l) => ({ id: l.id, parts: { ...parts(l.traits, waysOf(s, l)), look: lookOf(s.seed, s.era, l.id) }, length: sizeOf(l.traits), pop: totalPop(l) * H, near: held(l).some((id) => you.pop[id] > 0), like: resembles(l.traits) })),
     warning: warn && s.turn < onset ? { turns: warn.toOnset, named: warn.kinds.length === 1, kinds: warn.kinds } : null,
     dieoff: !g.over && s.turn >= onset ? { kind: s.dieoff.type, left: era.turns - s.turn } : null,
     moment: due ? { id: due, picked: g.plan.pick, roads: MOMENTS[due].options.length } : null,
@@ -287,7 +287,7 @@ export function view(g) {
     // Standing as it would be if the run ended now, and the ladder it is placed on.
     standing: { score: mineStanding.score, prospects: mineStanding.prospects, secure: mineStanding.secure, spread: mineStanding.spread, rank: place + 1, of: rows.length, like: resembles(t) },
     ladder: rows.map((r, i) => ({ id: r.id, you: r.you, score: r.score, rank: i + 1 })),
-    parts: parts(t),
+    parts: { ...parts(t, ways), look: lookOf(s.seed, s.era, 'you') },
     body: { dry: b.dry, lo: b.lo, hi: b.hi, mob: b.mob, defence: b.defence },
     saves: g.saves.map((x, e) => (x ? { era: e, name: ERAS[e].name, tries: g.tries[e] } : null)).filter(Boolean),
     last: s.lastEra || null,

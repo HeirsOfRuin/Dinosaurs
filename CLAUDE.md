@@ -61,7 +61,14 @@
   was "did the Great Dying come cold". Read the win by face of the die-off
   (the gate prints it) before believing a pooled number.
 - Every drawn part changes a number. A part that does not is not drawn: the
-  six slots are worked out from the traits in `src/engine/parts.js`.
+  slots and marks are worked out from the traits and ways of living in
+  `src/engine/parts.js`. One exception, at the author's word ("colour of
+  animals should be more randomized... it's always the same now"): a
+  lineage's colour, pattern and small features of outline come from the seed
+  and the era and change nothing. The Body screen says so.
+- `docs/FRAME-bodies.md` proposes coverings, traits that close each other
+  off, weapons and defences. Nothing in its sections 2 to 5 is built until
+  the author approves it.
 - The history is from memory until checked. Dates and die-offs are checked
   before they shape a number, and the source goes beside the number.
 - The kit files in `sim/` (`run.js`, `stats.js`, `measure-lib.js`) and

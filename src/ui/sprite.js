@@ -3,19 +3,21 @@
 // text: the same parts always draw the same animal. Drawn at whole multiples
 // and never smoothed (shape-rendering: crispEdges).
 
-const SKINS = {
-  wet:       { body: '#5f9a7a', dark: '#2f5a4a', belly: '#c4d8b0', limb: '#4a8066' },
-  scaling:   { body: '#6f9c62', dark: '#365a34', belly: '#c8d49c', limb: '#5a8752' },
-  scaled:    { body: '#7fa04a', dark: '#3d5226', belly: '#c9cf8a', limb: '#6f8f3e' },
-  insulated: { body: '#8a6a4a', dark: '#4a3626', belly: '#e0cfb0', limb: '#6e5238' },
-  armoured:  { body: '#6a7a4a', dark: '#36402a', belly: '#c9c9a0', limb: '#566640' },
-};
+// Colouring: a hue from the lineage's look, shaded by what its skin is. [hue, saturation, lightness].
+const HUE = [[150, 28, 48], [95, 36, 45], [45, 46, 47], [22, 48, 46], [205, 24, 50], [330, 20, 50], [70, 32, 40], [180, 30, 42]];
+const SHADE = { wet: [0, 8, 4], scaling: [0, 0, 0], scaled: [0, 6, -2], insulated: [0, -8, -4], armoured: [0, -14, -9] };
+const hsl = (h, s, l) => `hsl(${Math.round(h)} ${Math.max(4, Math.min(90, Math.round(s)))}% ${Math.max(8, Math.min(92, Math.round(l)))}%)`;
+function colours(p) {
+  const [h0, s0, l0] = HUE[(p.look?.hue ?? 0) % HUE.length], [dh, ds, dl] = SHADE[p.skin] || SHADE.wet;
+  const h = p.skin === 'insulated' ? (h0 + 28 * 2) / 3 : h0 + dh, s = s0 + ds, l = l0 + dl;   // a coat pulls every hue toward brown
+  return { body: hsl(h, s, l), dark: hsl(h, s + 4, l - 22), belly: hsl(h + 10, s - 12, l + 30), limb: hsl(h, s, l - 8), pale: hsl(h + 10, s - 10, l + 16) };
+}
 const SIZE = { slight: [10, 3], sturdy: [12, 4], heavy: [13, 5], massive: [14, 6] };
 const SKULL = { narrow: [5, 3], broad: [6, 3], domed: [6, 4], high: [6, 4] };
 
 /** [x, y, w, h, colour] rectangles for one animal facing right, feet on row 17. */
 export function animalRects(p) {
-  const c = SKINS[p.skin] || SKINS.wet, out = [];
+  const c = colours(p), out = [], look = p.look || { pattern: 1, ridge: 0, tip: 0 };
   const put = (x, y, w, h, col) => { if (w > 0 && h > 0) out.push([x, y, w, h, col]); };
   const [len, hgt] = SIZE[p.trunk] || SIZE.slight;
   const [hw, hh] = SKULL[p.skull] || SKULL.narrow;
@@ -50,13 +52,34 @@ export function animalRects(p) {
   else if (p.jaw === 'jawPlants') { put(headX + hw, mid, 1, 2, c.body); put(headX, under, hw, 2, c.belly); }
   else if (p.jaw === 'jawPrey') { put(headX + hw, mid, 2, 2, c.body); put(headX + 1, under, hw + 1, 1, c.belly); put(headX + hw - 1, under, 1, 1, '#f4f0e0'); put(headX + hw + 1, under, 1, 1, '#f4f0e0'); }
   else { put(headX + hw, mid, 1, 1, c.body); put(headX + 1, under, hw - 1, 1, c.belly); }
-  put(headX + hw - 3, headY + 1, 1, 1, '#15170f');
-  // skin
+  // What the mouth has grown into: an omnivore's mixed teeth, a cracking beak, a scavenger's hook.
+  const tip = headX + hw + (p.jaw === 'jawFish' ? 3 : p.jaw === 'jawInsects' || p.jaw === 'jawPrey' ? 1 : 0);
+  if (p.teeth?.mixed) put(headX + 2, under, 1, 1, '#f4f0e0');
+  if (p.teeth?.beak) put(tip, mid, 1, 2, c.dark);
+  if (p.teeth?.hook) put(tip, mid + 2, 1, 1, c.dark);
+  // The eye: a night animal's is larger.
+  put(headX + hw - 3, headY + 1, 1, p.night ? 2 : 1, '#15170f');
+  if (p.night) put(headX + hw - 4, headY + 1, 1, 1, '#f4f0e0');
   const L = upright ? len - 2 : len;
-  if (p.skin === 'armoured') for (let x = x0 + 1; x < x0 + L; x += 2) put(x, top - 1, 1, 1, c.dark);
-  else if (p.skin === 'insulated') for (let x = x0 + 1; x < x0 + L - 1; x += 4) put(x, top, 2, 1, '#a88a66');
-  else if (p.skin === 'wet') for (let x = x0 + 2; x < x0 + L; x += 4) put(x, top + (x % 3 === 0 ? 0 : 1), 1, 1, c.dark);
-  else for (let x = x0 + 2; x < x0 + L; x += (p.skin === 'scaled' ? 3 : 4)) put(x, top, p.skin === 'scaled' ? 2 : 1, 1, c.dark);
+  // The lineage's own pattern, on the trunk.
+  if (look.pattern === 1) for (let x = x0 + 2; x < x0 + L - 1; x += 3) put(x, top + ((x * 7) % Math.max(1, hgt - 1)), 1, 1, c.dark);
+  else if (look.pattern === 2) for (let x = x0 + 2; x < x0 + L - 1; x += 3) put(x, top, 1, Math.max(1, hgt - 1), c.dark);
+  else if (look.pattern === 3) for (let x = x0 + 2; x < x0 + L - 2; x += 5) put(x, top, 2, hgt, c.pale);
+  else if (look.pattern === 4) put(x0 + 1, top, L - 2, 1, c.dark);
+  // Small features of the outline that are this lineage's own.
+  if (look.ridge === 1) for (let x = x0 + 2; x < x0 + L - 1; x += 2) put(x, top - 1, 1, 1, c.limb);
+  else if (look.ridge === 2) put(headX - 1, headY - 1, 2, 2, c.limb);
+  else if (look.ridge === 3) put(x0 + Math.floor(L / 3), top - 2, Math.ceil(L / 3), 2, c.limb);
+  if (look.tip === 1) put(x0 - 9, top + 2, 2, 1, c.dark); else if (look.tip === 2) put(x0 - 9, top + 1, 2, 3, c.pale);
+  // Armour: scutes, then plates, then a shell over the back.
+  if (p.armour === 1) for (let x = x0 + 1; x < x0 + L; x += 2) put(x, top - 1, 1, 1, c.dark);
+  else if (p.armour === 2) put(x0 + 1, top - 1, L - 2, 1, c.dark);
+  else if (p.armour >= 3) { put(x0, top - 1, L, 1, c.dark); put(x0 + 2, top - 2, L - 4, 1, c.dark); put(x0, top, 1, hgt, c.dark); put(x0 + L - 1, top, 1, hgt, c.dark); }
+  // A warm animal's covering: tufts, then a coat.
+  if (p.coat === 1) for (let x = x0 + 1; x < x0 + L - 1; x += 5) put(x, top, 2, 1, c.pale);
+  else if (p.coat >= 2 && p.armour < 2) for (let x = x0; x < x0 + L; x += 2) put(x, top - (p.armour ? 2 : 1), 1, 1, c.pale);
+  // Fat laid down: a deeper belly.
+  if (p.fat) put(x0 + 2, top + hgt + 1, L - 4, 1, c.belly);
   return out;
 }
 
@@ -97,6 +120,7 @@ export function sceneSVG(eraId, palette, p, label, dim, others = []) {
   const spots = [[45, 0.75], [-6, 0.6]];
   const rivals = others.slice(0, 2).map((o, i) => placed(o.parts, spots[i][0] + (o.ratio > 1.4 ? -6 : 0), Math.max(0.45, Math.min(1.7, o.ratio)), 0.55)).join('');
   // Its own kind beside it: one for a herd beginning, two for a herd.
-  const kin = [[8, 0.8], [27, 0.7]].slice(0, Math.min(2, p.herd || 0)).map(([x, k]) => placed(p, x, k, 0.9)).join('');
+  const kin = [[8, 0.8], [27, 0.7]].slice(0, Math.min(2, p.herd || 0)).map(([x, k]) => placed(p, x, k, 0.9)).join('')
+    + (p.young ? placed(p, 33, 0.4, 1) + placed(p, 39, 0.35, 1) : '');   // young at heel, where they are tended
   return `<svg class="scene${dim ? ' dim' : ''}" viewBox="0 0 64 30" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" role="img" aria-label="${label}">${bg}${rivals}${kin}${placed(p, 16, 1)}</svg>`;
 }

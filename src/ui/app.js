@@ -12,7 +12,7 @@ import { SAVE_KEY, SHELF_KEY, serialize, deserialize, toCode, fromCode } from '.
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
 import { animalSVG, sceneSVG } from './sprite.js';
-import { TITLE, TRAIT_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, DIEOFF_TEXT, LINEAGE_TEXT, RANK_TEXT, THROUGH_TEXT, STANDING_TEXT, WAY_TEXT, MOMENT_TEXT, SIZE_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
+import { TITLE, TRAIT_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, DIEOFF_TEXT, LINEAGE_TEXT, RANK_TEXT, THROUGH_TEXT, STANDING_TEXT, WAY_TEXT, MOMENT_TEXT, SIZE_TEXT, LOOK_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
 
 const SHELF_MAX = 6;
 const app = document.getElementById('app');
@@ -291,7 +291,7 @@ function bodyTab(v) {
   const st = v.standing, like = LINEAGE_TEXT[st.like], pic = animalSVG(v.parts, 9, animalLabel(v), v.length);
   return `
     <div class="stage plain">${pic.svg}</div>
-    <p class="hint">About ${metres(v.length)} from snout to tail, ${SIZE_TEXT[[0.4, 0.9, 2, 4].indexOf(v.length)] || ''}. The bar under it is ${metres(pic.unit)}.</p>
+    <p class="hint">About ${metres(v.length)} from snout to tail, ${SIZE_TEXT[[0.4, 0.9, 2, 4].indexOf(v.length)] || ''}. The bar under it is ${metres(pic.unit)}. In this era it is ${LOOK_TEXT.hue[v.parts.look.hue]}, ${LOOK_TEXT.pattern[v.parts.look.pattern]}; colouring is the lineage's own and changes nothing.</p>
     <div class="slots">${slots}</div>
     <p class="hint">Upkeep ${n2(v.upkeep)} food a head. ${v.regionsHeld > 1 ? `Holding ${v.regionsHeld} regions, a trait grows at ${Math.round(v.speed * 100)}% of full speed.` : `A trait grows at ${Math.round(v.speed * 100)}% of full speed.`}</p>
     <h2>Traits held</h2>

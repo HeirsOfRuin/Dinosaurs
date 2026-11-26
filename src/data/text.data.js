@@ -136,3 +136,9 @@ export const PART_TEXT = {
   tail: { fin: 'a fin', plain: 'plain', balance: 'held out for balance' },
   skin: { wet: 'wet', scaling: 'scaling over', scaled: 'scaled', insulated: 'insulated', armoured: 'armoured' },
 };
+
+// The lineage's colouring, in words. It changes no number: see src/engine/parts.js.
+export const LOOK_TEXT = {
+  hue: ['sea green', 'olive', 'ochre', 'rust', 'slate blue', 'dusk rose', 'moss', 'teal'],
+  pattern: ['plain', 'spotted', 'striped', 'banded', 'dark along the back'],
+};
