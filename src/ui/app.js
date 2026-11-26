@@ -144,7 +144,7 @@ function playTab(v) {
       ${f.helps.length ? `What would leave more:<ul>${f.helps.map((h) => `<li>${esc(helpLine(h))}</li>`).join('')}</ul>` : f.left < 50 ? ' Nothing within reach changes that. It may still fall otherwise than it looks.' : ' Nothing within reach would leave many more.'}
       <span class="dim">A reckoning from how things stand now, not a promise.</span></div>` : '';
   const living = v.ways.filter((w) => w.on);
-  const wayRow = `<button class="row${living.length ? '' : ' empty'}" data-tab="body">${living.length ? `<span>Living: <strong>${living.map((w) => WAY_TEXT[w.id].name.toLowerCase()).join(', ')}</strong></span><span class="dim">${living.some((w) => w.settling) ? 'taking hold' : ''}</span>` : `<span><strong>No way of living chosen.</strong></span><span class="dim">Up to ${v.maxWays} at once, on the Body screen. They matter most when a die-off comes.</span>`}</button>`;
+  const wayRow = `<button class="row${living.length ? '' : ' empty'}" data-tab="body">${living.length ? `<span>Living: <strong>${living.map((w) => WAY_TEXT[w.id].name.toLowerCase()).join(', ')}</strong></span><span class="dim">${living.some((w) => w.settling) ? 'taking hold' : v.fatSlows ? 'The fat is slowing your climb back: the ground would feed many more than there are.' : ''}</span>` : `<span><strong>No way of living chosen.</strong></span><span class="dim">Up to ${v.maxWays} at once, on the Body screen. They matter most when a die-off comes.</span>`}</button>`;
   const p = v.pressure;
   const pressure = p
     ? `<button class="row" data-tab="body"><span>${p.kind === 'shed' ? 'Letting go of' : p.kind === 'turn' ? 'Turning the mouth to' : 'Pressure on'} <strong>${esc(TRAIT_TEXT[p.id].name.toLowerCase())}</strong></span><span class="dim">${p.kind === 'press' ? `to ${STEP_NAMES[p.to]} · ` : ''}${p.left} ${plural(p.left, 'turn', 'turns')} left</span>${p.kind !== 'shed' ? `<span class="bar"><b style="width:${Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : ''}</button>`
@@ -217,7 +217,15 @@ function turnNote(rec) {
   for (const id of rec.settled) bits.push(`Settlers reached the ${REGION_TEXT[id].toLowerCase()}.`);
   for (const id of rec.emptied) bits.push(`None of you are left in the ${REGION_TEXT[id].toLowerCase()}.`);
   const d = rec.popAfter - rec.popBefore;
-  bits.push(Math.abs(d) < 50 ? 'Numbers held.' : d > 0 ? `Numbers up ${n0(d)}.` : `Numbers down ${n0(-d)}.`);
+  // Why they moved, when it is worth saying: the turn's own account of bred, starved and caught.
+  const m = rec.moved, why = [];
+  if (m) {
+    if (m.bred >= 50) why.push(`${n0(m.bred)} bred`);
+    if (m.starved >= 50) why.push(`hunger took ${n0(m.starved)}`);
+    if (m.caught >= 50) why.push(`hunters took ${n0(m.caught)}`);
+    if (m.lost >= 50) why.push(`the last ${n0(m.lost)} somewhere died out`);
+  }
+  bits.push((Math.abs(d) < 50 ? 'Numbers held' : d > 0 ? `Numbers up ${n0(d)}` : `Numbers down ${n0(-d)}`) + (why.length ? `: ${why.join(', ')}.` : '.'));
   return bits.map(esc).join(' ');
 }
 

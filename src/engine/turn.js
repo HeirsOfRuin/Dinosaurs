@@ -135,6 +135,8 @@ export function advance(prev, input = {}) {
   const record = {
     era: before.era, turn: before.turn, kept: keep,
     popBefore: sum(before.pop) * HEADS, popAfter: totalPop(now) * HEADS, met: due ? { id: due, road: s.lastMoment.pick } : null,
+    // Why the numbers moved: what was bred, what hunger took, what the hunters took. From the turn itself.
+    moved: s.moved && s.era === before.era ? { bred: s.moved.bred * HEADS, starved: s.moved.starved * HEADS, caught: s.moved.caught * HEADS, lost: s.moved.lost * HEADS } : null,
     turned: mouthOf(now.traits) !== mouthOf(before.traits) ? { from: mouthOf(before.traits), to: mouthOf(now.traits) } : null,
     gained: Object.keys(now.traits).filter((id) => lv(now.traits, id) > lv(before.traits, id) && id !== keep && !JAWS[id]),
     lost: Object.keys(before.traits).filter((id) => lv(now.traits, id) < lv(before.traits, id) && !JAWS[id]),
@@ -280,6 +282,8 @@ export function view(g) {
       return { id, on: held_, settling, feeds: (worth(t, other.sort()) - feeds) * H, full: !held_ && (g.plan.ways || []).length >= MAX_WAYS };
     }),
     maxWays: MAX_WAYS, waySettle: WAY_SETTLE,
+    // Fat held when the ground would feed many more than there are is slowing the climb back, and no die-off is near.
+    fatSlows: ways.includes('fat') && feeds > pop * 1.25 && !(warn && warn.kinds.length === 1),
     // Standing as it would be if the run ended now, and the ladder it is placed on.
     standing: { score: mineStanding.score, prospects: mineStanding.prospects, secure: mineStanding.secure, spread: mineStanding.spread, rank: place + 1, of: rows.length, like: resembles(t) },
     ladder: rows.map((r, i) => ({ id: r.id, you: r.you, score: r.score, rank: i + 1 })),

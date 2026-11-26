@@ -98,6 +98,7 @@ button.primary small { color: var(--accent-ink); }
 
 .row { display: grid; grid-template-columns: 1fr auto; gap: .15rem .6rem; width: 100%; margin-top: .6rem; font-size: .9rem; align-items: center; }
 .row .dim { font-size: .8rem; text-align: right; }
+.row .dim:not(:empty) { max-width: 60vw; }
 .row.empty { grid-template-columns: 1fr; border-color: var(--alarm-line); }
 .row.empty .dim { text-align: left; }
 .bar { grid-column: 1 / -1; height: 8px; background: var(--well); display: block; }

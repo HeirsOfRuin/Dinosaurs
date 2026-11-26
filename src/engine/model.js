@@ -331,16 +331,21 @@ function apply(s, l, d, offers) {
 
 function feed(s) {
   const caps = s.lineages.map((l) => capacity(s, l));
+  // What moved the player's numbers this turn, kept for the turn's report: bred, starved, caught,
+  // and the last of a region dying out. It records the turn; it decides nothing.
+  const moved = { bred: 0, starved: 0, caught: 0, lost: 0 };
   s.lineages.forEach((l, i) => {
     const b = body(l.traits, waysOf(s, l));
     for (const r of s.regions) {
       const p = l.pop[r.id] || 0; if (!(p > 0)) continue;
       const k = caps[i][r.id];
-      let n = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
-      n *= 1 - 0.3 * r.pred * (1 - b.defence);
+      const fed = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
+      const n = fed * (1 - 0.3 * r.pred * (1 - b.defence));
+      if (l.player) { if (fed > p) moved.bred += fed - p; else moved.starved += p - fed; moved.caught += fed - n; if (n < MIN_VIABLE) moved.lost += n; }
       if (n < MIN_VIABLE) delete l.pop[r.id]; else l.pop[r.id] = n;
     }
   });
+  s.moved = moved;
 }
 
 // One turn. `decide` is the policy function (policies.js), passed in so that this file and that
