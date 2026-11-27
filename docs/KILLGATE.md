@@ -17,11 +17,72 @@ holds warm blood without a coat or grew both halves of a closed pair, and
 that every policy part and world switch changes the end state (26 parts;
 watching changes 29 of 40 seeds, the rest 37 to 40).
 
-Balance round C is the current measurement: the game after the three
-balance rounds the author approved in `docs/FRAME-balance.md`. Round 10 is
-their baseline, on the same seeds. Rounds 9 to 6 are earlier measurements of
-the same design, and their reading of ways of living, moments and the
-warning still holds where a later round does not say otherwise.
+Balance round D is the current measurement: the game after the four
+balance rounds the author approved (`docs/FRAME-balance.md`, then "Go" on
+round D). Round 10 is their baseline, on the same seeds. Rounds 9 to 6 are
+earlier measurements of the same design, and their reading of ways of
+living, moments and the warning still holds where a later round does not
+say otherwise.
+
+## Balance round D: the amphibian's bot, the hot face (2026-11-27)
+
+Shown rounds A to C and a proposed round D, the author: "Go". 194,000 runs,
+1,000 seeds an arm, the seeds of round 10, run alone and finished inside
+the limit.
+
+- **The amphibian was a bot fault.** Its bot grew fur and warm blood against
+  the Shore's cold die-off (its road wears no coat; warm blood pulled the fur
+  in through what it rests on) and carried both into the Coal Forests: 20%
+  of 147 came through that era with them, 71% of 153 without (300 seeds). A
+  bot making for a body now grows neither another animal's coat nor warm
+  blood resting on one against a die-off. The amphibian through the Coal
+  Forests: 44.2 to 55.3%; through the whole run 21.6 to 38.4%.
+- **The hot Great Dying leaves insects at 0.45** (was 0.6, the most of any
+  food on any face). It had carried the lizard, an insect-eater that holds
+  heat (86% of hot faces, 19% of cold).
+- **The starvation rate is no longer a dial.** At 0.66, 0.72, 0.78 and 0.85
+  careful play comes through 28% and every body within 2 points (300 seeds
+  a body each). Survival is now set by the die-offs and the rivals, not by
+  how fast a hungry population falls. It stays 0.72; the plan's last step
+  has no lever. If careful play has to come down to 30%, the lever is the
+  die-offs' size, not this.
+
+| Line | Round 10 | C | **D** |
+|---|---|---|---|
+| Careful play, one life, 30% / 10% (7,000 runs) | 34.6 / 9.7 | 34.5 / 8.9 | **33.6 ±0.6 / 9.3 ±0.3** |
+| Every body 25 to 45% through | 22.4 to 49.7 | 21.6 to 50.8 | **26.8 to 45.6: met** (the lizard inside its ±1.6) |
+| Every body at least 5% top three | 3.4 to 21.3 | 5.4 to 14.5 | **5.0 to 20.1: met** |
+| Weapon and colour traits within 5 points of none (none 28.0%) | | horns −5.9 | **horns −3.7, camouflage +2.6, armour +2.8, display +5.2, clubbed tail +5.4**: the last two at the edge, inside the noise |
+| Faces of the Great Dying within 10 points | 33.1 to 54.9 | 37.5 to 53.8 | **40.5 to 46.5: met** |
+| No more than a third rank last | 52% | 26% | **24%: met** |
+| Saved setting about 75% | 51.2 to 89.3 | careful 80.7; 48.2 to 89.0 | **careful 75.3; bodies 53.1 to 84.5** |
+
+By body, through / top three / saved (1,000 seeds each, ±1.5): lizard 45.6 /
+11.0 / 84.5, amphibian 38.4 / 20.1 / 73.7, mammal 34.6 / 5.0 / 79.7,
+dinosaur 31.0 / 6.0 / 80.9, crocodile 30.5 / 13.4 / 63.8, careful 28.0 /
+4.1 / 75.3, turtle 26.8 / 5.7 / 53.1.
+
+Stances together +2.6 (no stances 31.0%); rivals that act cost 4.0
+(passive 37.6%). Prey is the crocodile's (+7.8), push the amphibian's (+4.5)
+and the dinosaur's (+2.8). Keeping out of the way is still best nowhere.
+
+The specialists stay out of line on purpose: a heavier body −9.6, warm
+blood −12.1, fur −6.0, sail −9.2 (it closes off burrowing, +5.3).
+
+### Faults still open after round D
+
+1. **The turtle and the crocodile on the saved setting: 53.1 and 63.8%,**
+   against about 75. Both are armoured, and both lost most in round B's
+   armour price. The turtle is the weakest body on one life too (26.8%), and
+   dies most in the Triassic (51.8% of arrivals, against 69 to 93% for the
+   rest). Look at its bot in the Triassic before its body.
+2. **Keeping out of the way is best nowhere.** No body gains from it alone
+   (the largest is +0.1).
+3. **Careful play is 3.6 points over 30%.** Top three is 0.7 under 10%. The
+   starvation rate cannot move it (above); the die-offs' size can, and would
+   move every line above with it.
+4. **Display and the clubbed tail at the edge of the price line** (+5.2,
+   +5.4, the floor is 4.1). Re-read on the next gate before touching them.
 
 ## Balance rounds A to C (2026-11-27)
 
@@ -124,7 +185,7 @@ the dinosaur's and the amphibian's (+2.7 each), following a hunter the
 mammal's (+1.0). The crocodile pays most for rivals that act (44.1 passive,
 34.7 as designed): a hunter that preys is pushed back.
 
-### Faults still open after round C
+### Faults left open after round C (round D took 1, 2, 3 and 6)
 
 1. **The lizard, 50.8%.** Round C's lever did not move it (49.9 in round B):
    it was aimed at the wrong cause. Living at night does not carry it: without night
