@@ -37,19 +37,19 @@ export const TRAITS = {
   fur:      { cost: 0.02, needs: { skin: 1 }, cover: true },   // cold; dearer the bigger the animal
   feathers: { cost: 0.025, needs: { skin: 1 }, cover: true },   // cold, and light
   warm:   { cost: 0.06, needs: { skin: 1 }, under: ['fur', 'feathers'] },    // a faster, warmer metabolism; it needs a coat to hold the heat in
-  sail:   { cost: 0.03, needs: { skin: 1 } },
+  sail:   { cost: 0.02, needs: { skin: 1 } },
   // Weapons and defences (docs/FRAME-rivals.md section 4): they make a contest with a rival one of bodies.
   claws:    { cost: 0.02, needs: { limbs: 2 } },
-  horns:    { cost: 0.04, needs: { size: 1 } },
-  tailClub: { cost: 0.03, needs: { armour: 1 } },
+  horns:    { cost: 0.025, needs: { size: 1 } },
+  tailClub: { cost: 0.04, needs: { armour: 1 } },
   venom:    { cost: 0.03, needs: {} },
   // Colour that counts (the author, 2026-11-27: "Have your colours only affect the numbers if you have those").
   camouflage: { cost: 0.02, needs: { skin: 1 } },
-  display:    { cost: 0.03, needs: { skin: 1 } },    // a sail on the back: sheds heat and soaks it up
+  display:    { cost: 0.015, needs: { skin: 1 } },    // a sail on the back: sheds heat and soaks it up
   gait:   { cost: 0.04, needs: { limbs: 3 } },   // legs under the body
   burrow: { cost: 0.03, needs: { limbs: 2 } },
   brain:  { cost: 0.05, needs: {} },
-  armour: { cost: 0.05, needs: { skin: 1 } },
+  armour: { cost: 0.09, needs: { skin: 1 } },   // 0.05 until balance round B: its first step was worth +15 points to the careful player
 };
 export const START_TRAITS = { lungs: 1, limbs: 1, jawFish: 1 };
 export const START_POP = 12;
@@ -139,7 +139,8 @@ export const GROUND_HUE = { dry: 45, wet: 150, cold: 205, coldBelow: 0.3 };
 // Camouflage: fewer caught and prey easier where you match, and the colour turns toward the ground you
 // mostly live on, `drift` degrees a turn a step. Display: numbers climb faster and more are caught,
 // both where you stand out; the colour turns away from the ground. Colour counts only with one of them.
-export const COLOUR = { across: 90, camo: { defence: 0.06, prey: 0.04 }, display: { grow: 0.06, defence: 0.05 }, drift: 10 };
+export const COLOUR = { across: 90, camo: { defence: 0.045, prey: 0.04 }, display: { grow: 0.04, defence: 0.02, warn: 0.06 }, drift: 10 };
+// warn: with venom, standing out is a warning; then display means fewer caught, not more.
 
 // region: [id, wet, temp, insects, fish, plants, prey, predators]
 const R = (id, wet, temp, insects, fish, plants, prey, pred) => ({ id, wet, temp, food: { insects, fish, plants, prey }, pred });

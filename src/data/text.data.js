@@ -31,7 +31,7 @@ export const TRAIT_TEXT = {
   tailClub:   { name: 'A clubbed tail', does: 'Fewer caught, and more fight in a push. A club is no balancing tail: it closes off legs fully under the body.', slot: 'tail' },
   venom:      { name: 'Venom', does: 'Prey easier to take, fewer caught, more fight. Only in a small body: it closes off growing large.', slot: 'jaw' },
   camouflage: { name: 'Camouflage', does: 'Colour that counts: fewer caught and prey easier where your colour matches the ground. Your colour turns toward the ground you mostly live on, a little each turn; move on and it has to turn again. Closes off display.', slot: 'skin' },
-  display:    { name: 'Display', does: 'A bright frill: numbers climb back faster, and more are caught, both where you stand out from the ground. Your colour turns away from the ground you live on. Closes off camouflage.', slot: 'skull' },
+  display:    { name: 'Display', does: 'A bright frill: numbers climb back faster, and more are caught, both where you stand out from the ground; with venom, bright colours are a warning and fewer are caught instead. Your colour turns away from the ground you live on. Closes off camouflage.', slot: 'skull' },
   armour:     { name: 'Armour', does: 'Far fewer are caught. Slower. A full shell closes off running legs and burrowing.', slot: 'skin' },
 };
 // The branches of the tree on the Body screen.

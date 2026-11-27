@@ -24,7 +24,7 @@ export function body(t, ways = []) {
   const night = ways.includes('night'), tend = ways.includes('tend'), roam = ways.includes('roam'), fat = ways.includes('fat');
   const scales = lv(t, 'scales'), fur = lv(t, 'fur'), feathers = lv(t, 'feathers'), sail = lv(t, 'sail');
   const small = (3 - size) / 3, claws = lv(t, 'claws'), horns = lv(t, 'horns'), club = lv(t, 'tailClub'), venom = lv(t, 'venom') * small;
-  const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm + 0.03 * feathers - 0.08 * lv(t, 'armour') - 0.03 * size - 0.03 * horns;
+  const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm + 0.03 * feathers - 0.08 * lv(t, 'armour') - 0.03 * size - 0.015 * horns;
   const mouth = mouthOf(t), own = mouth ? JAWS[mouth] : null;
   const eff = {};
   for (const f of BASE_FOODS) {
@@ -39,15 +39,15 @@ export function body(t, ways = []) {
   eff.carrion = CARRION.scavenge * lv(t, 'scavenge') + (mouth === 'jawPrey' ? CARRION.hunter * lv(t, 'jawPrey') : 0);
   eff.hard = lv(t, 'crush') ? 0.2 * lv(t, 'crush') + 0.03 * size : 0;
   if (night) for (const f of FOODS) eff[f] *= 0.9;        // finds less in the dark
-  let upkeep = 1 + (tend ? 0.06 : 0) + (roam ? 0.07 : 0);   // young to feed; miles to walk
+  let upkeep = 1 + (tend ? 0.04 : 0) + (roam ? 0.07 : 0);   // young to feed; miles to walk
   for (const id in t) upkeep += TRAITS[id].cost * t[id];
   upkeep += COAT_SIZE * fur * size;                            // a coat costs more the more animal there is to cover
   return {
     dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg') + 0.06 * burrow + 0.04 * scales),   // a burrow is damp; scales keep water in
     // Cold: a warm metabolism under a coat. Fur holds heat best, feathers nearly; a sail soaks up the morning sun.
-    lo: 0.40 - 0.07 * warm - 0.10 * fur - 0.08 * feathers - 0.03 * sail - 0.04 * size - 0.05 * burrow,
+    lo: 0.40 - 0.07 * warm - 0.10 * fur - 0.08 * feathers - 0.07 * sail - 0.04 * size - 0.05 * burrow,
     // Heat: watertight skin, scales over it, a sail to shed it. A coat is worn in the heat too.
-    hi: 0.65 + 0.06 * skin + 0.05 * scales + 0.05 * sail - 0.02 * fur - 0.01 * feathers - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
+    hi: 0.65 + 0.06 * skin + 0.05 * scales + 0.09 * sail - 0.02 * fur - 0.01 * feathers - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
     mob, eff, upkeep, mouth,
     defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + 0.04 * claws + 0.05 * horns + 0.08 * club + 0.05 * venom + (night ? 0.2 : 0)),
     // Fight a head, for a push between lineages.
@@ -84,7 +84,8 @@ export function shade(l, r, b, t = l.traits) {
   const c = lv(t, 'camouflage'), d = lv(t, 'display'), m = matchIn(l, r);
   return {
     ...b,
-    defence: clamp01(b.defence + COLOUR.camo.defence * c * m - COLOUR.display.defence * d * (1 - m)),
+    // Display is seen: more are caught, unless the lineage is venomous, when bright colours are a warning.
+    defence: clamp01(b.defence + COLOUR.camo.defence * c * m + (lv(t, 'venom') ? COLOUR.display.warn : -COLOUR.display.defence) * d * (1 - m)),
     grow: b.grow + COLOUR.display.grow * d * (1 - m),
     eff: c ? { ...b.eff, prey: b.eff.prey + COLOUR.camo.prey * c * m } : b.eff,
   };
