@@ -1,8 +1,12 @@
 # Frame: how to balance what is now in the game
 
 Status: **approved 2026-11-27.** The author, shown the decisions at the end:
-"Go ahead", taken as every recommendation. Rounds A to C are measured in
-`docs/KILLGATE.md`.
+"Go ahead", taken as every recommendation. Rounds A to C are built and
+measured in `docs/KILLGATE.md` ("Balance rounds A to C"). Met: the top-three
+floor for every body, the weapon and colour prices but horns, ranking last.
+Open: the lizard and the amphibian outside 25 to 45%, the faces 16 points
+apart, three bodies under 75% saved. The global dial was not turned: it
+would push the amphibian further out (KILLGATE, fault 6).
 
 The author, after camouflage and display were built: "Now I want you to
 figure out how we might balance this stuff". "This stuff" is read as

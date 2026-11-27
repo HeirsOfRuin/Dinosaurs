@@ -10,18 +10,148 @@ record and their numbers no longer describe the game.
 
 The gate measures the game's own engine (`src/engine/model.js`,
 `src/data/world.data.js`, `src/engine/policies.js`). Every number in the data
-table is tuned, not sourced. `npm run gate` reproduces round 9 (169,000 runs,
-about an hour and a half); `npm run gate:check` proves the model is deterministic, that
+table is tuned, not sourced. `npm run gate` reproduces balance round C
+(194,000 runs, about an hour and a half on one core); `npm run gate:check` proves the model is deterministic, that
 every run ended and moved its clock, that no lineage wears two coverings,
 holds warm blood without a coat or grew both halves of a closed pair, and
 that every policy part and world switch changes the end state (26 parts;
 watching changes 29 of 40 seeds, the rest 37 to 40).
 
-Round 9 is the current measurement: the game with rivals that act. Round 8
-is the same game the turn before rivals were built, on the same seeds.
-Rounds 7, 6a and 6 are earlier tunings of the same design, and their reading
-of ways of living, moments and the warning still holds where a later round
-does not say otherwise.
+Balance round C is the current measurement: the game after the three
+balance rounds the author approved in `docs/FRAME-balance.md`. Round 10 is
+their baseline, on the same seeds. Rounds 9 to 6 are earlier measurements of
+the same design, and their reading of ways of living, moments and the
+warning still holds where a later round does not say otherwise.
+
+## Balance rounds A to C (2026-11-27)
+
+The author approved `docs/FRAME-balance.md` ("Go ahead"): rounds A, B and C
+in that order, each measured before the next, against round 10. Each round is
+a full gate, 1,000 seeds an arm, the seeds of round 10, so every difference is
+what that round changed. Run side by side, none of the three gates
+finished inside the machine's two-hour limit. Round A has every table but
+the pooled stances (table 14 holds the same runs by body); round B every
+table but the stances (stopped, to free the machine for C); round C's tables
+12 and 14 were run separately on the same code and seeds (`npm run gate`
+now plays each arm once: 49,000 fewer runs, 194,000 in all).
+
+### Against the lines the author approved
+
+| Line | Round 10 | A | B | C |
+|---|---|---|---|---|
+| Careful play, one life: about 30% through, 10% top three (7,000 runs) | 34.6 / 9.7 | 34.9 / 10.6 | 33.0 / 8.4 | **34.5 / 8.9** |
+| Every body 25 to 45% through | 22.4 to 49.7 | 24.1 to 49.9 | 19.6 to 49.9 | **21.6 to 50.8**: amphibian and lizard out |
+| Every body at least 5% top three | 3.4 to 21.3 | 4.2 to 21.3 | 5.0 to 13.4 | **5.4 to 14.5**: met |
+| Each weapon and colour trait within 5 points of none | club +12.6, display −14.9, horns −8.8 | club +16.8, display −14.2, armour +16.6 | all within 5 but club +5.1, horns −5.1 | **all within 5 but horns −5.9** |
+| Faces of the Great Dying within 10 points | 33.1 to 54.9 | 33.4 to 56.3 | 31.9 to 53.5 | **37.5 to 53.8**: 16 apart |
+| No more than a third of finishers rank last | 52% | 49% | 52% | **26%**: met |
+| Saved setting about 75% through | 51.2 to 89.3 by body | 51.5 to 89.8 | 46.3 to 90.0 | **careful 80.7; bodies 48.2 to 89.0** |
+
+### Round A: what the stances can do
+
+A hunter may prey on a rival that fights less than 1.3 times as well, head
+for head (it was "a smaller body"); the side that pushes only bleeds; keeping
+out of the way costs half the rival's best food, not all of it; the bots take
+stances at the reading a person would and grow a weapon when they mean to use
+it.
+
+- Stances together are worth 2.7 points (no stances 32.2%, as designed
+  34.9%), from 1.4 in round 10.
+- Each is best somewhere (table 14, 1,000 seeds an arm against no stances):
+  prey for the crocodile, +7.1 (30.8 to 37.9); push for the amphibian +3.0 and
+  the dinosaur +2.7; following a hunter for the mammal, +1.6. Keeping out of
+  the way is best nowhere: no row moves more than 0.4. Only the crocodile's prey
+  clears the floor of 4.1.
+- The price list (table 13, careful player, none 29.0%) showed what round B
+  had to take: armour +16.6, clubbed tail +16.8 (with its armour), camouflage
+  +6.8, display −14.2, horns −7.5, sail −12.4.
+
+### Round B: what the new traits cost
+
+Prices only: armour 0.05 to 0.09 a step, clubbed tail 0.03 to 0.04,
+camouflage hides less, display cheaper with fewer caught and a smaller climb
+(and with venom a warning: fewer caught), horns cheaper and slow less, sail
+cheaper and holds more heat and cold, tending cheaper.
+
+Price list after (none 31.1%): armour +1.4, clubbed tail +5.1, camouflage
++2.1, display +4.7, claws −0.5, venom −1.5, horns −5.1, sail −10.1. Every
+weapon and colour trait came within about 5 points.
+
+What it cost the bodies: the armoured ones. Turtle 38.6 to 28.3% (top three
+15.0 to 6.1), crocodile 39.1 to 33.0 (21.3 to 13.4). The dinosaur rose 28.3
+to 32.9. Careful play pooled fell 34.9 to 33.0. The amphibian fell to 19.6.
+
+### Round C: bodies, the ladder, the cold face
+
+- The great amphibians stand on the ladder as the lineage that only just
+  came through (numbers 4 to 1; standing 491 to 421). Ranking last: 52% to
+  26% of finishers. Making secure reach full sooner, the plan's lever, was
+  tried first and changed nothing: it lifts the ladder as much as the player.
+  That the great amphibians "only just came through" is from memory and
+  unchecked.
+- A rival that hunts on your ground is not fooled by living at night.
+- A drought leaves more fish (0.3 to 0.45).
+- The cold Great Dying a step softer.
+- The starvation rate stays 0.72 (below).
+
+By body, through / top three (1,000 seeds each): lizard 50.8 / 13.4, mammal
+37.6 / 5.4, crocodile 34.7 / 14.5, dinosaur 34.4 / 6.8, careful 33.1 / 5.4,
+turtle 29.4 / 6.1, amphibian 21.6 / 10.9.
+
+Price list (none 33.1%): size −11.9, fur −9.5, warm blood −16.3, sail −10.3,
+horns −5.9, gait −2.5, armour +0.4, clubbed tail +4.2, camouflage +1.9,
+display +4.8, burrowing +4.9. The specialists (a heavier body, fur, warm
+blood) stay out of line on purpose: they pay on a cold Great Dying and in
+standing (FRAME-balance, round B).
+
+Stances and rivals (tables 12 and 14; through %, 1,000 seeds a cell, floor
+4.1; pooled rows 7,000 runs, floor 1.5):
+
+| Body | No stances | Push | Prey | Follow | Avoid | All | Rivals passive |
+|---|---|---|---|---|---|---|---|
+| careful | 30.9 | 32.8 | 30.9 | 31.4 | 30.9 | 33.1 | 34.9 |
+| dinosaur | 31.7 | 34.4 | 31.7 | 31.8 | 31.7 | 34.4 | 36.3 |
+| crocodile | 29.2 | 30.3 | 34.7 | 29.2 | 28.9 | 34.7 | 44.1 |
+| mammal | 35.5 | 36.3 | 35.5 | 36.5 | 35.7 | 37.6 | 41.4 |
+| amphibian | 18.9 | 21.6 | 18.9 | 18.9 | 19.0 | 21.6 | 21.8 |
+| lizard | 50.2 | 50.7 | 50.2 | 50.7 | 49.9 | 50.8 | 54.8 |
+| turtle | 28.5 | 28.7 | 28.5 | 29.2 | 28.3 | 29.4 | 34.9 |
+| **pooled** | 32.1 ±0.6 | 33.5 | 32.9 | 32.5 | 32.1 | 34.5 | 38.3 |
+
+The stances together are worth 2.4 points; rivals that act cost 3.8 (2.2 in
+round 10). Prey is the crocodile's (+5.5, the one cell over the floor), push
+the dinosaur's and the amphibian's (+2.7 each), following a hunter the
+mammal's (+1.0). The crocodile pays most for rivals that act (44.1 passive,
+34.7 as designed): a hunter that preys is pushed back.
+
+### Faults still open after round C
+
+1. **The lizard, 50.8%.** Round C's lever did not move it (49.9 in round B):
+   it was aimed at the wrong cause. Living at night does not carry it: without night
+   it comes through 50.0%, with it 47.0%, and with rivals passive 52.7% (300
+   seeds an arm). The hot Great Dying carries it: it comes through 86% of hot
+   faces and 19% of cold. The hot face leaves insects at 0.6, the most of any
+   food on any face, and the lizard eats insects in a body that holds heat.
+   Insects at 0.45 on the hot face (200 seeds a body, not built) take that
+   face from 52 to 42% and the lizard from 45 to 42%, close the four faces to
+   36 to 48% (fault 3), and cost careful play about 2 points.
+2. **The amphibian, 21.6%.** The fish left by a drought gave 2 points (19.6
+   to 21.6), not the 4 the 300-seed sweep showed. It still dies in the Coal
+   Forests: 44% of arrivals come through that era, against 86 to 98% for
+   every other body. Saved, three tries an era, 48.2%.
+3. **The Great Dying's faces, 16 points apart.** Cold rose 33.4 to 37.5; the
+   gap is now the hot face (53.8) against cold and wasting (37.5, 38.1).
+   Wasting fell from 42.9 in round B, with armour's price.
+4. **The saved setting by body.** Careful play 80.7%, on the author's 75%;
+   the amphibian 48.2, the turtle 55.3 and the crocodile 66.2 are under it.
+   The turtle is the armour price: it lost 10 points on one life in round B.
+5. **Keeping out of the way is best nowhere.** It is open on most shared
+   turns and no body gains from it.
+6. **The global dial was not turned.** The plan's last step was to turn the
+   starvation rate onto 30% and 10%. Careful play is 4.5 points over on
+   coming through and 1.1 under on the top three; a harsher rate lowers both,
+   and one step (0.73) put the amphibian at 20%. Turning it before faults 1
+   and 2 are fixed would push the amphibian further out of the band.
 
 ## Round 10: camouflage and display in; the baseline for balance rounds A to C (2026-11-27)
 
