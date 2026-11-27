@@ -7,7 +7,8 @@
 // (docs/FRAME-standing.md): one mouth, ways of living, moments, and standing
 // in place of four fixed winning bodies.
 import { streamFor } from './rng.js';
-import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, SHADOW, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
+import { lookOf } from './parts.js';
+import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, SHADOW, HUE_DEG, GROUND_HUE, COLOUR, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
@@ -56,6 +57,36 @@ export function body(t, ways = []) {
     starve: (fat ? STARVE.fat : STARVE.plain) * (1 - STARVE.size * size - STARVE.armour * lv(t, 'armour') - STARVE.burrow * burrow * (3 - size) / 3),   // and a small one gone to ground                            // how fast they fall toward it
     ease: roam ? 0.55 : 1,                                 // how much of bad ground's harm is felt
     drag: 1,                                 // a lineage on the move changes more slowly
+  };
+}
+
+// ---- colour (docs/FRAME-rivals.md section 6) ------------------------------------
+
+/** A ground's colour in degrees, from how wet and how cold it is. */
+export function groundHue(r) {
+  const h = GROUND_HUE.dry + (GROUND_HUE.wet - GROUND_HUE.dry) * clamp01(r.wet);
+  const cold = clamp01((GROUND_HUE.coldBelow - r.temp) / GROUND_HUE.coldBelow);
+  return h + (GROUND_HUE.cold - h) * cold;
+}
+const hueGap = (a, b) => { const d = Math.abs(((a - b) % 360 + 360) % 360); return Math.min(d, 360 - d); };
+/** How closely a lineage's colour matches a ground, 0 to 1. */
+export const matchIn = (l, r) => (l.hue == null ? 0 : clamp01(1 - hueGap(l.hue, groundHue(r)) / COLOUR.across));
+/** The colour a lineage is born with in an era: the seeded look, as a hue. */
+export const bornHue = (s, l) => HUE_DEG[lookOf(s.seed, s.era, l.id).hue % HUE_DEG.length];
+const shows = (t) => lv(t, 'camouflage') > 0 || lv(t, 'display') > 0;
+
+/**
+ * A body on one ground, its colour counted. Colour counts only with camouflage or display (the
+ * author's word); without them this returns the body unchanged, and colour is free.
+ */
+export function shade(l, r, b, t = l.traits) {
+  if (!shows(t)) return b;
+  const c = lv(t, 'camouflage'), d = lv(t, 'display'), m = matchIn(l, r);
+  return {
+    ...b,
+    defence: clamp01(b.defence + COLOUR.camo.defence * c * m - COLOUR.display.defence * d * (1 - m)),
+    grow: b.grow + COLOUR.display.grow * d * (1 - m),
+    eff: c ? { ...b.eff, prey: b.eff.prey + COLOUR.camo.prey * c * m } : b.eff,
   };
 }
 
@@ -174,7 +205,7 @@ function claims(s) {
     const ob = body(o.traits, waysOf(s, o)), m = {};
     for (const r of s.regions) {
       const p = o.pop[r.id] || 0; if (!(p > 0)) continue;
-      const k = p * fit(ob, r), eff = effIn(s, o, r.id, ob.eff); m[r.id] = {};
+      const k = p * fit(ob, r), eff = effIn(s, o, r.id, shade(o, r, ob).eff); m[r.id] = {};
       for (const f of FOODS) { m[r.id][f] = k * eff[f]; t.total[r.id][f] += m[r.id][f]; }
     }
     t.mine.set(o, m);
@@ -187,7 +218,7 @@ export function capacity(s, l, traits = l.traits, ways = waysOf(s, l), stance = 
   const b = body(traits, ways), out = {}, t = claims(s), was = t.mine.get(l) || {};
   for (const r of s.regions) {
     const p = l.pop[r.id] || 0; if (!(p > 0)) continue;
-    const k = p * fit(b, r), eff = effIn(s, { ...l, traits, stance }, r.id, b.eff);
+    const k = p * fit(b, r), eff = effIn(s, { ...l, traits, stance }, r.id, shade(l, r, b, traits).eff);
     let got = 0;
     for (const f of FOODS) { const c = k * eff[f]; if (c > 0) got += r.food[f] * c / (t.total[r.id][f] - (was[r.id]?.[f] || 0) + c); }
     out[r.id] = got / b.upkeep;
@@ -254,10 +285,11 @@ export function contact(s, caps) {
   for (const l of s.lineages) {
     const x = stanceOn(s, l, null);
     if (!x || (x.act !== 'push' && x.act !== 'prey')) continue;
-    const R = x.R, bl = body(l.traits, waysOf(s, l)), bR = body(R.traits, waysOf(s, R));
+    const R = x.R, bl0 = body(l.traits, waysOf(s, l)), bR0 = body(R.traits, waysOf(s, R));
     for (const r of sharedGround(l, R)) {
       if (avoids(s, R, l, r)) continue;
-      const a = l.pop[r], b = R.pop[r];
+      const a = l.pop[r], b = R.pop[r], ground = s.regions.find((x) => x.id === r);
+      const bl = ground ? shade(l, ground, bl0) : bl0, bR = ground ? shade(R, ground, bR0) : bR0;
       if (x.act === 'prey') {
         const taken = PREY.rate * Math.min(b, PREY.reach * a) * Math.min(1, bl.eff.prey) * (1 - bR.defence);
         add(lose, R, r, taken); add(gain, l, r, taken * PREY.worth / bl.upkeep);
@@ -284,7 +316,7 @@ export function contact(s, caps) {
  * warned of eight turns out, 18,000 strong, having been told nothing of what would help.
  */
 export function forecast(s, l, traits = l.traits, ways = waysOf(s, l)) {
-  const era = ERAS[s.era], b = body(traits, ways), rivals = s.lineages.filter((o) => o !== l);
+  const era = ERAS[s.era], b0 = body(traits, ways), rivals = s.lineages.filter((o) => o !== l);
   let pop = { ...l.pop }, worst = Infinity;
   for (let t = s.turn; t < era.turns; t++) {
     const me = { ...l, traits, pop };
@@ -294,7 +326,7 @@ export function forecast(s, l, traits = l.traits, ways = waysOf(s, l)) {
     let fed = 0;
     for (const r of at.regions) {
       const p = Math.max(0, (pop[r.id] || 0) - (lose[r.id] || 0)); if (!(p > 0)) continue;
-      const k = caps[r.id] || 0; fed += k;
+      const k = caps[r.id] || 0, b = shade(me, r, b0, traits); fed += k;
       let n = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
       n *= 1 - 0.3 * r.pred * (1 - b.defence);
       if (n >= MIN_VIABLE) next[r.id] = n;
@@ -394,7 +426,10 @@ export function startEra(s) {
   s.lineages = s.lineages.filter((l) => l.player);
   s.faces = { ...(s.faces || {}), [s.era]: s.dieoff.type };
   if (!s.opts.noRivals) era.rivals.forEach((rv, i) => s.lineages.push({ id: 'rival' + i, player: false, plan: { plan: rv.plan, regions: 2 }, traits: { ...rv.traits }, prog: {}, ways: {}, stance: null, pop: { [rv.home]: 15 } }));
-  for (const l of s.lineages) l.stance = null;   // a new era, new neighbours
+  for (const l of s.lineages) {
+    l.stance = null;   // a new era, new neighbours
+    if (l.hue == null || !shows(l.traits)) l.hue = bornHue(s, l);   // colour that counts is carried; free colour is born anew
+  }
   s.rev = (s.rev || 0) + 1;
   s.regions = regionsNow(s);
 }
@@ -433,6 +468,15 @@ function apply(s, l, d, offers) {
     for (const id of Object.keys(l.ways)) if (!want.includes(id)) delete l.ways[id];
     for (const id of want) if (!(id in l.ways)) l.ways[id] = s.clock;
   }
+  // Colour that counts turns, a little each turn: toward the ground most of the lineage lives on with
+  // camouflage, away from it with display. Without either it stays as it was born.
+  const main = held(l).sort((a, b) => l.pop[b] - l.pop[a])[0], ground = main && s.regions.find((r) => r.id === main);
+  if (ground && shows(l.traits) && l.hue != null) {
+    const to = lv(l.traits, 'camouflage') ? groundHue(ground) : groundHue(ground) + 180;
+    const step = COLOUR.drift * (lv(l.traits, 'camouflage') || lv(l.traits, 'display'));
+    const d = ((to - l.hue) % 360 + 540) % 360 - 180;
+    l.hue = ((l.hue + Math.sign(d) * Math.min(Math.abs(d), step)) % 360 + 360) % 360;
+  }
   const speed = body(l.traits, waysOf(s, l)).drag / (1 + RANGE_DRAG * (Math.max(1, held(l).length) - 1));
   if (d.turn && canTurn(l.traits, d.turn)) {
     // The mouth (or the covering) turns: the old one goes on working until the new one is ready, which arrives a step lower.
@@ -468,10 +512,10 @@ function feed(s) {
   // lost to rivals, and the last of a region dying out. It records the turn; it decides nothing.
   const moved = { bred: 0, starved: 0, caught: 0, lost: 0, rivals: 0 };
   s.lineages.forEach((l, i) => {
-    const b = body(l.traits, waysOf(s, l)), lose = c.lose.get(l) || {};
+    const b0 = body(l.traits, waysOf(s, l)), lose = c.lose.get(l) || {};
     for (const r of s.regions) {
       const p0 = l.pop[r.id] || 0; if (!(p0 > 0)) continue;
-      const p = Math.max(0, p0 - (lose[r.id] || 0)), k = caps[i][r.id];
+      const p = Math.max(0, p0 - (lose[r.id] || 0)), k = caps[i][r.id], b = shade(l, r, b0);
       const fed = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
       const shadow = stanceOn(s, l, r.id)?.act === 'shadow' ? SHADOW.pred : 0;   // close behind a hunter, more are caught
       const n = fed * (1 - 0.3 * Math.min(1, r.pred + shadow) * (1 - b.defence));

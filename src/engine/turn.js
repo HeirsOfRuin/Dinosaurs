@@ -11,7 +11,7 @@
 
 import { FOODS, JAWS, TRAITS, ERAS, MOMENTS, WAYS, MAX_WAYS, WAY_SETTLE, STEP_TURNS, SHED_TURNS, COVERS, TREE, WATCH_TURNS, STANCES, PUSH, RANGE_DRAG, MAX_REGIONS, MIN_VIABLE, HEADS, LENGTH_M } from '../data/world.data.js';
 import { ERA_TEXT, TRAIT_TEXT } from '../data/text.data.js';
-import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast, canTurn, lostOnTurn, closedBy, coverOf, turnsFrom, turnTime, byId, stanceWhy, sharedGround, pushShare, bestFood, contact } from './model.js';
+import { body, fit, capacity, held, totalPop, canRaise, canShed, warning, offersFor, step, rerollEra, dieoffTurns, mouthOf, waysOf, momentDue, ladder, resembles, forecast, canTurn, lostOnTurn, closedBy, coverOf, turnsFrom, turnTime, byId, stanceWhy, sharedGround, pushShare, bestFood, contact, matchIn, groundHue, shade } from './model.js';
 import { decide } from './policies.js';
 import { freshGame } from './game.js';
 import { parts, lookOf } from './parts.js';
@@ -272,7 +272,7 @@ function rivalView(g, s, you, R, caps, H) {
     };
   });
   return {
-    id: R.id, parts: { ...parts(R.traits, waysOf(s, R)), look: lookOf(s.seed, s.era, R.id) }, length: sizeOf(R.traits), pop: totalPop(R) * H,
+    id: R.id, parts: { ...parts(R.traits, waysOf(s, R)), look: { ...lookOf(s.seed, s.era, R.id), deg: R.hue ?? null } }, length: sizeOf(R.traits), pop: totalPop(R) * H,
     trend: was != null ? (totalPop(R) - was) * H : null, near: ground.length > 0, like: resembles(R.traits), mouth: mouthOf(R.traits), best: bestFood(s, R),
     ground, home: held(R), toYou, lastTurn, stances,
   };
@@ -315,7 +315,7 @@ export function view(g) {
       return {
         id: r.id, mine: (you.pop[r.id] || 0) * H, feeds: (caps[r.id] || 0) * H,
         rivals: s.lineages.filter((l) => !l.player).reduce((a, l) => a + (l.pop[r.id] || 0), 0) * H,
-        fit: fit(b, r), wet: r.wet, temp: r.temp, tooDry: (1 - b.dry) - r.wet > 0.02, tooCold: b.lo - r.temp > 0.02, tooHot: r.temp - b.hi > 0.02,
+        fit: fit(b, r), match: lv(t, 'camouflage') || lv(t, 'display') ? matchIn(you, r) : null, wet: r.wet, temp: r.temp, tooDry: (1 - b.dry) - r.wet > 0.02, tooCold: b.lo - r.temp > 0.02, tooHot: r.temp - b.hi > 0.02,
         food: Object.fromEntries(FOODS.map((f) => [f, r.food[f] * H])), pred: r.pred,
         spread: { ok: sp.ok, why: sp.why, sends: sp.sends != null ? sp.sends * H : null, arrive: sp.arrive != null ? sp.arrive * H : null, feeds: sp.feeds != null ? sp.feeds * H : null, queued: g.plan.spread === r.id },
         outlook: warn && warn.sens ? outlookOf(warn.sens[r.id] * era.mag) : null,
@@ -379,7 +379,10 @@ export function view(g) {
     // Standing as it would be if the run ended now, and the ladder it is placed on.
     standing: { score: mineStanding.score, prospects: mineStanding.prospects, secure: mineStanding.secure, spread: mineStanding.spread, rank: place + 1, of: rows.length, like: resembles(t) },
     ladder: rows.map((r, i) => ({ id: r.id, you: r.you, score: r.score, rank: i + 1 })),
-    parts: { ...parts(t, ways), look: lookOf(s.seed, s.era, 'you') },
+    parts: { ...parts(t, ways), look: { ...lookOf(s.seed, s.era, 'you'), deg: you.hue ?? null } },
+    // Colour, and whether it counts: only with camouflage or display. Each ground's colour and how well you match it.
+    colour: { hue: you.hue ?? null, counts: lv(t, 'camouflage') > 0 || lv(t, 'display') > 0, by: lv(t, 'camouflage') ? 'camouflage' : lv(t, 'display') ? 'display' : null,
+      grounds: s.regions.map((r) => ({ id: r.id, hue: groundHue(r), match: matchIn(you, r), mine: you.pop[r.id] > 0 })) },
     body: { dry: b.dry, lo: b.lo, hi: b.hi, mob: b.mob, defence: b.defence },
     saves: g.saves.map((x, e) => (x ? { era: e, name: ERAS[e].name, tries: g.tries[e] } : null)).filter(Boolean),
     last: s.lastEra || null,

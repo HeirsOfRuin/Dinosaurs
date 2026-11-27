@@ -12,7 +12,7 @@ export function freshGame({ seed = 1, setting = 'saved' } = {}) {
   const s = newWorld(seed >>> 0, {});
   s.lineages.find((l) => l.player).plan = null;   // the player's lineage has no policy; a save must not hold `undefined`
   return {
-    v: 5,
+    v: 6,
     seed: seed >>> 0,
     setting,
     s,

@@ -304,3 +304,34 @@ test('keeping out of a hunter\'s way stops it hunting you there, at a cost in fo
   assert.equal((contact(s, null).lose.get(you) || {}).a || 0, 0, 'not hunted while keeping out of the way');
   assert.match(stanceWhy(s, you, R, 'prey'), /hunter's mouth/);
 });
+
+// ---- colour (the author, 2026-11-27: "Have your colours only affect the numbers if you have those") ----
+import { shade, matchIn, body as bodyOf } from '../src/engine/model.js';
+
+test('colour changes nothing without camouflage or display', () => {
+  const r = { id: 'a', wet: 0.8, temp: 0.5, pred: 0.3 };
+  const t = { lungs: 2, limbs: 2, skin: 1, jawInsects: 2 }, b = bodyOf(t);
+  for (const hue of [0, 45, 150, 300]) assert.deepEqual(shade({ traits: t, hue }, r, b), b);
+});
+
+test('camouflage hides where the colour matches; display shows where it stands out', () => {
+  const wet = { id: 'a', wet: 1, temp: 0.5, pred: 0.3 };   // green ground, hue 150
+  const camo = { lungs: 2, limbs: 2, skin: 1, jawInsects: 2, camouflage: 2 }, disp = { ...camo, camouflage: undefined, display: 2 };
+  delete disp.camouflage;
+  const bc = bodyOf(camo), bd = bodyOf(disp);
+  assert.ok(matchIn({ hue: 150 }, wet) > 0.99 && matchIn({ hue: 330 }, wet) === 0);
+  assert.ok(shade({ traits: camo, hue: 150 }, wet, bc).defence > shade({ traits: camo, hue: 330 }, wet, bc).defence);
+  assert.ok(shade({ traits: disp, hue: 330 }, wet, bd).grow > shade({ traits: disp, hue: 150 }, wet, bd).grow);
+  assert.ok(shade({ traits: disp, hue: 330 }, wet, bd).defence < bd.defence);
+});
+
+test('a camouflaged lineage\'s colour turns toward the ground it lives on, and is drawn as it is', () => {
+  let g = newGame({ seed: 41 });
+  const you = () => g.s.lineages.find((l) => l.player);
+  Object.assign(you().traits, { skin: 1, camouflage: 2 });
+  const start = view(g).colour, home = start.grounds.find((x) => x.mine);
+  for (let i = 0; i < 8 && !g.over; i++) { if (view(g).moment) g = meet(g, 0); g = advance(g, { keep: null }).state; }
+  const now = view(g).colour, there = now.grounds.find((x) => x.id === home.id);
+  if (there && there.mine) assert.ok(there.match >= home.match, `match ${home.match.toFixed(2)} -> ${there.match.toFixed(2)}`);
+  assert.equal(view(g).parts.look.deg, you().hue);
+});

@@ -42,7 +42,10 @@ export const TRAITS = {
   claws:    { cost: 0.02, needs: { limbs: 2 } },
   horns:    { cost: 0.04, needs: { size: 1 } },
   tailClub: { cost: 0.03, needs: { armour: 1 } },
-  venom:    { cost: 0.03, needs: {} },    // a sail on the back: sheds heat and soaks it up
+  venom:    { cost: 0.03, needs: {} },
+  // Colour that counts (the author, 2026-11-27: "Have your colours only affect the numbers if you have those").
+  camouflage: { cost: 0.02, needs: { skin: 1 } },
+  display:    { cost: 0.03, needs: { skin: 1 } },    // a sail on the back: sheds heat and soaks it up
   gait:   { cost: 0.04, needs: { limbs: 3 } },   // legs under the body
   burrow: { cost: 0.03, needs: { limbs: 2 } },
   brain:  { cost: 0.05, needs: {} },
@@ -75,6 +78,7 @@ export const BARS = [
   [['sail', 1], ['burrow', 1]],     // or dug with
   [['tailClub', 1], ['gait', 3]],   // a club is no balancing tail
   [['venom', 1], ['size', 2]],      // venom is a small animal's weapon
+  [['camouflage', 1], ['display', 1]],   // one hides, the other is seen
 ];
 // A trait a lineage is watching for is among what a generation offers once it has watched this many turns.
 export const WATCH_TURNS = 2;
@@ -85,7 +89,7 @@ export const TREE = [
   { id: 'legs', traits: ['limbs', 'gait', 'burrow'] },
   { id: 'mouth', traits: ['jawFish', 'jawInsects', 'jawPlants', 'jawPrey', 'omni', 'scavenge', 'crush'] },
   { id: 'frame', traits: ['size', 'brain', 'herd'] },
-  { id: 'arms', traits: ['claws', 'horns', 'tailClub', 'venom'] },
+  { id: 'arms', traits: ['claws', 'horns', 'tailClub', 'venom', 'camouflage', 'display'] },
 ];
 export const RANGE_DRAG = 0.35;             // each region held beyond the first slows selection
 export const MAX_REGIONS = 3;
@@ -122,6 +126,17 @@ export const PUSH = { loss: 0.12, yield: 0.3 };
 export const PREY = { rate: 0.1, reach: 2, worth: 0.6 };
 // Shadow a bigger hunter: more of the dead for you, and more of you caught.
 export const SHADOW = { carrion: 0.12, pred: 0.1 };
+
+// ---- Colour (docs/FRAME-rivals.md section 6) ----------------------------------
+// The eight colours a lineage can be born in, as hues in degrees; the screen draws them.
+export const HUE_DEG = [150, 95, 45, 22, 205, 330, 70, 180];
+// A ground's colour, from what it is: dry ground is ochre (45), wet ground green (150), cold ground slate (205).
+export const GROUND_HUE = { dry: 45, wet: 150, cold: 205, coldBelow: 0.3 };
+// A colour matches a ground fully at no difference in hue and not at all at `across` degrees.
+// Camouflage: fewer caught and prey easier where you match, and the colour turns toward the ground you
+// mostly live on, `drift` degrees a turn a step. Display: numbers climb faster and more are caught,
+// both where you stand out; the colour turns away from the ground. Colour counts only with one of them.
+export const COLOUR = { across: 90, camo: { defence: 0.06, prey: 0.04 }, display: { grow: 0.06, defence: 0.05 }, drift: 10 };
 
 // region: [id, wet, temp, insects, fish, plants, prey, predators]
 const R = (id, wet, temp, insects, fish, plants, prey, pred) => ({ id, wet, temp, food: { insects, fish, plants, prey }, pred });

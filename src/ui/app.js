@@ -128,6 +128,7 @@ function playTab(v) {
       <span>${r.mine ? `<strong>you ${n0(r.mine)}</strong>` : fitWord(r)}</span>
       <span class="dim">${r.rivals >= 1 ? `rivals ${n0(r.rivals)}` : 'no rivals'}</span>
       ${r.outlook ? `<span class="out ${r.outlook === 'spared' ? 'good' : 'bad'}">${r.outlook}</span>` : ''}
+      ${r.match != null ? `<span class="dim">colour ${matchWord(r.match)}</span>` : ''}
       ${r.spread.queued ? '<span class="out good">settlers going</span>' : ''}
     </button>`).join('');
 
@@ -277,6 +278,17 @@ function endTab(v) {
     <div class="stack last"><button ${again ? '' : 'class="primary"'} data-act="new">New lineage</button></div>`;
 }
 
+// Colour: free, unless camouflage or display makes it count; then how well it matches each ground.
+const HUE_NAMES = [[150, 'sea green'], [95, 'olive'], [45, 'ochre'], [22, 'rust'], [205, 'slate blue'], [330, 'dusk rose'], [70, 'moss'], [180, 'teal']];
+const hueName = (deg) => HUE_NAMES.reduce((a, x) => (Math.min(Math.abs(x[0] - deg), 360 - Math.abs(x[0] - deg)) < Math.min(Math.abs(a[0] - deg), 360 - Math.abs(a[0] - deg)) ? x : a))[1];
+const matchWord = (m) => (m >= 0.75 ? 'matches' : m >= 0.4 ? 'half matches' : 'stands out');
+function colourLine(v) {
+  const c = v.colour, name = c.hue != null ? hueName(c.hue) : LOOK_TEXT.hue[v.parts.look.hue], pat = LOOK_TEXT.pattern[v.parts.look.pattern];
+  if (!c.counts) return `In this era it is ${name}, ${pat}. Colour changes nothing unless the lineage has camouflage or display.`;
+  const where = c.grounds.filter((g) => g.mine).map((g) => `the ${REGION_TEXT[g.id].toLowerCase()} (${matchWord(g.match)})`);
+  return `It is ${name}, ${pat}, and its colour counts: ${c.by === 'camouflage' ? 'it hides where it matches the ground, and turns toward the ground you mostly live on' : 'it shows where it stands out, and turns away from the ground you live on'}. Against your ground: ${list(where).replace(' or ', ' and ')}.`;
+}
+
 // ---- the rivals ---------------------------------------------------------------
 
 function rivalsTab(v) {
@@ -335,7 +347,7 @@ function bodyTab(v) {
   const st = v.standing, like = LINEAGE_TEXT[st.like], pic = animalSVG(v.parts, 9, animalLabel(v), v.length);
   return `
     <div class="stage plain">${pic.svg}</div>
-    <p class="hint">About ${metres(v.length)} from snout to tail, ${SIZE_TEXT[[0.4, 0.9, 2, 4].indexOf(v.length)] || ''}. The bar under it is ${metres(pic.unit)}. In this era it is ${LOOK_TEXT.hue[v.parts.look.hue]}, ${LOOK_TEXT.pattern[v.parts.look.pattern]}; colouring is the lineage's own and changes nothing.</p>
+    <p class="hint">About ${metres(v.length)} from snout to tail, ${SIZE_TEXT[[0.4, 0.9, 2, 4].indexOf(v.length)] || ''}. The bar under it is ${metres(pic.unit)}. ${colourLine(v)}</p>
     <div class="slots">${slots}</div>
     <p class="hint">Upkeep ${n2(v.upkeep)} food a head. ${v.regionsHeld > 1 ? `Holding ${v.regionsHeld} regions, a trait grows at ${Math.round(v.speed * 100)}% of full speed.` : `A trait grows at ${Math.round(v.speed * 100)}% of full speed.`}</p>
     <h2>The tree</h2>

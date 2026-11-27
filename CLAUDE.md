@@ -57,9 +57,10 @@
   toward one rival at a time, resolved by `contact()` in `model.js` for the
   player and the rivals alike. A rival hunts a smaller player and pushes back
   against one that pushes or hunts it; rivals do not act on each other yet.
-  Camouflage and display are not built: they would make colour mean
-  something, and colour is free at the author's word. Ask before building
-  them.
+  Camouflage and display are built (`docs/FRAME-rivals.md` section 6). The
+  author: "Have your colours only affect the numbers if you have those."
+  Colour counts through `shade()` and only with one of them; without, a
+  test holds that hue changes no number.
 - The author's targets: about 30% of careful play comes through on one life,
   about 10% reaches the top three rungs. A replayed era rolls a new die-off.
 - A win rate can be right and still be a coin toss. One tuning read 27% and
@@ -70,7 +71,8 @@
   `src/engine/parts.js`. One exception, at the author's word ("colour of
   animals should be more randomized... it's always the same now"): a
   lineage's colour, pattern and small features of outline come from the seed
-  and the era and change nothing. The Body screen says so.
+  and the era and change nothing, unless it holds camouflage or display
+  (then its colour turns and counts). The Body screen says which.
 - `docs/FRAME-bodies.md`: coverings, the closing pairs and the tree are built
   (its section 6 says how they differ from the proposal). Weapons and
   defences (section 4) wait for acting on rivals; randomising what a run

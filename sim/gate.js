@@ -98,6 +98,13 @@ console.log('arm             ' + ['THROUGH', 'top three'].map((h) => h.padStart(
 for (const [label, f] of [['as designed', (p) => ({ policy: p })], ['no watching', (p) => ({ policy: p, noWatch: true })]]) { const rs = label === 'as designed' ? allCareful : pooled(f); console.log(label.padEnd(16) + rate(thr(rs), rs.length) + ' ' + rate(top3(rs), rs.length)); }
 console.log(floor(m7));
 
+console.log('\n13. Weapons and colour: the careful player growing one besides (careful policy alone, 1,000 seeds an arm)');
+console.log('trait           ' + ['THROUGH', 'top three'].map((h) => h.padStart(10)).join(' '));
+for (const [label, also] of [['none', []], ['claws', [['claws', 2]]], ['horns', [['size', 1], ['horns', 2]]], ['clubbed tail', [['armour', 1], ['tailClub', 2]]], ['venom', [['venom', 2]]], ['camouflage', [['camouflage', 2]]], ['display', [['display', 2]]]]) {
+  const rs = runAll({ policy: { ...POLICIES.careful, also } }); console.log(label.padEnd(16) + rate(thr(rs)) + ' ' + rate(top3(rs)));
+}
+console.log(floor());
+
 console.log('\n12. Rivals: stances, and rivals that answer (careful play pooled)');
 console.log('arm             ' + ['THROUGH', 'top three'].map((h) => h.padStart(10)).join(' '));
 for (const [label, f] of [['as designed', null], ['no stances', (p) => ({ policy: { ...p, act: false } })], ...['push', 'prey', 'shadow', 'avoid'].map((a) => [a + ' only', (p) => ({ policy: { ...p, only: a } })]), ['rivals passive', (p) => ({ policy: p, passiveRivals: true })]]) {

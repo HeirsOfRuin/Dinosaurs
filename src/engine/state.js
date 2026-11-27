@@ -23,11 +23,11 @@
 
 import { freshGame } from './game.js';
 import { JAWS } from '../data/world.data.js';
-import { regionsNow, ladder, resembles } from './model.js';
+import { regionsNow, ladder, resembles, bornHue } from './model.js';
 
 export const SAVE_KEY = 'deep-time.save.v1'; // never rename
 export const SHELF_KEY = 'deep-time.shelf.v1'; // lineages set aside by going back to an earlier era
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 export const CODE_PREFIX = 'DEEP1.';
 
 /** MIGRATIONS[v](save) returns the save at version v + 1. Add one per version bump. */
@@ -96,6 +96,18 @@ MIGRATIONS[4] = (old) => {
   g.plan = { ...g.plan, stance: null };
   g.v = 5;
   g.note = old.note ? old.note : 'The rules have changed since this lineage was saved. You can now act on the rivals you share ground with, from the new Rivals screen, and they can act on you: a hunter bigger than you will hunt you. Four weapons have been added to the tree.';
+  return g;
+};
+
+// v6: colour can count (camouflage, display). Every lineage is given the colour it was born
+// with in its era, which is the colour a v5 save drew; nothing else changes.
+MIGRATIONS[5] = (old) => {
+  const g = structuredClone(old);
+  const world = (s) => { for (const l of s.lineages) if (l.hue == null) l.hue = bornHue(s, l); s.rev = (s.rev || 0) + 1; return s; };
+  g.s = world(g.s);
+  g.saves = (g.saves || []).map((x) => (x ? world(x) : x));
+  g.v = 6;
+  g.note = old.note ? old.note : 'The rules have changed since this lineage was saved. Two new traits, camouflage and display, make a lineage\'s colour count. Without them colour still changes nothing.';
   return g;
 };
 

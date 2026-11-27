@@ -92,6 +92,33 @@ Kill gate round 9, the same seeds as round 8:
 9.8% top three). Rivals that act cost 2.2 points; the stances, as the bots
 use them, give 1.5 together and none alone clears the floor.
 
+## 6. Colour that counts: camouflage and display (built 2026-11-27)
+
+Left out of the first build because they would make colour mean something.
+The author: "I want them. Have your colours only affect the numbers if you
+have those."
+
+- Every ground has a colour, worked out from what it is: dry ground ochre,
+  wet ground green, cold ground slate (`groundHue` in `model.js`).
+- A lineage's colour matches a ground fully at the same hue and not at all
+  90 degrees round the wheel away (`matchIn`).
+- **Camouflage** (three steps): where the colour matches, fewer are caught
+  and prey is easier. The colour turns toward the ground most of the
+  lineage lives on, 10 degrees a turn a step, so a lineage that moves has to
+  turn again.
+- **Display** (three steps): a bright frill. Where the colour stands out,
+  numbers climb back faster and more are caught. The colour turns away from
+  the ground.
+- The two close each other off.
+- **Without either, colour changes nothing**, as before: a test holds that
+  a body's numbers are the same at any hue. A colour that counts is carried
+  from era to era; a free one is born anew each era, as before.
+- Drawn: camouflage as blotches that break up the outline, display as a frill
+  in the colour opposite the body's. The Body screen names the colour and how
+  it matches each ground you hold; the region tiles say it too.
+- Standing does not count colour: it scores the body on the ladder's
+  grounds, which have no colour to match.
+
 ## What it costs
 
 - Save version 5 (a stance in the plan; nothing to carry over).

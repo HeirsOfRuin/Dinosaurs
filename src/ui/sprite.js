@@ -8,7 +8,8 @@ const HUE = [[150, 28, 48], [95, 36, 45], [45, 46, 47], [22, 48, 46], [205, 24, 
 const SHADE = { wet: [0, 8, 4], tight: [0, 0, 0], scaled: [0, 6, -3], furred: [0, -8, -4], feathered: [0, 4, 2], armoured: [0, -14, -9] };
 const hsl = (h, s, l) => `hsl(${Math.round(h)} ${Math.max(4, Math.min(90, Math.round(s)))}% ${Math.max(8, Math.min(92, Math.round(l)))}%)`;
 function colours(p) {
-  const [h0, s0, l0] = HUE[(p.look?.hue ?? 0) % HUE.length], [dh, ds, dl] = SHADE[p.skin] || SHADE.wet;
+  const [hb, s0, l0] = HUE[(p.look?.hue ?? 0) % HUE.length], [dh, ds, dl] = SHADE[p.skin] || SHADE.wet;
+  const h0 = p.look?.deg ?? hb;   // a colour that has turned (camouflage, display) is drawn as it now is
   const h = p.skin === 'furred' ? (h0 + 28 * 2) / 3 : h0 + dh, s = s0 + ds, l = l0 + dl;   // fur pulls every hue toward brown
   return { body: hsl(h, s, l), dark: hsl(h, s + 4, l - 22), belly: hsl(h + 10, s - 12, l + 30), limb: hsl(h, s, l - 8), pale: hsl(h + 10, s - 10, l + 16) };
 }
@@ -103,6 +104,9 @@ export function animalRects(p) {
   if (p.horns) { put(headX + 1, headY - 1, 1, 1, '#e8dcc0'); if (p.horns >= 2) put(headX, headY - 2, 1, 1, '#e8dcc0'); if (p.horns >= 3) put(headX - 1, headY - 3, 1, 1, '#e8dcc0'); }
   // A clubbed tail: a knob of bone at its end, heavier by step.
   if (p.club) { const tx = upright ? x0 - 10 : x0 - 9, ty = upright ? top + 1 : top + 1; put(tx, ty, 2 + (p.club >= 2 ? 1 : 0), 2 + (p.club >= 3 ? 1 : 0), c.dark); }
+  // Display: a frill behind the head, in a bright contrast. Camouflage: blotches that break up the outline.
+  if (p.frill) { const fc = hsl(h0 + 180, 70, 58); put(headX - 1, headY - 1 - Math.min(2, p.frill - 1), 2, hh + Math.min(2, p.frill - 1), fc); }
+  if (p.mottle) for (let x = x0 + 1; x < x0 + L - 1; x += 3) put(x, top + 1 + (x % 2), 2, 1, c.limb);
   // Fangs: two pale points below the jaw.
   if (p.fangs) { put(headX + hw - 1, headY + hh, 1, 2, '#f4f0e0'); }
   // Fat laid down: a deeper belly.

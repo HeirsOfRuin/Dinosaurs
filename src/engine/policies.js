@@ -161,7 +161,8 @@ export function decide(s, l, offers, warn) {
   } else if (p.plan === 'tolerant') d = follow(l, offers, TOLERANT);
   else if (p.plan === 'greedy') d = greedy(s, l, offers);
   else if (p.plan === 'mixed') {
-    d = follow(l, offers, TOLERANT.slice(0, 6));
+    // `also`: traits the gate asks a careful player to grow besides, to measure what each is worth.
+    d = follow(l, offers, [...TOLERANT.slice(0, 6), ...(p.also || [])]);
     const g = greedy(s, l, offers);
     if (!d.keep) d.keep = g.keep;
     if (!d.watch) d.watch = g.watch;
