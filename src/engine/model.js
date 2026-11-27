@@ -50,6 +50,8 @@ export function body(t, ways = []) {
     hi: 0.65 + 0.06 * skin + 0.05 * scales + 0.09 * sail - 0.02 * fur - 0.01 * feathers - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
     mob, eff, upkeep, mouth,
     defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + 0.04 * claws + 0.05 * horns + 0.08 * club + 0.05 * venom + (night ? 0.2 : 0)),
+    // What the night hides from: the hunters of the region, not a rival that shares the ground and learns its hours.
+    nightCover: night ? 0.2 : 0,
     // Fight a head, for a push between lineages.
     fight: FIGHT.base + FIGHT.size * size + FIGHT.armour * lv(t, 'armour') + FIGHT.herd * herd + FIGHT.horns * horns + FIGHT.claws * claws + FIGHT.tailClub * club + FIGHT.venom * venom,
     grow: ((tend ? 0.68 : 0.5) + WARM_GROW * warm) * (fat ? 0.75 : 1),   // how fast numbers rise toward what the ground feeds; a warm body breeds faster
@@ -294,7 +296,7 @@ export function contact(s, caps) {
       const a = l.pop[r], b = R.pop[r], ground = s.regions.find((x) => x.id === r);
       const bl = ground ? shade(l, ground, bl0) : bl0, bR = ground ? shade(R, ground, bR0) : bR0;
       if (x.act === 'prey') {
-        const taken = PREY.rate * Math.min(b, PREY.reach * a) * Math.min(1, bl.eff.prey) * (1 - bR.defence);
+        const taken = PREY.rate * Math.min(b, PREY.reach * a) * Math.min(1, bl.eff.prey) * (1 - (bR.defence - bR.nightCover));
         add(lose, R, r, taken); add(gain, l, r, taken * PREY.worth / bl.upkeep);
         log.push({ by: l.id, on: R.id, act: 'prey', r, n: taken });
       } else {

@@ -148,13 +148,13 @@ const R = (id, wet, temp, insects, fish, plants, prey, pred) => ({ id, wet, temp
 // A die-off takes the hunted hardest: whatever lives at the top of the food goes first.
 export const DIEOFFS = {
   cold:     { dWet: 0,     dTemp: -0.35, food: { insects: 0.4, plants: 0.5, prey: 0.4, fish: 0.7 } },
-  drought:  { dWet: -0.45, dTemp: 0.05,  food: { plants: 0.5, fish: 0.3, insects: 0.6, prey: 0.35 } },
+  drought:  { dWet: -0.45, dTemp: 0.05,  food: { plants: 0.5, fish: 0.45, insects: 0.6, prey: 0.35 } },
   heat:     { dWet: -0.15, dTemp: 0.35,  food: { fish: 0.4, plants: 0.6, insects: 0.6, prey: 0.4 } },
   collapse: { dWet: 0,     dTemp: 0,     food: { plants: 0.25, prey: 0.25, insects: 0.5, fish: 0.6 } },
   greatHot: { dWet: -0.30, dTemp: 0.40,  food: { plants: 0.3, prey: 0.25, fish: 0.3, insects: 0.6 } },
   greatDry: { dWet: -0.50, dTemp: 0.25,  food: { plants: 0.25, prey: 0.25, fish: 0.2, insects: 0.6 } },
   // Two more faces of the Great Dying, so that it does not always favour the dry, scaled body.
-  greatCold:  { dWet: 0,   dTemp: -0.65, food: { plants: 0.25, insects: 0.4, prey: 0.25, fish: 0.5 } },
+  greatCold:  { dWet: 0,   dTemp: -0.6, food: { plants: 0.3, insects: 0.5, prey: 0.3, fish: 0.5 } },
   greatWaste: { dWet: 0.05, dTemp: 0.05, food: { plants: 0.1, prey: 0.12, insects: 0.25, fish: 0.5 } },
 };
 export const HARSH = 2.6;                   // every die-off's strength, one dial
@@ -205,7 +205,7 @@ export const LINEAGES = {
   dinosaur:  { traits: { lungs: 2, limbs: 3, gait: 3, skin: 2, egg: 3, feathers: 1, warm: 2, size: 2, jawInsects: 2, omni: 2, herd: 1, brain: 1 }, ways: ['tend'], numbers: 9, ground: 2 },
   crocodile: { traits: { lungs: 2, limbs: 2, skin: 3, scales: 2, egg: 2, armour: 2, size: 2, jawPrey: 3, scavenge: 1 }, ways: ['tend'], numbers: 6, ground: 1 },
   mammal:    { traits: { lungs: 2, limbs: 2, skin: 1, egg: 1, fur: 2, warm: 3, brain: 2, burrow: 2, jawInsects: 2, omni: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
-  amphibian: { traits: { lungs: 3, limbs: 2, skin: 1, armour: 1, size: 3, jawFish: 3, burrow: 1 }, ways: ['tend', 'roam'], numbers: 4, ground: 1 },
+  amphibian: { traits: { lungs: 3, limbs: 2, skin: 1, armour: 1, size: 3, jawFish: 3, burrow: 1 }, ways: ['tend', 'roam'], numbers: 1, ground: 1 },   // numbers 4 until balance round C: the great amphibians only just came through (a few lingered on), and half of the player's survivors ranked below them
   lizard:    { traits: { lungs: 2, limbs: 2, skin: 3, scales: 2, egg: 2, jawInsects: 2, burrow: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
   turtle:    { traits: { lungs: 2, limbs: 2, skin: 2, scales: 1, egg: 2, armour: 3, size: 1, jawPlants: 2, omni: 2, crush: 1 }, ways: ['tend'], numbers: 5, ground: 1 },
   beaked:    { traits: { lungs: 2, limbs: 2, skin: 2, scales: 1, egg: 2, size: 3, jawPlants: 3, crush: 1, herd: 2, brain: 1 }, ways: [], numbers: 2, ground: 1 },
