@@ -151,7 +151,7 @@ export const DIEOFFS = {
   drought:  { dWet: -0.45, dTemp: 0.05,  food: { plants: 0.5, fish: 0.45, insects: 0.6, prey: 0.35 } },
   heat:     { dWet: -0.15, dTemp: 0.35,  food: { fish: 0.4, plants: 0.6, insects: 0.6, prey: 0.4 } },
   collapse: { dWet: 0,     dTemp: 0,     food: { plants: 0.25, prey: 0.25, insects: 0.5, fish: 0.6 } },
-  greatHot: { dWet: -0.30, dTemp: 0.40,  food: { plants: 0.3, prey: 0.25, fish: 0.3, insects: 0.6 } },
+  greatHot: { dWet: -0.30, dTemp: 0.40,  food: { plants: 0.3, prey: 0.25, fish: 0.3, insects: 0.45 } },   // insects 0.6 until balance round D: the lizard, an insect-eater that holds heat, came through 86% of hot faces and 19% of cold
   greatDry: { dWet: -0.50, dTemp: 0.25,  food: { plants: 0.25, prey: 0.25, fish: 0.2, insects: 0.6 } },
   // Two more faces of the Great Dying, so that it does not always favour the dry, scaled body.
   greatCold:  { dWet: 0,   dTemp: -0.6, food: { plants: 0.3, insects: 0.5, prey: 0.3, fish: 0.5 } },

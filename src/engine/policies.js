@@ -180,9 +180,12 @@ export function decide(s, l, offers, warn) {
   let ways = p.ways ? [...p.ways] : [];
   const named = p.heed && warn && warn.kinds.length === 1 && warn.sens;
   if (named) {
-    // A lineage making for an animal does not grow another animal's coat against one die-off.
+    // A lineage making for an animal does not grow another animal's coat against one die-off, nor
+    // warm blood that rests on one. (The amphibian's bot grew fur and warm blood against the Shore's
+    // cold and carried them into the Coal Forests: 20% came through that era with them, 71% without.)
     const coat = p.plan === 'recipe' ? COVERS.find((id) => lv(LINEAGES[p.road || 'dinosaur'].traits, id) > 0) : null;
-    const c = follow(l, offers, COUNTER[warn.kinds[0]].filter(([id]) => !(TRAITS[id].cover && p.plan === 'recipe' && id !== coat)), allow, 2);
+    const offRoad = (id) => p.plan === 'recipe' && ((TRAITS[id].cover && id !== coat) || (TRAITS[id].under && !TRAITS[id].under.includes(coat)));
+    const c = follow(l, offers, COUNTER[warn.kinds[0]].filter(([id]) => !offRoad(id)), allow, 2);
     if (c.keep) d.keep = c.keep;
     if (c.watch) d.watch = c.watch;
     if (c.press && !d.turn) { d.press = c.press; delete d.shed; }
