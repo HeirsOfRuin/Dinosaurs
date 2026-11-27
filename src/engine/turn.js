@@ -268,7 +268,7 @@ function rivalView(g, s, you, R, caps, H) {
       act, ok: true, why: null, on,
       feeds: (feedsAfter - feeds + (act === 'prey' ? sum(c.gain.get(mine) || {}) : 0)) * H,
       takes: act === 'prey' ? mineLog.reduce((a, e) => a + e.n, 0) * H : null,
-      push: act === 'push' ? ground.map((r) => { const share = pushShare(s, you, R, r); return { r, share, out: share < PUSH.yield ? 'you' : 1 - share < PUSH.yield ? 'them' : null, cost: (you.pop[r] || 0) * (1 - share) * PUSH.loss * H }; }) : null,
+      push: act === 'push' ? ground.map((r) => { const share = pushShare(s, you, R, r); return { r, share, out: 1 - share < PUSH.yield ? 'them' : null, cost: (you.pop[r] || 0) * (1 - share) * PUSH.loss * H }; }) : null,
     };
   });
   return {

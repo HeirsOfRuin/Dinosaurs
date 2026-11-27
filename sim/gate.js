@@ -6,7 +6,7 @@
 import { play, playSaved } from './play.js';
 import { standing } from '../src/engine/model.js';
 import { POLICIES, ROADS } from '../src/engine/policies.js';
-import { ERAS, LINEAGES, WAYS } from '../src/data/world.data.js';
+import { ERAS, LINEAGES, WAYS, TRAITS, JAWS } from '../src/data/world.data.js';
 import { seRate, noiseFloor } from './stats.js';
 
 const n = Number(process.argv[2] || 1000);
@@ -98,11 +98,22 @@ console.log('arm             ' + ['THROUGH', 'top three'].map((h) => h.padStart(
 for (const [label, f] of [['as designed', (p) => ({ policy: p })], ['no watching', (p) => ({ policy: p, noWatch: true })]]) { const rs = label === 'as designed' ? allCareful : pooled(f); console.log(label.padEnd(16) + rate(thr(rs), rs.length) + ' ' + rate(top3(rs), rs.length)); }
 console.log(floor(m7));
 
-console.log('\n13. Weapons and colour: the careful player growing one besides (careful policy alone, 1,000 seeds an arm)');
-console.log('trait           ' + ['THROUGH', 'top three'].map((h) => h.padStart(10)).join(' '));
-for (const [label, also] of [['none', []], ['claws', [['claws', 2]]], ['horns', [['size', 1], ['horns', 2]]], ['clubbed tail', [['armour', 1], ['tailClub', 2]]], ['venom', [['venom', 2]]], ['camouflage', [['camouflage', 2]]], ['display', [['display', 2]]]]) {
-  const rs = runAll({ policy: { ...POLICIES.careful, also } }); console.log(label.padEnd(16) + rate(thr(rs)) + ' ' + rate(top3(rs)));
+// The price list (docs/FRAME-balance.md): every trait but the mouths, grown to step 2 besides by the
+// careful player, with whatever it rests on. A trait is in line within 5 points of growing nothing.
+console.log('\n13. Trait audit: the careful player growing one trait besides, to step 2 with what it rests on (1,000 seeds an arm)');
+console.log('trait           ' + ['THROUGH', 'top three', 'vs none', 'held it'].map((h) => h.padStart(10)).join(' '));
+const none13 = runAll({ policy: { ...POLICIES.careful, also: [] } });
+console.log('none'.padEnd(16) + rate(thr(none13)) + ' ' + rate(top3(none13)));
+for (const id of Object.keys(TRAITS).filter((id) => !JAWS[id])) {
+  const rs = runAll({ policy: { ...POLICIES.careful, also: [[id, 2]] } });
+  const d = 100 * (thr(rs) - thr(none13)) / n, held = rs.filter((x) => (x.eraLog[x.eraLog.length - 1]?.traits || {})[id]).length;
+  console.log(id.padEnd(16) + rate(thr(rs)) + ' ' + rate(top3(rs)) + ((d >= 0 ? '+' : '') + d.toFixed(1)).padStart(11) + `${(100 * held / n).toFixed(0)}%`.padStart(11) + (Math.abs(d) > 5 ? '   OUT OF LINE' : ''));
 }
+console.log(floor());
+
+console.log('\n14. Stances by body: none, each alone, and all (through, 1,000 seeds an arm)');
+console.log('policy          ' + ['none', 'push', 'prey', 'follow', 'avoid', 'all'].map((h) => h.padStart(8)).join(''));
+for (const name of CAREFUL) console.log(name.padEnd(16) + [(p) => ({ ...p, act: false }), ...['push', 'prey', 'shadow', 'avoid'].map((a) => (p) => ({ ...p, only: a })), (p) => p].map((f) => (100 * thr(runAll({ policy: f(POLICIES[name]) })) / n).toFixed(1).padStart(8)).join(''));
 console.log(floor());
 
 console.log('\n12. Rivals: stances, and rivals that answer (careful play pooled)');

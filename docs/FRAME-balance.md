@@ -1,7 +1,8 @@
 # Frame: how to balance what is now in the game
 
-Status: **proposed 2026-11-27, waiting for the author's decisions** (the
-table at the end). Nothing in it is built.
+Status: **approved 2026-11-27.** The author, shown the decisions at the end:
+"Go ahead", taken as every recommendation. Rounds A to C are measured in
+`docs/KILLGATE.md`.
 
 The author, after camouflage and display were built: "Now I want you to
 figure out how we might balance this stuff". "This stuff" is read as

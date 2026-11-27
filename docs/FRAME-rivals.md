@@ -34,10 +34,10 @@ toward one rival, at a time.
 
 | Stance | Who can | Does | Costs |
 |---|---|---|---|
-| Push | Anyone | Contest the ground. Both sides lose numbers each turn, each in proportion to the other's share of the strength there. A side left with under 30% of the strength in a region is driven out: half go to its largest other region, the rest are lost. With nowhere else to go it stays and bleeds | Numbers. Push a bigger population and it is you who leaves |
-| Prey on them | A hunter's mouth, on a rival with a smaller body | Their numbers there become your food. What you take is limited by your own numbers, your skill at prey and their defence | They push back |
+| Push | Anyone | Contest the ground. Both sides lose numbers each turn, each in proportion to the other's share of the strength there. The pushed side, left with under 30% of the strength in a region, is driven out: half go to its largest other region, the rest are lost. With nowhere else to go it stays and bleeds. The side that pushes only bleeds (the author, 2026-11-27) | Numbers, and it pushes back |
+| Prey on them | A hunter's mouth, on a rival that fights less than 1.3 times as well, head for head (balance round A; it was "a smaller body", open on 1% of shared turns) | Their numbers there become your food. What you take is limited by your own numbers, your skill at prey and their defence | They push back |
 | Shadow | Anyone, behind a rival hunter bigger than you | Eat what it leaves: more of the dead for you there | More of you are caught |
-| Avoid | Anyone | Give up the food that rival eats best, where you share ground. In return it cannot push you or prey on you there | Less food |
+| Avoid | Anyone | Eat half as much of the food that rival eats best, where you share ground (balance round A; it was all of it). In return it cannot push you or prey on you there | Less food |
 
 Strength in a region is numbers times fight. Fight comes from the body: size,
 armour, herding, and the four new weapons below (`FIGHT` in the data table).

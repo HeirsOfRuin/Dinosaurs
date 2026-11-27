@@ -123,9 +123,12 @@ export const FIGHT = { base: 0.5, size: 0.35, armour: 0.15, herd: 0.2, horns: 0.
 export const PUSH = { loss: 0.12, yield: 0.3 };
 // Prey on a rival: `rate` of their numbers there a turn, at most `reach` times your own numbers'
 // worth, times your skill at prey and their want of defence; `worth` of what is taken feeds you.
-export const PREY = { rate: 0.1, reach: 2, worth: 0.6 };
+// A hunter takes on anything that fights less than `edge` times as well as it does, head for head.
+export const PREY = { rate: 0.1, reach: 2, worth: 0.6, edge: 1.3 };
 // Shadow a bigger hunter: more of the dead for you, and more of you caught.
 export const SHADOW = { carrion: 0.12, pred: 0.1 };
+// Keep out of the way: of the food that rival eats best, you eat only `keep` as much where you share ground.
+export const AVOID = { keep: 0.5 };
 
 // ---- Colour (docs/FRAME-rivals.md section 6) ----------------------------------
 // The eight colours a lineage can be born in, as hues in degrees; the screen draws them.

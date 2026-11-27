@@ -301,7 +301,7 @@ function rivalsTab(v) {
     const opts = r.stances.map((x) => {
       if (!x.ok) return `<p class="empty"><strong>${STANCE_TEXT[x.act].name}.</strong> ${esc(x.why)}</p>`;
       const what = x.act === 'push'
-        ? x.push.map((p) => `${REGION_TEXT[p.r]}: you would have ${Math.round(100 * p.share)}% of the strength${p.out === 'you' ? ', and it is you who would be driven out' : p.out === 'them' ? ', enough to drive them out' : ''}; about ${n0(p.cost)} of you lost a turn`).join('. ') + '.'
+        ? x.push.map((p) => `${REGION_TEXT[p.r]}: you would have ${Math.round(100 * p.share)}% of the strength${p.out === 'them' ? ', enough to drive them out' : ''}; about ${n0(p.cost)} of you lost a turn`).join('. ') + '.'
         : x.act === 'prey' ? `About ${n0(x.takes)} of them taken a turn; ${signed(x.feeds)}.`
           : `${cap(signed(x.feeds))} as things stand${x.act === 'shadow' ? '; more of you caught' : ''}.`;
       return x.on

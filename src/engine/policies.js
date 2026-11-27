@@ -137,7 +137,8 @@ export function chooseStance(s, l, p) {
   for (const R of others) if (may('avoid') && takenBy(R) > 0 && !stanceWhy(s, l, R, 'avoid') && now - sumCap(s, l, { id: R.id, act: 'avoid' }) < takenBy(R)) return { id: R.id, act: 'avoid' };
   const prey = others.filter((R) => !stanceWhy(s, l, R, 'prey')).sort((a, b) => sum(b.pop) - sum(a.pop))[0];
   if (prey && may('prey')) return { id: prey.id, act: 'prey' };
-  for (const R of others) if (may('push') && !stanceWhy(s, l, R, 'push') && sharedGround(l, R).every((r) => pushShare(s, l, R, r) >= 0.8)) return { id: R.id, act: 'push' };
+  // Push where it would drive them out of some shared ground and cost little elsewhere.
+  for (const R of others) if (may('push') && !stanceWhy(s, l, R, 'push')) { const sh = sharedGround(l, R).map((r) => pushShare(s, l, R, r)); if (Math.max(...sh) >= 0.7 && Math.min(...sh) >= 0.4) return { id: R.id, act: 'push' }; }
   for (const R of others) if (may('shadow') && !stanceWhy(s, l, R, 'shadow') && sumCap(s, l, { id: R.id, act: 'shadow' }) > now * 1.05) return { id: R.id, act: 'shadow' };
   return null;
 }

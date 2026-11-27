@@ -8,7 +8,7 @@
 // in place of four fixed winning bodies.
 import { streamFor } from './rng.js';
 import { lookOf } from './parts.js';
-import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, SHADOW, HUE_DEG, GROUND_HUE, COLOUR, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
+import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, SHADOW, AVOID, HUE_DEG, GROUND_HUE, COLOUR, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
@@ -241,7 +241,9 @@ export function stanceWhy(s, l, R, act) {
   if (!sharedGround(l, R).length) return 'You share no ground with them.';
   if (act === 'prey') {
     if (mouthOf(l.traits) !== 'jawPrey') return "Only a hunter's mouth preys on other animals.";
-    if (lv(R.traits, 'size') >= lv(l.traits, 'size')) return 'Only on an animal smaller than you.';
+    // Prey is whatever fights less well, head for head: a smaller body, or one without the weapons.
+    // (At first it had to be smaller, and a hunter could prey on 1% of the turns it shared ground.)
+    if (body(R.traits, waysOf(s, R)).fight >= PREY.edge * body(l.traits, waysOf(s, l)).fight) return 'Only on an animal that fights not much better than you, head for head.';
   }
   if (act === 'shadow') {
     if (mouthOf(R.traits) !== 'jawPrey') return 'They do not hunt: there is nothing left behind to eat.';
@@ -269,7 +271,7 @@ const avoids = (s, R, l, r) => { const x = stanceOn(s, R, r); return !!x && x.ac
 function effIn(s, l, r, eff) {
   const x = stanceOn(s, l, r);
   if (!x) return eff;
-  if (x.act === 'avoid') return { ...eff, [bestFood(s, x.R)]: 0 };
+  if (x.act === 'avoid') { const f = bestFood(s, x.R); return { ...eff, [f]: eff[f] * AVOID.keep }; }
   if (x.act === 'shadow') return { ...eff, carrion: eff.carrion + SHADOW.carrion };
   return eff;
 }
@@ -298,7 +300,9 @@ export function contact(s, caps) {
         const sa = a * bl.fight, sb = b * bR.fight, share = sa / (sa + sb);
         add(lose, l, r, a * PUSH.loss * (1 - share)); add(lose, R, r, b * PUSH.loss * share);
         log.push({ by: l.id, on: R.id, act: 'push', r, share, n: b * PUSH.loss * share, cost: a * PUSH.loss * (1 - share) });
-        if (share < PUSH.yield) out.push([l, r]); else if (1 - share < PUSH.yield) out.push([R, r]);
+        // Only the pushed side can be driven out. The side that started it only bleeds (the author, 2026-11-27);
+        // a rival's answering push is a push of its own and can drive the player out.
+        if (1 - share < PUSH.yield) out.push([R, r]);
       }
     }
   }

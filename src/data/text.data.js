@@ -45,10 +45,10 @@ export const TREE_TEXT = {
 };
 // What can be done about a rival (docs/FRAME-rivals.md).
 export const STANCE_TEXT = {
-  push:   { name: 'Push them out', does: 'Contest the ground you share. Both sides lose numbers; the weaker side, under a third of the strength, is driven out.', doing: 'Pushing' },
-  prey:   { name: 'Prey on them', does: 'Hunt them where you share ground. They are smaller than you; what you take feeds you. They will push back.', doing: 'Preying on' },
+  push:   { name: 'Push them out', does: 'Contest the ground you share. Both sides lose numbers, each by the other\'s strength. If they are left with under a third of it, they are driven out. They will push back.', doing: 'Pushing' },
+  prey:   { name: 'Prey on them', does: 'Hunt them where you share ground. A hunter takes on what fights not much better than it does; what you take feeds you. They will push back.', doing: 'Preying on' },
   shadow: { name: 'Follow them', does: 'Keep close behind a bigger hunter and eat what it leaves. More of you are caught.', doing: 'Following' },
-  avoid:  { name: 'Keep out of their way', does: 'Leave them the food they eat best where you share ground. They cannot push you or hunt you there.', doing: 'Keeping out of the way of' },
+  avoid:  { name: 'Keep out of their way', does: 'Leave them half of the food they eat best where you share ground. They cannot push you or hunt you there.', doing: 'Keeping out of the way of' },
 };
 export const STEP_NAMES = ['not begun', 'a hint', 'developed', 'refined'];
 
