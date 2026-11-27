@@ -23,6 +23,23 @@ Rounds 7, 6a and 6 are earlier tunings of the same design, and their reading
 of ways of living, moments and the warning still holds where a later round
 does not say otherwise.
 
+## Round 10: camouflage and display in; the baseline for balance rounds A to C (2026-11-27)
+
+176,000 runs, the seeds of round 9. Camouflage and display were added
+(`docs/FRAME-rivals.md` section 6); no number was re-tuned. This is the
+baseline `docs/FRAME-balance.md` compares rounds A, B and C against.
+
+Careful play through 34.6 ±0.6%, top three 9.7 ±0.4% (7,000 runs). By body
+(1,000 seeds each): lizard 49.7, mammal 35.6, turtle 38.8, crocodile 38.6,
+dinosaur 28.5, careful 28.3, amphibian 22.4%. Great Dying by cold 33.1%,
+the other faces 42.1 to 54.9%. 52% of finishers rank eighth. Stances
+together +1.4 (no stances 33.2%); rivals passive 36.8%. Tending +0.1 at
+best. Saved, three tries an era: 51.2 to 89.3% by body.
+
+The careful player growing one trait besides (1,000 seeds an arm; none
+28.3%): clubbed tail 40.9 (its armour does it), camouflage 34.2, venom
+28.8, claws 27.7, horns 19.5, display 13.4.
+
 ## Round 9: rivals that act, and are acted on (2026-11-26)
 
 The author: "Then I want to do the rival update we talked about, then run
