@@ -180,9 +180,11 @@ export const DIEOFFS = {
   // cold-blooded ones such as crocodilians and sea turtles.
   heavy:        { dWet: -0.1, dTemp: 0,     food: { plants: 0.55, prey: 0.45, fish: 0.7, insects: 0.7 }, big: 0.1 },
   deadSeas:     { dWet: 0,    dTemp: 0.3,   food: { fish: 0.2, plants: 0.6, insects: 0.6, prey: 0.45 } },
-  impactWinter: { dWet: 0,    dTemp: -0.55, food: { plants: 0.12, prey: 0.25, insects: 0.4, fish: 0.6 }, big: 0.15 },
-  impactFire:   { dWet: -0.35, dTemp: 0.35, food: { plants: 0.15, prey: 0.25, insects: 0.35, fish: 0.55 }, big: 0.15 },
-  deccan:       { dWet: 0.05, dTemp: 0.15,  food: { plants: 0.2, prey: 0.2, insects: 0.35, fish: 0.5 }, big: 0.1 },
+  // Insects spared more (0.4/0.35/0.35 until round G): small insect-eaters came through the impact best, and in
+  // round F the lizard and the frog met it worst (60 and 62% of arrivals came through; 1,000 seeds a body).
+  impactWinter: { dWet: 0,    dTemp: -0.55, food: { plants: 0.12, prey: 0.25, insects: 0.6, fish: 0.6 }, big: 0.15 },
+  impactFire:   { dWet: -0.35, dTemp: 0.35, food: { plants: 0.15, prey: 0.25, insects: 0.55, fish: 0.55 }, big: 0.15 },
+  deccan:       { dWet: 0.05, dTemp: 0.15,  food: { plants: 0.2, prey: 0.2, insects: 0.5, fish: 0.5 }, big: 0.1 },
 };
 export const COLD_BLOOD = 0.4;
 export const HARSH = 2.6;                   // every die-off's strength, one dial
@@ -218,7 +220,7 @@ export const ERAS = [
     pulse: { from: 4, to: 18, plants: 1.35, insects: 1.5 },   // flowering plants spread, about 130 to 90 Ma, and stay
     regions: [R('floodplain', 0.75, 0.62, 120, 60, 120, 80, 0.35), R('flowerWood', 0.6, 0.6, 140, 0, 140, 90, 0.4), R('coast', 0.85, 0.6, 50, 130, 40, 50, 0.3), R('uplands', 0.35, 0.45, 60, 0, 100, 60, 0.25)],
     rivals: [{ traits: { lungs: 2, limbs: 3, gait: 2, skin: 2, egg: 2, jawPlants: 3, crush: 1, size: 2, herd: 2 }, home: 'floodplain', plan: 'special' }, { traits: { lungs: 2, limbs: 3, gait: 3, feathers: 2, warm: 1, jawPrey: 2, size: 1, claws: 2, herd: 1 }, home: 'flowerWood', plan: 'greedy' }] },
-  { id: 'giants', name: 'The Last of the Giants', turns: 22, dWet: 0, dTemp: 0, dieoffs: ['impactWinter', 'impactFire', 'deccan'], mag: 2.2, dieoffTurns: 5, lead: 8, sens: [0.4, 1.5], predRise: 0.006,   // the impact: named early, as the Great Dying is
+  { id: 'giants', name: 'The Last of the Giants', turns: 22, dWet: 0, dTemp: 0, dieoffs: ['impactWinter', 'impactFire', 'deccan'], mag: 2.4, dieoffTurns: 5, lead: 8, sens: [0.4, 1.5], predRise: 0.006,   // the impact: named early, as the Great Dying is
     regions: [R('delta', 0.85, 0.6, 90, 120, 90, 70, 0.35), R('forest', 0.65, 0.55, 130, 0, 150, 110, 0.45), R('plains', 0.45, 0.6, 90, 0, 150, 130, 0.55), R('highlands', 0.35, 0.4, 60, 0, 100, 60, 0.25)],
     rivals: [{ traits: { lungs: 3, limbs: 3, gait: 3, skin: 2, egg: 2, feathers: 1, jawPrey: 3, scavenge: 1, size: 3 }, home: 'plains', plan: 'special' }, { traits: { lungs: 2, limbs: 3, gait: 2, skin: 2, egg: 2, jawPlants: 3, battery: 2, size: 3, herd: 2 }, home: 'forest', plan: 'special' }] },
 ];
