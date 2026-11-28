@@ -12,8 +12,9 @@
 - The rules are `src/engine/model.js`, their numbers `src/data/world.data.js`
   (tuned, not sourced), and the lineages' policies `src/engine/policies.js`.
   They were the kill-gate prototype and were moved without changing a result.
-  `npm run gate` prints the KILLGATE tables from the game (about an hour
-  and a half; run it alone, as two hours is the background limit);
+  `npm run gate` prints the KILLGATE tables from the game, its groups of
+  tables on four cores (`sim/gate-par.js`; `gate:serial` is one process, about
+  an hour and a half, and prints the same tables);
   `npm run gate:check` proves the model is deterministic and that every part
   changes the end state. Re-run both after any change to those three files,
   and put the numbers, with their run counts, in the commit message.

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test \"test/*.test.js\"",
     "sim": "node sim/run.js",
-    "gate": "node sim/gate.js 1000",
+    "gate": "node sim/gate-par.js 1000",
+    "gate:serial": "node sim/gate.js 1000",
     "gate:check": "node sim/gate-check.js",
     "build": "node tools/bundle.js",
     "smoke": "node tools/smoke.mjs",
