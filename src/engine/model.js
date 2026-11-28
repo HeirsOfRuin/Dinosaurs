@@ -8,7 +8,7 @@
 // in place of four fixed winning bodies.
 import { streamFor } from './rng.js';
 import { lookOf } from './parts.js';
-import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, SHADOW, AVOID, HUE_DEG, GROUND_HUE, COLOUR, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
+import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, BEHIND, HUE_DEG, GROUND_HUE, COLOUR, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
@@ -30,7 +30,7 @@ export function body(t, ways = []) {
   for (const f of BASE_FOODS) {
     let e = 0.35 + (f === own ? 0.25 * lv(t, mouth) - 0.08 * omni : 0.06 * omni) + 0.05 * lv(t, 'brain');
     if (f === 'prey') e = e * (0.55 + 0.6 * mob) + 0.08 * size + 0.04 * herd + 0.05 * claws + 0.08 * venom;
-    if (f === 'insects') e = e * (0.8 + 0.25 * mob) - 0.08 * size;
+    if (f === 'insects') e = e * (0.8 + 0.25 * mob) - 0.08 * size + 0.08 * lv(t, 'tongue');
     if (f === 'plants') e += 0.05 * size;
     eff[f] = Math.max(0.05, e);
   }
@@ -248,10 +248,6 @@ export function stanceWhy(s, l, R, act) {
     // (At first it had to be smaller, and a hunter could prey on 1% of the turns it shared ground.)
     if (body(R.traits, waysOf(s, R)).fight >= PREY.edge * body(l.traits, waysOf(s, l)).fight) return 'Only on an animal that fights not much better than you, head for head.';
   }
-  if (act === 'shadow') {
-    if (mouthOf(R.traits) !== 'jawPrey') return 'They do not hunt: there is nothing left behind to eat.';
-    if (lv(R.traits, 'size') <= lv(l.traits, 'size')) return 'Only a bigger hunter leaves enough behind.';
-  }
   return null;
 }
 /** The stance l holds, if it still holds: toward a rival on ground r (or anywhere, with r null). */
@@ -266,17 +262,15 @@ export function pushShare(s, l, R, r) {
   const a = (l.pop[r] || 0) * body(l.traits, waysOf(s, l)).fight, b = (R.pop[r] || 0) * body(R.traits, waysOf(s, R)).fight;
   return a + b > 0 ? a / (a + b) : 0;
 }
-/** R avoids l on ground r: then l can neither push nor prey on R there. */
-const avoids = (s, R, l, r) => { const x = stanceOn(s, R, r); return !!x && x.act === 'avoid' && x.R === l; };
+/** A bigger hunter than l lives on ground r: what a scavenger eats behind. */
+export const hunterAbove = (s, l, r) => s.lineages.some((R) => R !== l && R.pop[r] > 0 && mouthOf(R.traits) === 'jawPrey' && lv(R.traits, 'size') > lv(l.traits, 'size'));
 
-// What a lineage makes of each food on ground r, its stance counted: an avoided rival's best food
-// is left to it; a shadowed hunter leaves more of the dead.
+// What a lineage makes of each food on ground r: a scavenger eats what a bigger hunter leaves there.
+// (This was the stance "follow them" until 2026-11-28; it is now the scavenger's own, and costs nothing.)
 function effIn(s, l, r, eff) {
-  const x = stanceOn(s, l, r);
-  if (!x) return eff;
-  if (x.act === 'avoid') { const f = bestFood(s, x.R); return { ...eff, [f]: eff[f] * AVOID.keep }; }
-  if (x.act === 'shadow') return { ...eff, carrion: eff.carrion + SHADOW.carrion };
-  return eff;
+  const sc = lv(l.traits, 'scavenge');
+  if (!sc || !hunterAbove(s, l, r)) return eff;
+  return { ...eff, carrion: eff.carrion + BEHIND.carrion * sc };
 }
 
 /**
@@ -292,7 +286,6 @@ export function contact(s, caps) {
     if (!x || (x.act !== 'push' && x.act !== 'prey')) continue;
     const R = x.R, bl0 = body(l.traits, waysOf(s, l)), bR0 = body(R.traits, waysOf(s, R));
     for (const r of sharedGround(l, R)) {
-      if (avoids(s, R, l, r)) continue;
       const a = l.pop[r], b = R.pop[r], ground = s.regions.find((x) => x.id === r);
       const bl = ground ? shade(l, ground, bl0) : bl0, bR = ground ? shade(R, ground, bR0) : bR0;
       if (x.act === 'prey') {
@@ -524,8 +517,7 @@ function feed(s) {
       const p0 = l.pop[r.id] || 0; if (!(p0 > 0)) continue;
       const p = Math.max(0, p0 - (lose[r.id] || 0)), k = caps[i][r.id], b = shade(l, r, b0);
       const fed = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
-      const shadow = stanceOn(s, l, r.id)?.act === 'shadow' ? SHADOW.pred : 0;   // close behind a hunter, more are caught
-      const n = fed * (1 - 0.3 * Math.min(1, r.pred + shadow) * (1 - b.defence));
+      const n = fed * (1 - 0.3 * Math.min(1, r.pred) * (1 - b.defence));
       if (l.player) { moved.rivals += p0 - p; if (fed > p) moved.bred += fed - p; else moved.starved += p - fed; moved.caught += fed - n; if (n < MIN_VIABLE) moved.lost += n; }
       if (n < MIN_VIABLE) delete l.pop[r.id]; else l.pop[r.id] = n;
     }

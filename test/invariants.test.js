@@ -250,7 +250,7 @@ test('a trait watched for is offered within the turns the screen promises', () =
 });
 
 // ---- rivals (docs/FRAME-rivals.md) ----
-import { contact, stanceWhy, byId } from '../src/engine/model.js';
+import { contact, stanceWhy, byId, hunterAbove, canRaise } from '../src/engine/model.js';
 
 function sharedStart(seed) {
   // A game with a rival on the player's ground, found by playing the careful bot forward.
@@ -292,17 +292,25 @@ test('a pushed rival pushes back, by the same rules', () => {
   assert.deepEqual(R.stance, { id: 'you', act: 'push' });
 });
 
-test('keeping out of a hunter\'s way stops it hunting you there, at a cost in food', () => {
-  // Two lineages on one ground: a big hunter and a small player.
+test('a scavenger eats behind a bigger hunter on its ground, without a stance; the old stances are gone', () => {
+  // The author, 2026-11-28: two stances, push and prey. Following a hunter became the scavenger's own.
   const s = { seed: 1, opts: {}, era: 0, turn: 0, attempt: 0, clock: 0, rev: 1, lineages: [], regions: [{ id: 'a', wet: 0.6, temp: 0.5, pred: 0.2, food: { insects: 40, fish: 40, plants: 40, prey: 40, carrion: 5, hard: 5 } }] };
-  const you = { id: 'you', player: true, traits: { lungs: 2, limbs: 2, jawInsects: 2 }, prog: {}, ways: {}, stance: null, pop: { a: 30 } };
-  const R = { id: 'rival0', player: false, traits: { lungs: 2, limbs: 2, jawPrey: 2, size: 2 }, prog: {}, ways: {}, stance: { id: 'you', act: 'prey' }, pop: { a: 60 } };
+  const you = { id: 'you', player: true, traits: { lungs: 2, limbs: 2, jawPrey: 2, scavenge: 1 }, prog: {}, ways: {}, stance: null, pop: { a: 30 } };
+  const R = { id: 'rival0', player: false, traits: { lungs: 2, limbs: 2, jawPrey: 2, size: 2 }, prog: {}, ways: {}, stance: null, pop: { a: 60 } };
   s.lineages = [you, R];
-  assert.equal(stanceWhy(s, R, you, 'prey'), null);
-  assert.ok((contact(s, null).lose.get(you) || {}).a > 0, 'hunted');
-  you.stance = { id: 'rival0', act: 'avoid' };
-  assert.equal((contact(s, null).lose.get(you) || {}).a || 0, 0, 'not hunted while keeping out of the way');
-  assert.match(stanceWhy(s, you, R, 'prey'), /hunter's mouth/);
+  assert.ok(hunterAbove(s, you, 'a'), 'a bigger hunter shares the ground');
+  R.traits = { lungs: 2, limbs: 2, jawPlants: 2, size: 2 };
+  assert.ok(!hunterAbove(s, you, 'a'), 'a plant-eater leaves nothing behind');
+  for (const act of ['shadow', 'avoid']) assert.match(stanceWhy(s, you, R, act), /No such stance/);
+});
+
+test('each mouth refinement grows only on its own jaw; the omnivore\'s teeth on any', () => {
+  assert.ok(canRaise({ lungs: 1, jawPrey: 2 }, 'scavenge'));
+  assert.ok(!canRaise({ lungs: 1, jawInsects: 2 }, 'scavenge'));
+  assert.ok(!canRaise({ lungs: 1, jawPrey: 2 }, 'crush'));
+  assert.ok(canRaise({ lungs: 1, jawFish: 2 }, 'crush') && canRaise({ lungs: 1, jawPlants: 2 }, 'crush'));
+  assert.ok(canRaise({ lungs: 1, jawInsects: 2 }, 'tongue') && !canRaise({ lungs: 1, jawPlants: 2 }, 'tongue'));
+  for (const j of ['jawFish', 'jawInsects', 'jawPlants', 'jawPrey']) assert.ok(canRaise({ lungs: 1, [j]: 2 }, 'omni'));
 });
 
 // ---- colour (the author, 2026-11-27: "Have your colours only affect the numbers if you have those") ----

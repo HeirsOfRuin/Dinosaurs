@@ -22,12 +22,12 @@
 // holds both halves of a closed pair keeps both.
 
 import { freshGame } from './game.js';
-import { JAWS } from '../data/world.data.js';
-import { regionsNow, ladder, resembles, bornHue } from './model.js';
+import { JAWS, TRAITS, STANCES } from '../data/world.data.js';
+import { regionsNow, ladder, resembles, bornHue, mouthOf } from './model.js';
 
 export const SAVE_KEY = 'deep-time.save.v1'; // never rename
 export const SHELF_KEY = 'deep-time.shelf.v1'; // lineages set aside by going back to an earlier era
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 export const CODE_PREFIX = 'DEEP1.';
 
 /** MIGRATIONS[v](save) returns the save at version v + 1. Add one per version bump. */
@@ -108,6 +108,28 @@ MIGRATIONS[5] = (old) => {
   g.saves = (g.saves || []).map((x) => (x ? world(x) : x));
   g.v = 6;
   g.note = old.note ? old.note : 'The rules have changed since this lineage was saved. Two new traits, camouflage and display, make a lineage\'s colour count. Without them colour still changes nothing.';
+  return g;
+};
+
+// v7 (2026-11-28, docs/FRAME-next.md): two stances, not four; each mouth refinement grows only on
+// its own jaw. A stance that is gone is dropped, and a refinement on the wrong jaw is shed, with any
+// pressure on it.
+MIGRATIONS[6] = (old) => {
+  const g = structuredClone(old);
+  const fits = (t, id) => !TRAITS[id]?.mouths || TRAITS[id].mouths.includes(mouthOf(t));
+  const world = (s) => {
+    for (const l of s.lineages) {
+      if (l.stance && !STANCES.includes(l.stance.act)) l.stance = null;
+      for (const id of Object.keys(l.traits)) if (!TRAITS[id] || !fits(l.traits, id)) { delete l.traits[id]; if (l.prog) delete l.prog[id]; }
+    }
+    s.rev = (s.rev || 0) + 1; return s;
+  };
+  g.s = world(g.s);
+  g.saves = (g.saves || []).map((x) => (x ? world(x) : x));
+  g.plan = { ...g.plan, stance: g.plan?.stance && STANCES.includes(g.plan.stance.act) ? g.plan.stance : null };
+  if (g.plan.press && !TRAITS[g.plan.press]) g.plan.press = null;
+  g.v = 7;
+  g.note = old.note ? old.note : 'The rules have changed since this lineage was saved. There are two stances toward a rival now, push and prey; a scavenger eats behind a bigger hunter without one. Each refinement of a mouth grows only on its own jaw, and one on the wrong jaw has been shed.';
   return g;
 };
 

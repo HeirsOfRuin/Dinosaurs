@@ -303,7 +303,7 @@ function rivalsTab(v) {
       const what = x.act === 'push'
         ? x.push.map((p) => `${REGION_TEXT[p.r]}: you would have ${Math.round(100 * p.share)}% of the strength${p.out === 'them' ? ', enough to drive them out' : ''}; about ${n0(p.cost)} of you lost a turn`).join('. ') + '.'
         : x.act === 'prey' ? `About ${n0(x.takes)} of them taken a turn; ${signed(x.feeds)}.`
-          : `${cap(signed(x.feeds))} as things stand${x.act === 'shadow' ? '; more of you caught' : ''}.`;
+          : `${cap(signed(x.feeds))} as things stand.`;
       return x.on
         ? `<button class="way on" data-act="stance:none:${r.id}"><strong>${STANCE_TEXT[x.act].name}</strong><small>${esc(what)}</small><small class="state">Doing this now. Tap to stop.</small></button>`
         : `<button class="way" data-act="stance:${x.act}:${r.id}"><strong>${STANCE_TEXT[x.act].name}</strong><small>${STANCE_TEXT[x.act].does}</small><small class="state">${esc(what)}</small></button>`;

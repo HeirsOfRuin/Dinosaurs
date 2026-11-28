@@ -9,13 +9,14 @@ export const TRAIT_TEXT = {
   limbs:      { name: 'Limbs', does: 'Walk further and faster. Fewer are caught.', slot: 'limbs' },
   skin:       { name: 'Watertight skin', does: 'Holds water in. Drier and hotter ground opens.', slot: 'skin' },
   egg:        { name: 'A shelled egg', does: 'Breed away from water. The driest ground opens.', slot: 'trunk' },
-  jawInsects: { name: 'Needle teeth', does: 'A mouth for insects. A lineage has one mouth. It can be turned to another food, and works until the new one is ready.', slot: 'jaw' },
+  jawInsects: { name: "An insect-eater's jaw", does: 'A mouth for insects. A lineage has one mouth. It can be turned to another food, and works until the new one is ready.', slot: 'jaw' },
   jawFish:    { name: "A fisher's jaw", does: 'A mouth for fish. A lineage has one mouth. It can be turned to another food, and works until the new one is ready.', slot: 'jaw' },
-  jawPlants:  { name: 'Grinding teeth', does: 'A mouth for plants. A lineage has one mouth. It can be turned to another food, and works until the new one is ready.', slot: 'jaw' },
+  jawPlants:  { name: "A grazer's jaw", does: 'A mouth for plants. A lineage has one mouth. It can be turned to another food, and works until the new one is ready.', slot: 'jaw' },
   jawPrey:    { name: "A hunter's jaw", does: 'A mouth for prey. A lineage has one mouth. It can be turned to another food, and works until the new one is ready.', slot: 'jaw' },
-  omni:       { name: "An omnivore's teeth", does: 'Every other food feeds you somewhat; your own a little less.', slot: 'jaw' },
-  scavenge:   { name: 'A scavenger', does: 'Eats the dead. There are more of them where hunters are many, and as a die-off begins.', slot: 'jaw' },
-  crush:      { name: 'Cracking and grinding', does: 'Shell, seed and bone: hard food that other mouths leave.', slot: 'jaw' },
+  omni:       { name: "An omnivore's teeth", does: 'Every other food feeds you somewhat; your own a little less. The one refinement any jaw can grow.', slot: 'jaw' },
+  scavenge:   { name: 'A scavenger', does: "A hunter's refinement. Eats the dead, and what a bigger hunter leaves where you share its ground. There are more dead where hunters are many, and as a die-off begins.", slot: 'jaw' },
+  crush:      { name: 'Crushing teeth', does: "Shellfish on a fisher's jaw, seeds on a grazer's: hard food other mouths leave.", slot: 'jaw' },
+  tongue:     { name: 'A long tongue', does: "An insect-eater's refinement. Reaches the insects in bark and under the ground: insects feed you better.", slot: 'jaw' },
   herd:       { name: 'Living in herds', does: 'Fewer are caught, and prey is easier taken together.', slot: 'skull' },
   size:       { name: 'A heavier body', does: 'Harder to catch and better in the cold. Worse in heat and on insects.', slot: 'trunk' },
   warm:       { name: 'Warm blood', does: 'Cold ground opens and you move faster. Heat is harder. It needs fur or feathers over it to hold the heat in.', slot: 'skin' },
@@ -47,8 +48,6 @@ export const TREE_TEXT = {
 export const STANCE_TEXT = {
   push:   { name: 'Push them out', does: 'Contest the ground you share. Both sides lose numbers, each by the other\'s strength. If they are left with under a third of it, they are driven out. They will push back.', doing: 'Pushing' },
   prey:   { name: 'Prey on them', does: 'Hunt them where you share ground. A hunter takes on what fights not much better than it does; what you take feeds you. They will push back.', doing: 'Preying on' },
-  shadow: { name: 'Follow them', does: 'Keep close behind a bigger hunter and eat what it leaves. More of you are caught.', doing: 'Following' },
-  avoid:  { name: 'Keep out of their way', does: 'Leave them half of the food they eat best where you share ground. They cannot push you or hunt you there.', doing: 'Keeping out of the way of' },
 };
 export const STEP_NAMES = ['not begun', 'a hint', 'developed', 'refined'];
 

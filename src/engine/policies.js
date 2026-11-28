@@ -117,9 +117,7 @@ function towards(s, l, offers, target, allow) {
 
 // A stance toward a rival (docs/FRAME-rivals.md). A rival answers the player: it pushes back against
 // a player that pushes or preys on it, and a hunter preys on a smaller player. A bot reads as a person
-// would: avoid a rival whose hunting costs more than its food would; prey where it can; push only
-// where it is far the stronger; shadow a bigger hunter when that feeds more.
-const sumCap = (s, l, stance) => sum(capacity(s, l, l.traits, waysOf(s, l), stance));
+// would: prey where it can; push only where it is far the stronger.
 export function chooseStance(s, l, p) {
   const others = s.lineages.filter((o) => o !== l);
   if (!l.player) {
@@ -132,14 +130,10 @@ export function chooseStance(s, l, p) {
   }
   if (!p.act) return null;
   const may = (act) => !p.only || p.only === act;   // the gate measures each stance alone
-  const now = sumCap(s, l, null);
-  const takenBy = (R) => (s.contact?.log || []).filter((e) => e.by === R.id && e.on === l.id).reduce((a, e) => a + e.n, 0);
-  for (const R of others) if (may('avoid') && takenBy(R) > 0 && !stanceWhy(s, l, R, 'avoid') && now - sumCap(s, l, { id: R.id, act: 'avoid' }) < takenBy(R)) return { id: R.id, act: 'avoid' };
   const prey = others.filter((R) => !stanceWhy(s, l, R, 'prey')).sort((a, b) => sum(b.pop) - sum(a.pop))[0];
   if (prey && may('prey')) return { id: prey.id, act: 'prey' };
   // Push where it would drive them out of some shared ground and cost little elsewhere.
   for (const R of others) if (may('push') && !stanceWhy(s, l, R, 'push')) { const sh = sharedGround(l, R).map((r) => pushShare(s, l, R, r)); if (Math.max(...sh) >= 0.7 && Math.min(...sh) >= 0.4) return { id: R.id, act: 'push' }; }
-  for (const R of others) if (may('shadow') && !stanceWhy(s, l, R, 'shadow') && sumCap(s, l, { id: R.id, act: 'shadow' }) > now * 1.05) return { id: R.id, act: 'shadow' };
   return null;
 }
 

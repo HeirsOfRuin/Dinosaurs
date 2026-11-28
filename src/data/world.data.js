@@ -25,9 +25,13 @@ export const TRAITS = {
   jawPlants:  { cost: 0.04, needs: {} },
   jawPrey:    { cost: 0.04, needs: {} },
   // What a mouth can grow into. `jaw` is the step the mouth must have reached; `mouths`, which mouths can.
-  omni:     { cost: 0.04, needs: {}, jaw: 2 },                                            // an omnivore's teeth: every other food, in part
-  scavenge: { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawPrey', 'jawInsects'] },         // eats the dead
-  crush:    { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawFish', 'jawPlants', 'jawPrey'] }, // cracks shell, seed and bone
+  // Each refinement grows on the jaw it makes sense on (the author, 2026-11-28: "having all of the different
+  // mouth adaptations didn't make much sense"; his hunter had grown crushing teeth and an omnivore's teeth).
+  // The omnivore's teeth are the one road open to any jaw.
+  omni:     { cost: 0.04, needs: {}, jaw: 2 },                                    // an omnivore's teeth: every other food, in part
+  scavenge: { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawPrey'] },               // eats the dead, and what bigger hunters leave
+  crush:    { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawFish', 'jawPlants'] },  // cracks shellfish on a fisher, seeds on a grazer
+  tongue:   { cost: 0.03, needs: {}, jaw: 2, mouths: ['jawInsects'] },            // a long tongue: insects in the bark and the ground
   herd:   { cost: 0.05, needs: { brain: 1 } },   // living in herds or packs
   size:   { cost: 0.08, needs: {} },
   // One covering. A lineage's skin grows scales, fur or feathers, or stays bare; it holds one at a
@@ -87,7 +91,7 @@ export const TREE = [
   { id: 'air', traits: ['lungs', 'skin', 'egg'] },
   { id: 'cover', traits: ['scales', 'fur', 'feathers', 'warm', 'sail', 'armour'] },
   { id: 'legs', traits: ['limbs', 'gait', 'burrow'] },
-  { id: 'mouth', traits: ['jawFish', 'jawInsects', 'jawPlants', 'jawPrey', 'omni', 'scavenge', 'crush'] },
+  { id: 'mouth', traits: ['jawFish', 'jawPlants', 'crush', 'jawInsects', 'tongue', 'jawPrey', 'scavenge', 'omni'] },   // each refinement under its jaw
   { id: 'frame', traits: ['size', 'brain', 'herd'] },
   { id: 'arms', traits: ['claws', 'horns', 'tailClub', 'venom', 'camouflage', 'display'] },
 ];
@@ -101,6 +105,8 @@ export const FOOD_FLOOR = 0.05;             // the least a die-off leaves of a f
 
 // Ways of living: behaviours, held two at a time at most. Chosen, not grown, but a new one takes
 // WAY_SETTLE turns to take hold and does nothing until then. Effects are in model.js body().
+// Tending the young stays (2026-11-28): cutting it, at the author's word on a measurement that read
+// +1.6 points, cost the crocodile 20 points and the turtle 12. That +1.6 was tending against no way at all.
 export const WAYS = ['night', 'tend', 'roam', 'fat'];
 export const MAX_WAYS = 2;
 export const WAY_SETTLE = 3;
@@ -115,7 +121,9 @@ export const HEADS = 100;
 export const LENGTH_M = [0.4, 0.9, 2, 4];
 
 // ---- Rivals (docs/FRAME-rivals.md) ---------------------------------------------
-export const STANCES = ['push', 'prey', 'shadow', 'avoid'];
+// Following a hunter and keeping out of the way were stances until 2026-11-28: worth 1.0 and 0.1 points
+// at best (round D gate). A scavenger now eats behind a bigger hunter without a stance (BEHIND).
+export const STANCES = ['push', 'prey'];
 // Fight a head: what each step of a trait adds. Strength in a region is numbers times fight.
 export const FIGHT = { base: 0.5, size: 0.35, armour: 0.15, herd: 0.2, horns: 0.3, claws: 0.15, tailClub: 0.15, venom: 0.25 };
 // Push: each side loses `loss` of its numbers there times the other's share of the strength;
@@ -125,10 +133,8 @@ export const PUSH = { loss: 0.12, yield: 0.3 };
 // worth, times your skill at prey and their want of defence; `worth` of what is taken feeds you.
 // A hunter takes on anything that fights less than `edge` times as well as it does, head for head.
 export const PREY = { rate: 0.1, reach: 2, worth: 0.6, edge: 1.3 };
-// Shadow a bigger hunter: more of the dead for you, and more of you caught.
-export const SHADOW = { carrion: 0.12, pred: 0.1 };
-// Keep out of the way: of the food that rival eats best, you eat only `keep` as much where you share ground.
-export const AVOID = { keep: 0.5 };
+// A scavenger on ground where a bigger hunter lives eats what it leaves: `carrion` more of the dead a step.
+export const BEHIND = { carrion: 0.06 };
 
 // ---- Colour (docs/FRAME-rivals.md section 6) ----------------------------------
 // The eight colours a lineage can be born in, as hues in degrees; the screen draws them.

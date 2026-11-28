@@ -1,6 +1,6 @@
 # Frame: a clearer game, then a longer one
 
-Status: **proposal, waiting for the author.** Nothing here is built.
+Status: **approved 2026-11-28** ("Go with recommendations"), except decision 3: tending the young stays (section 2.4). Phase 1 is being built.
 
 The author, with his fifth playtest save (2026-11-28):
 
@@ -89,8 +89,11 @@ sentence that explains it is in the sheet. Today each offer is a paragraph.
 - Stances go from four to two: *push* and *prey*, or none. Following a
   hunter becomes part of the scavenger's mouth (a scavenger eats behind
   hunters on its ground without a stance).
-- Tending the young is cut as a way of living, unless the author wants it
-  kept for the story; it has never been worth more than 1.6 points.
+- Tending the young was to be cut as a way of living, on a measurement of
+  +1.6 points at best. **It stays.** That number was tending against no way
+  of living at all. Cut from play, it cost the crocodile 20 points and the
+  turtle 12 (200 seeds a body); made something every lineage does, it made
+  every rival breed faster and cost as much.
 
 **2.5 Mouths that make sense.** Today any jaw can grow any refinement. The
 fifth run's hunter grew crushing teeth and an omnivore's teeth. Proposed:
@@ -103,7 +106,7 @@ under that jaw.
 | A grazer's jaw | Cracking and grinding: seeds, hard plants |
 | A fisher's jaw | Shell-crushing teeth: shellfish |
 | An insect-eater's jaw | A long tongue: insects other mouths cannot reach |
-| Any jaw | An omnivore's teeth: some of every other food. The one general road, and it costs more |
+| Any jaw | An omnivore's teeth: some of every other food. The one general road. (It was to cost more; at 0.05 it cost careful play 3 points and stays 0.04) |
 
 The long tongue is new. The other four already exist and are re-homed.
 
