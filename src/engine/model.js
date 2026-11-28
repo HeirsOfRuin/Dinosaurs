@@ -464,7 +464,8 @@ function apply(s, l, d, offers) {
     l.stance = d.stance && !stanceWhy(s, l, R, d.stance.act) ? { id: d.stance.id, act: d.stance.act } : null;
   }
   if (d.watch !== undefined) {
-    if (!d.watch || !TRAITS[d.watch] || !arrived(s, d.watch)) delete l.watch;
+    // A trait not yet arrived can be watched for: it turns up once its era comes (offersFor holds it back till then).
+    if (!d.watch || !TRAITS[d.watch]) delete l.watch;
     else if (!l.watch || l.watch.id !== d.watch) l.watch = { id: d.watch, since: s.clock };
   }
   if (l.watch && lv(l.traits, l.watch.id) > 0) delete l.watch;
