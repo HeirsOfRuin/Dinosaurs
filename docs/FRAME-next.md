@@ -167,6 +167,57 @@ change in time is a gate, and the gate will measure which it is.
 shorter. The kill gate takes about 1.5 times as long; it has to be split
 across the machine's cores to finish inside the two-hour limit.
 
+### 4.1 Phase 3 in detail (written 2026-11-28, before building)
+
+The history behind it is in `docs/HISTORY.md` (searched, not read in the
+papers). One change from the table above: the Cenomanian-Turonian event
+(93.9 Ma) is inside the Late Cretaceous, so the era of flowers ends on it.
+
+| Era | Span | Turns | In the era | Its die-off, by face |
+|---|---|---|---|---|
+| The Jurassic | 201 to 145 Ma | 18 | Seas starved of air near 183 Ma: a few turns of warmth and fewer fish | The end of the Jurassic: the seas fall back, and big bodies are hit hardest (a **heavy** face), or a drought |
+| The Age of Flowers | 145 to 94 Ma | 18 | Flowering plants spread: more plants and insects for the rest of the era | The dead seas: a sharp warming and few fish, or a heat |
+| The Last of the Giants | 94 to 66 Ma | 22 | | **The impact**, named 8 turns out as the Great Dying is: a dark winter, a burning, or the Deccan's long poison. Each falls hardest on big bodies |
+
+The run grows from 107 turns to 165.
+
+**A die-off that falls on size.** Today a die-off takes food and moves heat
+and wet; a heavy body only does worse through what it eats. Two of the new
+faces also take a share of a lineage for each step of size above the first
+(`big` on the die-off). That is how the history reads (most land animals
+over about 25 kg died at the impact), and it is a warning a player can act
+on: size can be let go a step at a time (`SHED_TURNS`), and eight turns of
+warning are enough for two steps.
+
+**New traits arrive with their era.** A trait may carry `from`, the first
+era it can turn up in. The tree shows it from the start with "from the
+Jurassic"; it cannot be watched for or offered before. Six traits, each
+built over several turns and resting on earlier ones:
+
+| Trait | Rests on | Does | Closes off |
+|---|---|---|---|
+| Wings (gliding, then flight) | Feathers | Much quicker to move and harder to catch | A heavier body at step 2; armour |
+| A long neck | A heavier body | Reaches plants no one else can | Burrowing |
+| Teeth in batteries | A grazer's jaw at step 3 | The best plant-eater's mouth (a refinement of that jaw) | |
+| Air sacs | Lungs at step 3 | Better in heat and in the dead seas' thin air | |
+| Milk | Fur and warm blood | The young come through a lean year: numbers fall more slowly | |
+| Flippers | | Fish feed you far better | Legs under the body at step 2 |
+
+**The ladder at the end** is the lineages that came through the impact,
+scored on what came after (the first forests of the new age): birds,
+mammals, crocodiles, turtles, lizards and snakes, frogs and salamanders, and
+the champsosaurs (fish-eaters of the rivers, which also came through). The
+dinosaur and beaked plant-eater bodies leave it. A big dinosaur body can
+still come through by changing in time; the gate measures it with its own
+bot (a big body that heeds the warning and sheds size).
+
+**Saves.** Version 8. A run that has ended stays ended; a run still going
+walks on past the Triassic into the Jurassic.
+
+**Order of the build.** (1) The eras, their die-offs and the ladder, with
+the bots taught the new die-offs; measured. (2) The six traits; measured.
+(3) Tuned to the targets on the whole run; the full gate.
+
 ## 5. What it costs
 
 | Phase | Work | Save version | Gate |

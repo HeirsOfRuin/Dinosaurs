@@ -17,6 +17,12 @@ export const TRAIT_TEXT = {
   scavenge:   { name: 'A scavenger', does: "A hunter's refinement. Eats the dead, and what a bigger hunter leaves where you share its ground. There are more dead where hunters are many, and as a die-off begins.", slot: 'jaw' },
   crush:      { name: 'Crushing teeth', does: "Shellfish on a fisher's jaw, seeds on a grazer's: hard food other mouths leave.", slot: 'jaw' },
   tongue:     { name: 'A long tongue', does: "An insect-eater's refinement. Reaches the insects in bark and under the ground: insects feed you better.", slot: 'jaw' },
+  wings:      { name: 'Wings', does: 'Gliding, then flight. Much quicker to move between regions and much harder to catch. Closes off a heavier body at step 2, and armour.', slot: 'trunk' },
+  longNeck:   { name: 'A long neck', does: 'Reaches plants no one else can: plants feed you better. Closes off burrowing.', slot: 'trunk' },
+  airSacs:    { name: 'Air sacs', does: 'Breathing through sacs that run through the body: better in heat, in dry ground and in thin air, and a little quicker.', slot: 'tail' },
+  milk:       { name: 'Milk', does: 'The young are fed by the mother: numbers climb back faster and fall more slowly in a lean year.', slot: 'skull' },
+  flippers:   { name: 'Flippers', does: 'Back to the water: fish feed you far better, and you are a little slower on land. Closes off legs under the body at step 2.', slot: 'limbs' },
+  battery:    { name: 'Teeth in batteries', does: "A grazer's refinement: hundreds of teeth, worn down and replaced. Plants and hard food feed you better.", slot: 'jaw' },
   herd:       { name: 'Living in herds', does: 'Fewer are caught, and prey is easier taken together.', slot: 'skull' },
   size:       { name: 'A heavier body', does: 'Harder to catch and better in the cold. Worse in heat and on insects.', slot: 'trunk' },
   warm:       { name: 'Warm blood', does: 'Cold ground opens and you move faster. Heat is harder. It needs fur or feathers over it to hold the heat in.', slot: 'skin' },
@@ -59,6 +65,8 @@ export const REGION_TEXT = {
   river: 'River', scrub: 'Scrub', desertEdge: 'Desert edge', highland: 'Highland',
   plains: 'Plains', dryBasin: 'Dry basin', polarForest: 'Polar forest',
   redbeds: 'Red beds', desert: 'Desert',
+  lagoon: 'Lagoon', riverForest: 'River forest', fernPrairie: 'Fern prairie', conifers: 'Conifers',
+  flowerWood: 'Flowering wood', coast: 'Coast', uplands: 'Uplands', delta: 'Delta', forest: 'Forest', highlands: 'Highlands',
 };
 
 // from / to are millions of years ago.
@@ -67,6 +75,9 @@ export const ERA_TEXT = {
   coal:     { from: 359, to: 299, intro: 'Forest to the horizon, and the air thick with insects. The swamps will not last.', palette: ['#1e2a1c', '#263524', '#2f4a2a', '#2b3320'] },
   drying:   { from: 299, to: 265, intro: 'The forests have gone to scrub. Bigger animals than you hold the best ground.', palette: ['#2e2a18', '#3a3520', '#57502a', '#4a3e22'] },
   shadow:   { from: 265, to: 252, intro: 'A world owned by others. Something very large is coming, and the signs are early.', palette: ['#2a2016', '#3a2a1c', '#5a3d24', '#4a2e1e'] },
+  jurassic: { from: 201, to: 145, intro: 'Warm, wet and enormous. Everything on the plains is bigger than it was.', palette: ['#1a2a1e', '#22382a', '#2f5236', '#2a3a22'] },
+  flowers:  { from: 145, to: 94, intro: 'Something new is growing: plants that flower, and the insects come with them.', palette: ['#232a1c', '#2e3a24', '#4a5a2e', '#3a4426'] },
+  giants:   { from: 94, to: 66, intro: 'The largest animals that ever walked. The age is long, and it is ending.', palette: ['#2a241a', '#3a3022', '#5a4a2c', '#43381f'] },
   triassic: { from: 252, to: 201, intro: 'Nearly empty, and hot. What is left of the world belongs to whoever takes it.', palette: ['#2e1e16', '#42281a', '#6a3d24', '#5a3320'] },
 };
 
@@ -79,22 +90,27 @@ export const DIEOFF_TEXT = {
   greatDry:   { name: 'the Great Dying, by drought', sign: 'The sky is dark with ash and the rivers are shrinking.', did: 'The rivers stopped.' },
   greatCold:  { name: 'the Great Dying, by cold', sign: 'The sky is dark with ash and the sun is weak.', did: 'The sun went out for a long time.' },
   greatWaste: { name: 'the Great Dying, by famine', sign: 'The sky is dark with ash and nothing is growing.', did: 'Nothing grew.' },
+  heavy:        { name: 'the seas falling back', sign: 'The shore is further away each year, and the big animals are thin.', did: 'The seas drew back, and the biggest went first.' },
+  deadSeas:     { name: 'the dead seas', sign: 'The water is warm and nothing is coming up from the deep.', did: 'The seas lost their air, and the shores their fish.' },
+  impactWinter: { name: 'the impact, and the dark', sign: 'There is a new light in the sky, brighter every night.', did: 'Something struck the world. The sky went black and the cold came, and nothing large lived through it.' },
+  impactFire:   { name: 'the impact, and the burning', sign: 'There is a new light in the sky, brighter every night.', did: 'Something struck the world. The forests burned, and nothing large lived through it.' },
+  deccan:       { name: 'the impact, and the long poison', sign: 'There is a new light in the sky, and the far mountains are smoking.', did: 'Something struck the world while the far mountains poured out fire. Nothing large lived through it.' },
 };
 
 // The lineages on the ladder. `example` is an animal that lived in that line. The examples and
 // what is said of them are from memory and are not yet checked against a source.
 export const LINEAGE_TEXT = {
-  dinosaur:  { name: 'Dinosaurs', line: 'Upright, fast and warm.', example: 'Coelophysis: a light, two-legged hunter about three metres long, which lived in packs.', after: 'They will own the land for a hundred and thirty million years, and some of them will fly.' },
-  crocodile: { name: 'Crocodile line', line: 'Armoured, big, a hunter.', example: 'Protosuchus: a land crocodile the size of a dog, long in the leg.', after: 'They will outlast the dinosaurs and change very little, having seen no reason to.' },
-  beaked:    { name: 'Beaked plant-eaters', line: 'Heavy, tusked, in herds.', example: 'Lystrosaurus: a pig-sized burrower that all but owned the world after the Great Dying. Placerias, the size of an ox, was among the last.', after: 'They ruled the Permian and came through its end. They do not come through this one.' },
-  mammal:    { name: 'Mammal line', line: 'Small, warm, burrowing.', example: 'Morganucodon: the size of a shrew, active at night, eating insects.', after: 'They will spend a very long time being overlooked, which will turn out to have been the right idea.' },
-  lizard:    { name: 'Lizard line', line: 'Small, scaled, everywhere.', example: 'Clevosaurus: a hand-long insect-eater. Its last living relative is the tuatara.', after: 'Nothing about them is remarkable, and they will still be here at the end.' },
-  amphibian: { name: 'Great amphibians', line: 'Never left the water.', example: 'Mastodonsaurus: as long as a car, most of it head, lying in wait in rivers.', after: 'The water keeps them a while longer. The crocodiles are coming for their rivers.' },
-  turtle:    { name: 'Turtle line', line: 'Armoured, slow, eats what it finds.', example: 'Proganochelys: a metre long, already in a full shell, unable to pull its head in.', after: 'They have found a shape that works and will not be talked out of it.' },
+  bird:        { name: 'Birds', line: 'Small, feathered, flying.', example: 'Vegavis: a duck-like bird that lived in the last of the Cretaceous and came through.', after: 'They are the dinosaurs that came through, and they will not say so.' },
+  mammal:      { name: 'Mammal line', line: 'Small, warm, burrowing.', example: 'Purgatorius: a small climber, close to the root of the primates.', after: 'They have waited a very long time for the room, and now there is room.' },
+  crocodile:   { name: 'Crocodile line', line: 'Armoured, cold-blooded, a hunter by the water.', example: 'Borealosuchus: a river crocodile that lived on both sides of the impact.', after: 'They will change very little, having found nothing to change for.' },
+  turtle:      { name: 'Turtle line', line: 'Armoured, slow, eats what it finds.', example: 'Basilemys: a land turtle the size of a table.', after: 'They have found a shape that works and see no reason to discuss it.' },
+  lizard:      { name: 'Lizards and snakes', line: 'Small, scaled, everywhere.', example: 'Polyglyphanodon: a plant-eating lizard about a metre long.', after: 'Nothing about them is remarkable, and they will be everywhere.' },
+  frog:        { name: 'Frogs and salamanders', line: 'Small, wet-skinned, by the water.', example: 'Beelzebufo: a frog the size of a football, which ate small dinosaurs.', after: 'The water and the mud keep them, as they always have.' },
+  champsosaur: { name: 'Champsosaurs', line: 'Long-snouted fish-eaters of the rivers.', example: 'Champsosaurus: shaped like a gharial, about a metre and a half long.', after: 'They will keep to the rivers for a long time yet, and then quietly not.' },
 };
 export const RANK_TEXT = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth'];
 export const THROUGH_TEXT = [
-  'Your lineage comes through at the head of everything alive. What the dinosaurs were about to do, it will do.',
+  'Your lineage comes through at the head of everything alive. The world that is coming is largely its.',
   'Your lineage comes through among the few that will shape what follows.',
   'Your lineage comes through among the few that will shape what follows.',
   'Your lineage comes through with a firm hold on the world that is coming.',
@@ -147,9 +163,9 @@ export const SETTING_TEXT = {
 };
 
 export const NOTES = [
-  'A lineage that is alive at the end of the Triassic has come through. Its standing is worked out from the same food and climate rules as every turn, and it is placed among seven lineages that are scored the same way.',
+  'A lineage that is alive after the impact that ended the age of dinosaurs has come through. Its standing is worked out from the same food and climate rules as every turn, and it is placed among seven lineages that are scored the same way.',
   'The animal you begin as looks like an amphibian. It is an early four-legged animal, not an ancestor of frogs: dinosaurs, crocodiles and mammals do not descend from modern amphibians.',
-  'The dates and the die-offs are from memory and have not yet been checked against a source. The numbers behind the world are tuned for play, not measured from rock.',
+  'The dates and die-offs from the Jurassic on were looked up in published summaries (docs/HISTORY.md); the earlier ones are from memory. The numbers behind the world are tuned for play, not measured from rock.',
   'Evolution has no aim. This game gives it one so that there is something to play for.',
 ];
 

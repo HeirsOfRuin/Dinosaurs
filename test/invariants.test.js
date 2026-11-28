@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { newGame, advance, setPlan, meet, retry, view } from '../src/engine/turn.js';
 import { totalPop } from '../src/engine/model.js';
-import { TRAITS, JAWS, LINEAGES, MAX_REGIONS, MAX_WAYS, HEADS } from '../src/data/world.data.js';
+import { TRAITS, JAWS, LINEAGES, MAX_REGIONS, MAX_WAYS, HEADS, ERAS } from '../src/data/world.data.js';
 import { POLICIES as PLANS } from '../src/engine/policies.js';
 import { decide, playGame } from '../sim/bot.js';
 import { play } from '../sim/play.js';
@@ -44,7 +44,7 @@ test('every game ends, and the clock advances every turn', () => {
     const g = playThrough(seed, ROADS[seed % 4], 'oneLife', (x) => { assert.ok(x.turns === last + 1); last = x.turns; assert.equal(x.s.log.length, x.s.clock); });
     assert.ok(g.over, `seed ${seed} never ended`);
     assert.ok(['through', 'extinct'].includes(g.outcome));
-    assert.ok(g.turns <= 107);
+    assert.ok(g.turns <= ERAS.reduce((a, e) => a + e.turns, 0), 'no run outlasts its eras');
   }
 });
 
@@ -56,7 +56,7 @@ test('whoever is alive at the end has come through, whatever its body, and has a
   let through = 0;
   for (let seed = 1; seed <= 40; seed++) {
     const g = playThrough(seed * 7919, ROADS[seed % 4], 'oneLife');
-    const alive = totalPop(g.s.lineages.find((l) => l.player)) >= 1 && g.s.eraLog.length === 5;
+    const alive = totalPop(g.s.lineages.find((l) => l.player)) >= 1 && g.s.eraLog.length === ERAS.length;
     assert.equal(g.outcome === 'through', alive, `seed ${seed}`);
     if (g.outcome !== 'through') continue;
     through++;

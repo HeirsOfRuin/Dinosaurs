@@ -39,13 +39,13 @@ const getBy14 = () => (by140 ??= Object.fromEntries(CAREFUL.map((name) => [name,
 
 if (T('1')) {
 console.log(`\n1. One life: how far each policy gets, ${n} seeds`);
-console.log('policy          ' + ['past Shore', 'past Coal', 'past Dry', 'past Dying', 'THROUGH', 'top three'].map((h) => h.padStart(10)).join(' ') + '   median standing');
+console.log('policy          ' + [...ERAS.slice(0, -1).map((e) => 'past ' + e.id.slice(0, 5)), 'THROUGH', 'top three'].map((h) => h.padStart(10)).join(' ') + '   median standing');
 const base = getBase();
 for (const name of Object.keys(POLICIES)) {
   const rs = base[name];
   const past = (e) => rs.filter((s) => s.eraLog.length > e).length;
   const sc = rs.filter((s) => s.outcome === 'through').map((s) => s.standing).sort((a, b) => a - b);
-  console.log(name.padEnd(16) + [past(0), past(1), past(2), past(3), thr(rs), top3(rs)].map((k) => rate(k)).join(' ') + '   ' + String(sc[sc.length >> 1] ?? '-').padStart(6));
+  console.log(name.padEnd(16) + [...ERAS.slice(0, -1).map((_, e) => past(e)), thr(rs), top3(rs)].map((k) => rate(k)).join(' ') + '   ' + String(sc[sc.length >> 1] ?? '-').padStart(6));
 }
 console.log(floor());
 }
@@ -77,17 +77,20 @@ for (const name of CAREFUL) console.log(name.padEnd(16) + ERAS.map((_, e) => { c
 
 if (T('5')) {
 const allCareful = getAll();
-console.log('\n5. Through, by the face of the Great Dying, of those who met it (careful play pooled)');
-for (const f of ERAS[3].dieoffs) { const m = allCareful.filter((s) => s.faces && s.faces[3] === f && s.eraLog.length >= 3); console.log(f.padEnd(16) + rate(thr(m), m.length) + `   (${m.length} runs)`); }
+// The two die-offs with several faces: the Great Dying and the impact. Each face's runs are those that met it.
+for (const e of ERAS.map((x, i) => i).filter((i) => ERAS[i].dieoffs.length > 2)) {
+  console.log(`\n5. Through, by the face of the die-off that ends ${ERAS[e].name}, of those who met it (careful play pooled)`);
+  for (const f of ERAS[e].dieoffs) { const m = allCareful.filter((s) => s.faces && s.faces[e] === f && s.eraLog.length >= e); console.log(f.padEnd(16) + rate(thr(m), m.length) + `   (${m.length} runs)`); }
+}
 }
 
 if (T('6')) {
 console.log('\n6. Ways of living: three bodies holding one way, none, or their own (THROUGH, then top three)');
-console.log('ways            ' + ['careful', 'mammal', 'amphibian'].map((h) => h.padStart(22)).join(''));
+console.log('ways            ' + ['careful', 'mammal', 'frog'].map((h) => h.padStart(22)).join(''));
 const wayArms = [['none', { ways: [], brace: false }], ...WAYS.map((w) => [w, { ways: [w], brace: false }]), ['as designed', {}]];
-const wayRows = wayArms.map(([label, p]) => [label, ['careful', 'mammal.plan', 'amphibian.plan'].map((b) => { const rs = runAll({ policy: { ...POLICIES[b], ...p } }); return [thr(rs), top3(rs)]; })]);
+const wayRows = wayArms.map(([label, p]) => [label, ['careful', 'mammal.plan', 'frog.plan'].map((b) => { const rs = runAll({ policy: { ...POLICIES[b], ...p } }); return [thr(rs), top3(rs)]; })]);
 for (const [label, cells] of wayRows) console.log(label.padEnd(16) + cells.map(([a, b]) => rate(a) + ' ' + rate(b)).join(' '));
-for (const w of WAYS) { const row = wayRows.find((r) => r[0] === w)[1], none = wayRows[0][1]; const best = row.map(([a], i) => a - none[i][0]); console.log(`${w}: best against no way of living by ${(100 * Math.max(...best) / n).toFixed(1)} points (${['careful', 'mammal', 'amphibian'][best.indexOf(Math.max(...best))]})`); }
+for (const w of WAYS) { const row = wayRows.find((r) => r[0] === w)[1], none = wayRows[0][1]; const best = row.map(([a], i) => a - none[i][0]); console.log(`${w}: best against no way of living by ${(100 * Math.max(...best) / n).toFixed(1)} points (${['careful', 'mammal', 'frog'][best.indexOf(Math.max(...best))]})`); }
 console.log(floor());
 }
 

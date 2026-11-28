@@ -27,7 +27,7 @@ import { regionsNow, ladder, resembles, bornHue, mouthOf } from './model.js';
 
 export const SAVE_KEY = 'deep-time.save.v1'; // never rename
 export const SHELF_KEY = 'deep-time.shelf.v1'; // lineages set aside by going back to an earlier era
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 export const CODE_PREFIX = 'DEEP1.';
 
 /** MIGRATIONS[v](save) returns the save at version v + 1. Add one per version bump. */
@@ -130,6 +130,16 @@ MIGRATIONS[6] = (old) => {
   if (g.plan.press && !TRAITS[g.plan.press]) g.plan.press = null;
   g.v = 7;
   g.note = old.note ? old.note : 'The rules have changed since this lineage was saved. There are two stances toward a rival now, push and prey; a scavenger eats behind a bigger hunter without one. Each refinement of a mouth grows only on its own jaw, and one on the wrong jaw has been shed.';
+  return g;
+};
+
+// v8 (2026-11-28, docs/FRAME-next.md section 4.1): the run goes on past the Triassic, through the
+// Jurassic and the Cretaceous to the impact, and the ladder is the lineages that came through it. A run
+// still going walks on into the Jurassic; one that has ended stays ended. Nothing stored changes shape.
+MIGRATIONS[7] = (old) => {
+  const g = structuredClone(old);
+  g.v = 8;
+  g.note = old.note ? old.note : (old.over ? 'The game now runs on past the Triassic to the end of the dinosaurs. This lineage ended before that, and is ranked among the lineages that came through the impact.' : 'The game now runs on past the Triassic, through the Jurassic and the Cretaceous, to the end of the dinosaurs. This lineage walks on.');
   return g;
 };
 

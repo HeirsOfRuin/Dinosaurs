@@ -37,6 +37,9 @@ export function parts(t, ways = []) {
     cover: lv(t, 'fur') ? 'fur' : lv(t, 'feathers') ? 'feathers' : lv(t, 'scales') ? 'scales' : 'bare',
     coat: lv(t, 'fur') || lv(t, 'feathers') || lv(t, 'scales'),
     sail: lv(t, 'sail'),       // a low ridge, then a sail, then a tall one
+    wings: lv(t, 'wings'),     // folded along the back, larger by step
+    neck: lv(t, 'longNeck'),   // the head raised on a long neck
+    flippers: lv(t, 'flippers') > 0,   // paddles for feet
     // Ways of living that show: a night animal's eye, a fat animal's belly, young at heel.
     night: ways.includes('night'), fat: ways.includes('fat'), young: ways.includes('tend'),
   };

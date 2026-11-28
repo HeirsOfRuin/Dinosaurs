@@ -32,6 +32,14 @@ export const TRAITS = {
   scavenge: { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawPrey'] },               // eats the dead, and what bigger hunters leave
   crush:    { cost: 0.04, needs: {}, jaw: 2, mouths: ['jawFish', 'jawPlants'] },  // cracks shellfish on a fisher, seeds on a grazer
   tongue:   { cost: 0.03, needs: {}, jaw: 2, mouths: ['jawInsects'] },            // a long tongue: insects in the bark and the ground
+  battery:  { cost: 0.04, needs: {}, jaw: 3, mouths: ['jawPlants'], from: 6 },    // teeth in batteries: the grazer's best (the Age of Flowers on)
+  // Phase 3 (docs/FRAME-next.md section 4.1): traits that arrive with their era. `from` is the first
+  // era (an index into ERAS) a trait can turn up in; before it, the tree shows it and nothing offers it.
+  wings:    { cost: 0.05, needs: { feathers: 1 }, from: 5 },   // gliding, then flight
+  longNeck: { cost: 0.04, needs: { size: 1 }, from: 5 },       // reaches plants no one else can
+  airSacs:  { cost: 0.03, needs: { lungs: 3 }, from: 5 },      // breathing through air sacs: heat and thin air
+  milk:     { cost: 0.04, needs: { fur: 1, warm: 1 }, from: 5 },   // the young come through a lean year
+  flippers: { cost: 0.04, needs: {}, from: 5 },                // back to the water
   herd:   { cost: 0.05, needs: { brain: 1 } },   // living in herds or packs
   size:   { cost: 0.08, needs: {} },
   // One covering. A lineage's skin grows scales, fur or feathers, or stays bare; it holds one at a
@@ -83,16 +91,20 @@ export const BARS = [
   [['tailClub', 1], ['gait', 3]],   // a club is no balancing tail
   [['venom', 1], ['size', 2]],      // venom is a small animal's weapon
   [['camouflage', 1], ['display', 1]],   // one hides, the other is seen
+  [['wings', 1], ['size', 2]],      // a heavy animal does not fly
+  [['wings', 1], ['armour', 1]],
+  [['longNeck', 1], ['burrow', 1]], // a long neck does not go down a hole
+  [['flippers', 1], ['gait', 2]],   // a flipper is not a leg under the body
 ];
 // A trait a lineage is watching for is among what a generation offers once it has watched this many turns.
 export const WATCH_TURNS = 2;
 // The tree as the Body screen lays it out: branches, each a list of traits in the order they are met.
 export const TREE = [
-  { id: 'air', traits: ['lungs', 'skin', 'egg'] },
-  { id: 'cover', traits: ['scales', 'fur', 'feathers', 'warm', 'sail', 'armour'] },
-  { id: 'legs', traits: ['limbs', 'gait', 'burrow'] },
-  { id: 'mouth', traits: ['jawFish', 'jawPlants', 'crush', 'jawInsects', 'tongue', 'jawPrey', 'scavenge', 'omni'] },   // each refinement under its jaw
-  { id: 'frame', traits: ['size', 'brain', 'herd'] },
+  { id: 'air', traits: ['lungs', 'skin', 'egg', 'airSacs'] },
+  { id: 'cover', traits: ['scales', 'fur', 'feathers', 'warm', 'wings', 'sail', 'armour'] },
+  { id: 'legs', traits: ['limbs', 'gait', 'burrow', 'flippers'] },
+  { id: 'mouth', traits: ['jawFish', 'jawPlants', 'crush', 'battery', 'jawInsects', 'tongue', 'jawPrey', 'scavenge', 'omni'] },   // each refinement under its jaw
+  { id: 'frame', traits: ['size', 'longNeck', 'brain', 'herd', 'milk'] },
   { id: 'arms', traits: ['claws', 'horns', 'tailClub', 'venom', 'camouflage', 'display'] },
 ];
 export const RANGE_DRAG = 0.35;             // each region held beyond the first slows selection
@@ -162,7 +174,17 @@ export const DIEOFFS = {
   // Two more faces of the Great Dying, so that it does not always favour the dry, scaled body.
   greatCold:  { dWet: 0,   dTemp: -0.6, food: { plants: 0.3, insects: 0.5, prey: 0.3, fish: 0.5 } },
   greatWaste: { dWet: 0.05, dTemp: 0.05, food: { plants: 0.1, prey: 0.12, insects: 0.25, fish: 0.5 } },
+  // Phase 3 (docs/HISTORY.md). `big`: a share of the lineage lost a turn, at the die-off's height, for each
+  // step of size above the first; a cold-blooded body loses COLD_BLOOD of it. The end of the Jurassic fell
+  // hardest on big land animals; at the impact most land animals over about 25 kg died, except some
+  // cold-blooded ones such as crocodilians and sea turtles.
+  heavy:        { dWet: -0.1, dTemp: 0,     food: { plants: 0.55, prey: 0.45, fish: 0.7, insects: 0.7 }, big: 0.1 },
+  deadSeas:     { dWet: 0,    dTemp: 0.3,   food: { fish: 0.2, plants: 0.6, insects: 0.6, prey: 0.45 } },
+  impactWinter: { dWet: 0,    dTemp: -0.55, food: { plants: 0.12, prey: 0.25, insects: 0.4, fish: 0.6 }, big: 0.15 },
+  impactFire:   { dWet: -0.35, dTemp: 0.35, food: { plants: 0.15, prey: 0.25, insects: 0.35, fish: 0.55 }, big: 0.15 },
+  deccan:       { dWet: 0.05, dTemp: 0.15,  food: { plants: 0.2, prey: 0.2, insects: 0.35, fish: 0.5 }, big: 0.1 },
 };
+export const COLD_BLOOD = 0.4;
 export const HARSH = 2.6;                   // every die-off's strength, one dial
 export const SENS = [0.05, 1.5];            // how hard a die-off hits a region: the low end is a refuge
 export const DIEOFF_TURNS = 3;              // the last turns of every era (an era may say more)
@@ -177,7 +199,8 @@ export const ERAS = [
   { id: 'drying', name: 'The Drying', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['heat', 'drought'], mag: 1.2, dieoffTurns: 5, sens: [0.3, 1.5],
     regions: [R('river', 0.6, 0.65, 70, 70, 60, 50, 0.3), R('scrub', 0.4, 0.7, 60, 0, 90, 80, 0.35), R('desertEdge', 0.2, 0.8, 40, 0, 40, 50, 0.2), R('highland', 0.35, 0.4, 40, 0, 80, 50, 0.2)],
     rivals: [{ traits: { lungs: 2, limbs: 2, skin: 2, egg: 1, jawPrey: 2, size: 2 }, home: 'scrub', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 1, jawPlants: 2, size: 2 }, home: 'scrub', plan: 'greedy' }] },
-  { id: 'shadow', name: 'The Long Shadow', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['greatHot', 'greatDry', 'greatCold', 'greatWaste'], mag: 1.45, dieoffTurns: 5, lead: 8, sens: [0.4, 1.5],   // named earlier than the rest; and almost nowhere is spared
+  { id: 'shadow', name: 'The Long Shadow', turns: 20, dWet: 0, dTemp: 0.004, dieoffs: ['greatHot', 'greatDry', 'greatCold', 'greatWaste'], mag: 1.25,   // 1.45 until 2026-11-28: the impact now ends the run, and the two together left too few
+    dieoffTurns: 5, lead: 8, sens: [0.4, 1.5],   // named earlier than the rest; and almost nowhere is spared
     regions: [R('river', 0.55, 0.62, 60, 60, 70, 70, 0.45), R('plains', 0.4, 0.65, 50, 0, 120, 110, 0.6), R('dryBasin', 0.2, 0.75, 50, 0, 40, 50, 0.35), R('polarForest', 0.5, 0.3, 50, 0, 100, 50, 0.3)],
     rivals: [{ traits: { lungs: 2, limbs: 3, skin: 2, egg: 2, jawPrey: 3, size: 3, fur: 1, warm: 1 }, home: 'plains', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, jawPlants: 3, size: 3 }, home: 'plains', plan: 'special' }] },
   { id: 'triassic', name: 'The Triassic', turns: 30, dWet: 0, dTemp: 0, dieoffs: ['heat', 'collapse', 'cold'], mag: 1.3, sens: [0.35, 1.5], dieoffTurns: 5,
@@ -186,6 +209,18 @@ export const ERAS = [
     predRise: 0.008,
     regions: [R('river', 0.5, 0.7, 60, 50, 60, 50, 0.3), R('redbeds', 0.3, 0.78, 50, 0, 60, 80, 0.4), R('desert', 0.15, 0.85, 30, 0, 30, 40, 0.2), R('highland', 0.4, 0.5, 40, 0, 90, 60, 0.3)],
     rivals: [{ traits: { lungs: 2, limbs: 3, skin: 2, egg: 2, jawPrey: 2, size: 2, armour: 1 }, home: 'redbeds', plan: 'special' }, { traits: { lungs: 2, limbs: 2, skin: 2, egg: 2, jawPlants: 2, size: 1, burrow: 1 }, home: 'highland', plan: 'greedy' }] },
+  // Phase 3: to the end of the dinosaurs (docs/FRAME-next.md section 4.1; dates in docs/HISTORY.md).
+  { id: 'jurassic', name: 'The Jurassic', turns: 18, dWet: 0, dTemp: 0, dieoffs: ['heavy', 'drought'], mag: 1.6, dieoffTurns: 4, sens: [0.3, 1.5],
+    pulse: { from: 4, to: 7, dTemp: 0.1, fish: 0.5 },   // the seas starved of air, near 183 Ma
+    regions: [R('lagoon', 0.9, 0.65, 60, 120, 40, 40, 0.35), R('riverForest', 0.75, 0.6, 110, 40, 120, 90, 0.4), R('fernPrairie', 0.5, 0.65, 80, 0, 140, 120, 0.5), R('conifers', 0.4, 0.5, 60, 0, 120, 70, 0.3)],
+    rivals: [{ traits: { lungs: 3, limbs: 3, gait: 2, skin: 2, egg: 2, jawPlants: 3, size: 3, longNeck: 2, herd: 1 }, home: 'fernPrairie', plan: 'special' }, { traits: { lungs: 3, limbs: 3, gait: 3, skin: 2, egg: 2, feathers: 1, jawPrey: 3, size: 3, claws: 1 }, home: 'riverForest', plan: 'special' }] },
+  { id: 'flowers', name: 'The Age of Flowers', turns: 18, dWet: 0, dTemp: 0.003, dieoffs: ['deadSeas', 'heat'], mag: 1.6, dieoffTurns: 4, sens: [0.3, 1.5],
+    pulse: { from: 4, to: 18, plants: 1.35, insects: 1.5 },   // flowering plants spread, about 130 to 90 Ma, and stay
+    regions: [R('floodplain', 0.75, 0.62, 120, 60, 120, 80, 0.35), R('flowerWood', 0.6, 0.6, 140, 0, 140, 90, 0.4), R('coast', 0.85, 0.6, 50, 130, 40, 50, 0.3), R('uplands', 0.35, 0.45, 60, 0, 100, 60, 0.25)],
+    rivals: [{ traits: { lungs: 2, limbs: 3, gait: 2, skin: 2, egg: 2, jawPlants: 3, crush: 1, size: 2, herd: 2 }, home: 'floodplain', plan: 'special' }, { traits: { lungs: 2, limbs: 3, gait: 3, feathers: 2, warm: 1, jawPrey: 2, size: 1, claws: 2, herd: 1 }, home: 'flowerWood', plan: 'greedy' }] },
+  { id: 'giants', name: 'The Last of the Giants', turns: 22, dWet: 0, dTemp: 0, dieoffs: ['impactWinter', 'impactFire', 'deccan'], mag: 2.2, dieoffTurns: 5, lead: 8, sens: [0.4, 1.5], predRise: 0.006,   // the impact: named early, as the Great Dying is
+    regions: [R('delta', 0.85, 0.6, 90, 120, 90, 70, 0.35), R('forest', 0.65, 0.55, 130, 0, 150, 110, 0.45), R('plains', 0.45, 0.6, 90, 0, 150, 130, 0.55), R('highlands', 0.35, 0.4, 60, 0, 100, 60, 0.25)],
+    rivals: [{ traits: { lungs: 3, limbs: 3, gait: 3, skin: 2, egg: 2, feathers: 1, jawPrey: 3, scavenge: 1, size: 3 }, home: 'plains', plan: 'special' }, { traits: { lungs: 2, limbs: 3, gait: 2, skin: 2, egg: 2, jawPlants: 3, battery: 2, size: 3, herd: 2 }, home: 'forest', plan: 'special' }] },
 ];
 
 // ---- Standing -----------------------------------------------------------------
@@ -195,26 +230,33 @@ export const ERAS = [
 // ladder are bodies in LINEAGES, scored by the same function; no score is typed in.
 // (Until 2026-11-25 a win needed one of four fixed bodies. The author: "I don't think winning
 // should be reliant on fitting a list of traits.")
+// Since phase 3 the grounds of what came after the impact: forests coming back, rivers, few big animals to hunt.
+// (Until 2026-11-28 they were the Jurassic's, when the run ended at the Triassic.)
 export const PANEL = [
-  R('fernPlain', 0.55, 0.62, 90, 0, 150, 90, 0.6),
-  R('conifer', 0.4, 0.5, 70, 0, 130, 80, 0.55),
-  R('coast', 0.8, 0.6, 60, 120, 40, 50, 0.5),
-  R('dryInland', 0.2, 0.75, 50, 0, 60, 70, 0.45),
-  R('coolSouth', 0.5, 0.3, 50, 20, 100, 60, 0.45),
-  R('riverDelta', 0.9, 0.65, 110, 90, 80, 60, 0.6),
+  R('palmForest', 0.7, 0.62, 140, 40, 150, 50, 0.35),
+  R('swampForest', 0.85, 0.6, 110, 100, 120, 40, 0.35),
+  R('openWood', 0.5, 0.55, 100, 0, 130, 60, 0.4),
+  R('river', 0.8, 0.55, 80, 120, 80, 40, 0.3),
+  R('coolNorth', 0.55, 0.35, 60, 30, 100, 40, 0.3),
+  R('dryInland', 0.25, 0.7, 60, 0, 60, 40, 0.3),
 ];
 export const STANDING = { fullAt: 25, grounds: [0.8, 0.9, 1.0], weight: 0.2 };   // numbers that count as secure; the worth of 1, 2, 3 regions
 
 // numbers and ground are what the lineage is taken to have had as the last die-off ended, in the
 // game's terms: like the player's, they are what was left, not what there had been.
+// Since phase 3 (2026-11-28) the lineages that came through the impact (docs/HISTORY.md). Until then they were
+// the lineages alive at the end of the Triassic, with the dinosaurs, the great amphibians and the beaked
+// plant-eaters; none of the three came through the impact as it was.
+// Their numbers are what was left after the impact, in the game's units: halved from the first guess
+// (2026-11-28), when survivors thinned by the impact ranked below nearly all of them (top three 6%, 900 runs).
 export const LINEAGES = {
-  dinosaur:  { traits: { lungs: 2, limbs: 3, gait: 3, skin: 2, egg: 3, feathers: 1, warm: 2, size: 2, jawInsects: 2, omni: 2, herd: 1, brain: 1 }, ways: ['tend'], numbers: 9, ground: 2 },
-  crocodile: { traits: { lungs: 2, limbs: 2, skin: 3, scales: 2, egg: 2, armour: 2, size: 2, jawPrey: 3, scavenge: 1 }, ways: ['tend'], numbers: 6, ground: 1 },
-  mammal:    { traits: { lungs: 2, limbs: 2, skin: 1, egg: 1, fur: 2, warm: 3, brain: 2, burrow: 2, jawInsects: 2, omni: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
-  amphibian: { traits: { lungs: 3, limbs: 2, skin: 1, armour: 1, size: 3, jawFish: 3, burrow: 1 }, ways: ['tend', 'roam'], numbers: 1, ground: 1 },   // numbers 4 until balance round C: the great amphibians only just came through (a few lingered on), and half of the player's survivors ranked below them
-  lizard:    { traits: { lungs: 2, limbs: 2, skin: 3, scales: 2, egg: 2, jawInsects: 2, burrow: 1 }, ways: ['night', 'tend'], numbers: 8, ground: 2 },
-  turtle:    { traits: { lungs: 2, limbs: 2, skin: 2, scales: 1, egg: 2, armour: 3, size: 1, jawPlants: 2, omni: 2, crush: 1 }, ways: ['tend'], numbers: 5, ground: 1 },
-  beaked:    { traits: { lungs: 2, limbs: 2, skin: 2, scales: 1, egg: 2, size: 3, jawPlants: 3, crush: 1, herd: 2, brain: 1 }, ways: [], numbers: 2, ground: 1 },
+  bird:        { traits: { lungs: 3, airSacs: 2, limbs: 3, gait: 3, skin: 2, egg: 3, feathers: 2, wings: 3, warm: 2, jawInsects: 2, omni: 2, brain: 2 }, ways: ['tend'], numbers: 5, ground: 2 },
+  mammal:      { traits: { lungs: 2, limbs: 2, skin: 1, egg: 1, fur: 2, warm: 3, milk: 2, brain: 2, burrow: 2, jawInsects: 2, omni: 1 }, ways: ['night', 'tend'], numbers: 4, ground: 2 },
+  crocodile:   { traits: { lungs: 2, limbs: 2, skin: 3, scales: 2, egg: 2, armour: 2, size: 2, jawPrey: 3, scavenge: 1 }, ways: ['tend'], numbers: 3, ground: 1 },
+  turtle:      { traits: { lungs: 2, limbs: 2, skin: 2, scales: 1, egg: 2, armour: 3, size: 1, jawPlants: 2, omni: 2, crush: 1 }, ways: ['tend'], numbers: 3, ground: 1 },
+  lizard:      { traits: { lungs: 2, limbs: 2, skin: 3, scales: 2, egg: 2, jawInsects: 2, tongue: 2, burrow: 1 }, ways: ['night', 'tend'], numbers: 4, ground: 2 },
+  frog:        { traits: { lungs: 2, limbs: 2, skin: 1, jawInsects: 2, tongue: 2, burrow: 1 }, ways: ['night'], numbers: 3, ground: 1 },
+  champsosaur: { traits: { lungs: 2, limbs: 2, skin: 2, scales: 2, egg: 2, jawFish: 3, flippers: 1, size: 1 }, ways: ['tend'], numbers: 1, ground: 1 },
 };
 
 // ---- Moments ------------------------------------------------------------------

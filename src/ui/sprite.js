@@ -44,6 +44,8 @@ export function animalRects(p) {
     headX = x1; headY = top - (hh - 3) - (p.limbs === 'raised' ? 1 : 0);
     for (const lx of [x0 + 1, x1 - 3]) { put(lx, top + hgt, 2, leg, c.limb); put(lx - (p.limbs === 'raised' ? 0 : 1), 17, 3, 1, c.limb); if (p.claws) put(lx + 2, 17, 1, 1, '#f4f0e0'); }
   }
+  // A long neck raises the head: two pixels a step, the neck drawn under it.
+  if (p.neck) { headY -= 2 * p.neck; put(headX - 1, headY + hh - 1, 2, 2 * p.neck + 1, c.body); }
   // skull and jaw
   put(headX, headY, hw, hh, c.body);
   if (p.skull === 'high') put(headX + 1, headY - 1, 3, 1, c.body);
@@ -98,6 +100,14 @@ export function animalRects(p) {
     for (let x = x0 + 1; x < x0 + L - 1; x += gap) put(x, top + hgt - 1, 1, 1, c.dark);
     if (p.coat >= 2) for (let x = x0 - 5; x < x0; x += gap) put(x, top + 2, 1, 1, c.dark);
   }
+  // Wings: folded along the back, a row of flight feathers at the step's length, pale tips at the end.
+  if (p.wings) {
+    put(x0 + 2, top - 1, L - 3, 1, c.dark);
+    if (p.wings >= 2) put(x0 + 3, top - 2, L - 5, 1, c.dark);
+    if (p.wings >= 3) { put(x0 + 5, top - 3, Math.max(1, L - 8), 1, c.dark); put(x0 - 1, top - 1, 3, 1, c.pale); }
+  }
+  // Flippers: paddles where the feet were.
+  if (p.flippers) for (const fx of upright ? [x0 + 2, x0 + 6] : [x0, x1 - 4]) put(fx, 16, 4, 2, c.limb);
   // Weapons. Hooked claws: a pale point at each foot, longer as they grow.
   if (p.talons) for (const fx of upright ? [x0 + 6, x0 + 7] : [x0 + 2, x1 - 1]) put(fx, 17 - (p.talons >= 2 ? 1 : 0), 1, 1 + (p.talons >= 2 ? 1 : 0), '#f4f0e0');
   // Horns: a nub, then a horn, then a long one, off the top of the skull.
@@ -123,7 +133,8 @@ export function animalSVG(p, px, label, metres) {
   // A bar of a round length, drawn to the animal's own scale: a metre for a big animal, ten centimetres for a small one.
   const unit = metres >= 2 ? 1 : metres >= 0.8 ? 0.5 : 0.1, bar = Math.max(1, Math.round((x1 - x0) * unit / metres));
   const measure = metres ? `<rect x="${x0}" y="20" width="${bar}" height="1" fill="#e9e6d6"/><rect x="${x0}" y="19" width="1" height="2" fill="#e9e6d6"/><rect x="${x0 + bar - 1}" y="19" width="1" height="2" fill="#e9e6d6"/>` : '';
-  return { svg: `<svg viewBox="0 0 32 22" width="${32 * px}" height="${22 * px}" shape-rendering="crispEdges" role="img" aria-label="${label}">${rects.map(rect).join('')}${measure}</svg>`, unit };
+  const y0 = Math.min(0, ...rects.map((r) => r[1]));   // a long neck can raise the head above the frame
+  return { svg: `<svg viewBox="0 ${y0} 32 ${22 - y0}" width="${32 * px}" height="${(22 - y0) * px}" shape-rendering="crispEdges" role="img" aria-label="${label}">${rects.map(rect).join('')}${measure}</svg>`, unit };
 }
 
 // Ground and sky for each era: [x, y, w, h, palette index] on a 64 by 30 grid.
@@ -132,6 +143,9 @@ const SCENES = {
   coal:     [[0, 0, 64, 30, 0], [0, 0, 64, 9, 1], [4, 2, 2, 20, 3], [1, 1, 8, 3, 2], [20, 0, 3, 22, 3], [16, 0, 11, 3, 2], [46, 2, 2, 20, 3], [43, 1, 8, 3, 2], [58, 4, 2, 18, 3], [55, 3, 8, 3, 2], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2]],
   drying:   [[0, 0, 64, 30, 0], [0, 0, 64, 10, 1], [0, 14, 20, 8, 1], [30, 16, 34, 6, 1], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2], [8, 17, 1, 5, 2], [9, 19, 2, 1, 2], [50, 18, 1, 4, 2], [48, 20, 2, 1, 2]],
   shadow:   [[0, 0, 64, 30, 0], [0, 0, 64, 8, 1], [44, 3, 5, 5, 2], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2], [6, 10, 1, 12, 0], [3, 13, 3, 1, 0], [7, 16, 3, 1, 0], [56, 13, 1, 9, 0], [57, 16, 3, 1, 0]],
+  jurassic: [[0, 0, 64, 30, 0], [0, 0, 64, 8, 1], [6, 4, 2, 18, 3], [3, 3, 8, 4, 2], [30, 6, 2, 16, 3], [27, 5, 8, 4, 2], [52, 2, 3, 20, 3], [48, 1, 11, 5, 2], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2], [14, 19, 4, 3, 2], [40, 20, 5, 2, 2]],
+  flowers:  [[0, 0, 64, 30, 0], [0, 0, 64, 9, 1], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2], [8, 14, 2, 8, 3], [5, 12, 8, 3, 2], [50, 15, 2, 7, 3], [47, 13, 8, 3, 2], [20, 20, 1, 2, 1], [24, 19, 1, 3, 1], [36, 20, 1, 2, 1], [42, 19, 1, 3, 1]],
+  giants:   [[0, 0, 64, 30, 0], [0, 0, 64, 8, 1], [44, 2, 4, 4, 2], [0, 16, 30, 6, 1], [36, 14, 28, 8, 1], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2], [10, 10, 2, 12, 3], [7, 8, 8, 3, 2]],
   triassic: [[0, 0, 64, 30, 0], [0, 0, 64, 8, 1], [48, 2, 6, 6, 2], [0, 15, 24, 7, 1], [34, 13, 30, 9, 1], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2]],
 };
 
@@ -148,7 +162,7 @@ const drawnFor = (heads) => (heads >= 30000 ? 5 : heads >= 10000 ? 4 : heads >= 
 
 // Weather for a die-off: snow, shimmer, dust or ash, falling or drifting in a fixed pattern (no chance:
 // the same turn draws the same picture). Light while it is only coming; full once it is here.
-const WEATHER = { cold: 'snow', greatCold: 'snow', heat: 'heat', greatHot: 'heat', drought: 'dust', greatDry: 'dust', collapse: 'ash', greatWaste: 'ash' };
+const WEATHER = { cold: 'snow', greatCold: 'snow', heat: 'heat', greatHot: 'heat', drought: 'dust', greatDry: 'dust', collapse: 'ash', greatWaste: 'ash', heavy: 'dust', deadSeas: 'heat', impactWinter: 'snow', impactFire: 'heat', deccan: 'ash' };
 const SPECK = { snow: '#eef3f6', heat: '#f6d27a', dust: '#c9a46a', ash: '#9a958c' };
 function weatherSVG(w) {
   if (!w) return '';

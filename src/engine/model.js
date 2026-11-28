@@ -8,7 +8,7 @@
 // in place of four fixed winning bodies.
 import { streamFor } from './rng.js';
 import { lookOf } from './parts.js';
-import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, BEHIND, HUE_DEG, GROUND_HUE, COLOUR, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
+import { BASE_FOODS, FOODS, JAWS, TRAITS, START_TRAITS, START_POP, STEP_TURNS, SHED_TURNS, MOUTH_TURNS, COVERS, COVER_TURNS, BARS, WATCH_TURNS, RANGE_DRAG, MAX_REGIONS, HALF_SAT, MIN_VIABLE, WAYS, MAX_WAYS, WAY_SETTLE, MOMENT_EVERY, MOMENT_AT, MOMENTS, PANEL, STANDING, LINEAGES, HARSH, SENS, FOOD_FLOOR, LEAST, STARVE, CARRION, COAT_SIZE, WARM_GROW, STANCES, FIGHT, PUSH, PREY, BEHIND, COLD_BLOOD, HUE_DEG, GROUND_HUE, COLOUR, DIEOFFS, DIEOFF_TURNS, ERAS } from '../data/world.data.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const lv = (t, id) => t[id] || 0;
@@ -24,39 +24,40 @@ export function body(t, ways = []) {
   const night = ways.includes('night'), tend = ways.includes('tend'), roam = ways.includes('roam'), fat = ways.includes('fat');
   const scales = lv(t, 'scales'), fur = lv(t, 'fur'), feathers = lv(t, 'feathers'), sail = lv(t, 'sail');
   const small = (3 - size) / 3, claws = lv(t, 'claws'), horns = lv(t, 'horns'), club = lv(t, 'tailClub'), venom = lv(t, 'venom') * small;
-  const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm + 0.03 * feathers - 0.08 * lv(t, 'armour') - 0.03 * size - 0.015 * horns;
+  const mob = 0.2 + 0.15 * lv(t, 'limbs') + 0.15 * lv(t, 'gait') + 0.08 * warm + 0.03 * feathers - 0.08 * lv(t, 'armour') - 0.03 * size - 0.015 * horns + 0.12 * lv(t, 'wings') + 0.03 * lv(t, 'airSacs') - 0.03 * lv(t, 'flippers');
   const mouth = mouthOf(t), own = mouth ? JAWS[mouth] : null;
   const eff = {};
   for (const f of BASE_FOODS) {
     let e = 0.35 + (f === own ? 0.25 * lv(t, mouth) - 0.08 * omni : 0.06 * omni) + 0.05 * lv(t, 'brain');
     if (f === 'prey') e = e * (0.55 + 0.6 * mob) + 0.08 * size + 0.04 * herd + 0.05 * claws + 0.08 * venom;
-    if (f === 'insects') e = e * (0.8 + 0.25 * mob) - 0.08 * size + 0.08 * lv(t, 'tongue');
-    if (f === 'plants') e += 0.05 * size;
+    if (f === 'insects') e = e * (0.8 + 0.25 * mob) - 0.08 * size + 0.08 * lv(t, 'tongue') + 0.04 * lv(t, 'wings');
+    if (f === 'plants') e += 0.05 * size + 0.1 * lv(t, 'longNeck') + 0.12 * lv(t, 'battery');
+    if (f === 'fish') e += 0.12 * lv(t, 'flippers');
     eff[f] = Math.max(0.05, e);
   }
   // The dead: a scavenger's food, and a hunter's too, which eats what it finds as well as what it kills.
   // (A scavenger once had them to itself: the author's fourth run came first of eight on it.)
   eff.carrion = CARRION.scavenge * lv(t, 'scavenge') + (mouth === 'jawPrey' ? CARRION.hunter * lv(t, 'jawPrey') : 0);
-  eff.hard = lv(t, 'crush') ? 0.2 * lv(t, 'crush') + 0.03 * size : 0;
+  eff.hard = lv(t, 'crush') || lv(t, 'battery') ? 0.2 * lv(t, 'crush') + 0.1 * lv(t, 'battery') + 0.03 * size : 0;
   if (night) for (const f of FOODS) eff[f] *= 0.9;        // finds less in the dark
   let upkeep = 1 + (tend ? 0.04 : 0) + (roam ? 0.07 : 0);   // young to feed; miles to walk
   for (const id in t) upkeep += TRAITS[id].cost * t[id];
   upkeep += COAT_SIZE * fur * size;                            // a coat costs more the more animal there is to cover
   return {
-    dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg') + 0.06 * burrow + 0.04 * scales),   // a burrow is damp; scales keep water in
+    dry: clamp01(0.15 + 0.12 * lv(t, 'lungs') + 0.12 * skin + 0.15 * lv(t, 'egg') + 0.06 * burrow + 0.04 * scales + 0.03 * lv(t, 'airSacs')),   // a burrow is damp; scales keep water in
     // Cold: a warm metabolism under a coat. Fur holds heat best, feathers nearly; a sail soaks up the morning sun.
     lo: 0.40 - 0.07 * warm - 0.10 * fur - 0.08 * feathers - 0.07 * sail - 0.04 * size - 0.05 * burrow,
     // Heat: watertight skin, scales over it, a sail to shed it. A coat is worn in the heat too.
-    hi: 0.65 + 0.06 * skin + 0.05 * scales + 0.09 * sail - 0.02 * fur - 0.01 * feathers - 0.05 * size - 0.04 * warm + 0.04 * burrow + (night ? 0.10 : 0),
+    hi: 0.65 + 0.06 * skin + 0.05 * scales + 0.09 * sail - 0.02 * fur - 0.01 * feathers - 0.05 * size - 0.04 * warm + 0.04 * burrow + 0.04 * lv(t, 'airSacs') + (night ? 0.10 : 0),
     mob, eff, upkeep, mouth,
-    defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + 0.04 * claws + 0.05 * horns + 0.08 * club + 0.05 * venom + (night ? 0.2 : 0)),
+    defence: clamp01(0.12 * size + 0.15 * lv(t, 'armour') + 0.25 * mob + 0.10 * burrow * (3 - size) / 3 + 0.08 * herd + 0.04 * claws + 0.05 * horns + 0.08 * club + 0.05 * venom + 0.06 * lv(t, 'wings') + (night ? 0.2 : 0)),
     // What the night hides from: the hunters of the region, not a rival that shares the ground and learns its hours.
     nightCover: night ? 0.2 : 0,
     // Fight a head, for a push between lineages.
     fight: FIGHT.base + FIGHT.size * size + FIGHT.armour * lv(t, 'armour') + FIGHT.herd * herd + FIGHT.horns * horns + FIGHT.claws * claws + FIGHT.tailClub * club + FIGHT.venom * venom,
-    grow: ((tend ? 0.68 : 0.5) + WARM_GROW * warm) * (fat ? 0.75 : 1),   // how fast numbers rise toward what the ground feeds; a warm body breeds faster
+    grow: ((tend ? 0.68 : 0.5) + WARM_GROW * warm + 0.04 * lv(t, 'milk')) * (fat ? 0.75 : 1),   // how fast numbers rise toward what the ground feeds; a warm body breeds faster
     // A heavy animal starves more slowly than a slight one; so does a slow one in armour, and one that has laid down fat.
-    starve: (fat ? STARVE.fat : STARVE.plain) * (1 - STARVE.size * size - STARVE.armour * lv(t, 'armour') - STARVE.burrow * burrow * (3 - size) / 3),   // and a small one gone to ground                            // how fast they fall toward it
+    starve: (fat ? STARVE.fat : STARVE.plain) * (1 - STARVE.size * size - STARVE.armour * lv(t, 'armour') - STARVE.burrow * burrow * (3 - size) / 3 - 0.04 * lv(t, 'milk')),   // and a small one gone to ground                            // how fast they fall toward it
     ease: roam ? 0.55 : 1,                                 // how much of bad ground's harm is felt
     drag: 1,                                 // a lineage on the move changes more slowly
   };
@@ -172,19 +173,20 @@ export function regionsNow(s) {
     const food = {};
     const back = era.recover ? Math.min(1, 0.5 + 0.5 * s.turn / era.recover) : 1;
     const pulse = era.pulse && s.turn >= era.pulse.from && s.turn < era.pulse.to;
-    if (pulse) wet += era.pulse.dWet;
+    if (pulse) { wet += era.pulse.dWet || 0; temp += era.pulse.dTemp || 0; }
     const hit = s.opts.noDieoff ? 0 : Math.min(2.2, ramp * s.dieoff.sens[r.id] * era.mag * (era.gentle ? 1 : (s.opts.harsh ?? HARSH)));
     wet += d.dWet * hit; temp += d.dTemp * hit;
     for (const m of mods) if (m.pred) pred += m.pred;
     for (const f of BASE_FOODS) {
       let v = r.food[f] * back * rng.float(0.85, 1.15);
-      if (pulse && f === 'plants') v *= era.pulse.plants;
+      if (pulse && era.pulse[f] != null) v *= era.pulse[f];   // an era's own event: the wet episode, the dead seas, the flowers
       if (d.food[f] != null) v *= Math.max(s.opts.floor ?? FOOD_FLOOR, 1 - (1 - d.food[f]) * hit);
       food[f] = v;
     }
     yields(food, clamp01(pred), hit);
     for (const m of mods) if (m.food) for (const f of FOODS) if (m.food === 'all' || m.food === f) food[f] *= m.m;
-    return { id: r.id, wet: clamp01(wet), temp: clamp01(temp), pred: clamp01(pred), food };
+    // A die-off that falls on size (docs/FRAME-next.md 4.1): the share lost a turn for each step of size above the first.
+    return { id: r.id, wet: clamp01(wet), temp: clamp01(temp), pred: clamp01(pred), food, big: (d.big || 0) * hit };
   });
 }
 
@@ -442,8 +444,11 @@ export function newGame(seed, opts = {}) {
 }
 
 /** What this generation offers. A lineage with no mouth is offered mouths. */
+/** A trait can turn up only from its era on (`from` in the data table). */
+export const arrived = (s, id) => (TRAITS[id].from ?? 0) <= s.era;
+
 export function offersFor(s, l) {
-  const open = Object.keys(TRAITS).filter((id) => lv(l.traits, id) === 0 && canRaise(l.traits, id));
+  const open = Object.keys(TRAITS).filter((id) => lv(l.traits, id) === 0 && canRaise(l.traits, id) && arrived(s, id));
   const pool = mouthOf(l.traits) ? open : open.filter((id) => JAWS[id]);
   const three = streamFor(s.seed, `${s.era}.${s.turn}.${s.attempt}`, 'offer.' + l.id).shuffle(pool).slice(0, 3);
   // A trait the lineage has been watching for turns up once it has watched WATCH_TURNS turns and can grow it.
@@ -459,7 +464,7 @@ function apply(s, l, d, offers) {
     l.stance = d.stance && !stanceWhy(s, l, R, d.stance.act) ? { id: d.stance.id, act: d.stance.act } : null;
   }
   if (d.watch !== undefined) {
-    if (!d.watch || !TRAITS[d.watch]) delete l.watch;
+    if (!d.watch || !TRAITS[d.watch] || !arrived(s, d.watch)) delete l.watch;
     else if (!l.watch || l.watch.id !== d.watch) l.watch = { id: d.watch, since: s.clock };
   }
   if (l.watch && lv(l.traits, l.watch.id) > 0) delete l.watch;
@@ -510,15 +515,16 @@ function feed(s) {
   s.was = Object.fromEntries(s.lineages.map((l) => [l.id, totalPop(l)]));
   // What moved the player's numbers this turn, kept for the turn's report: bred, starved, caught,
   // lost to rivals, and the last of a region dying out. It records the turn; it decides nothing.
-  const moved = { bred: 0, starved: 0, caught: 0, lost: 0, rivals: 0 };
+  const moved = { bred: 0, starved: 0, caught: 0, lost: 0, rivals: 0, heavy: 0 };
   s.lineages.forEach((l, i) => {
     const b0 = body(l.traits, waysOf(s, l)), lose = c.lose.get(l) || {};
     for (const r of s.regions) {
       const p0 = l.pop[r.id] || 0; if (!(p0 > 0)) continue;
       const p = Math.max(0, p0 - (lose[r.id] || 0)), k = caps[i][r.id], b = shade(l, r, b0);
       const fed = k > p ? Math.min(p + b.grow * (k - p), p * 1.6 + 1) : p + b.starve * (k - p);
-      const n = fed * (1 - 0.3 * Math.min(1, r.pred) * (1 - b.defence));
-      if (l.player) { moved.rivals += p0 - p; if (fed > p) moved.bred += fed - p; else moved.starved += p - fed; moved.caught += fed - n; if (n < MIN_VIABLE) moved.lost += n; }
+      const heavy = r.big ? Math.min(0.9, r.big * Math.max(0, lv(l.traits, 'size') - 1) * (lv(l.traits, 'warm') ? 1 : COLD_BLOOD)) : 0;
+      const left = fed * (1 - 0.3 * Math.min(1, r.pred) * (1 - b.defence)), n = left * (1 - heavy);
+      if (l.player) { moved.rivals += p0 - p; if (fed > p) moved.bred += fed - p; else moved.starved += p - fed; moved.caught += fed - left; moved.heavy += left - n; if (n < MIN_VIABLE) moved.lost += n; }
       if (n < MIN_VIABLE) delete l.pop[r.id]; else l.pop[r.id] = n;
     }
   });

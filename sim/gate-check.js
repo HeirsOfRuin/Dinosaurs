@@ -38,7 +38,7 @@ const base = seeds.map((seed) => sig(play(seed, { policy: basePolicy })));
 const parts = {
   'plan: none': { policy: { ...basePolicy, plan: 'none' } }, 'plan: random': { policy: { ...basePolicy, plan: 'random' } },
   'plan: special': { policy: { ...basePolicy, plan: 'special' } }, 'plan: wide': { policy: { ...basePolicy, plan: 'wide' } }, 'plan: tolerant': { policy: { ...basePolicy, plan: 'tolerant' } },
-  'plan: greedy': { policy: { ...basePolicy, plan: 'greedy' } }, 'plan: recipe': { policy: { ...basePolicy, plan: 'recipe', road: 'dinosaur' } },
+  'plan: greedy': { policy: { ...basePolicy, plan: 'greedy' } }, 'plan: recipe': { policy: { ...basePolicy, plan: 'recipe', road: 'bird' } },
   'road: turtle': { policy: { ...basePolicy, plan: 'recipe', road: 'turtle' } },
   'regions: 1': { policy: { ...basePolicy, regions: 1 } }, 'regions: 3': { policy: { ...basePolicy, regions: 3 } },
   'heed: off': { policy: { ...basePolicy, heed: false } }, 'brace: off': { policy: { ...basePolicy, brace: false } },

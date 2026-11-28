@@ -3,7 +3,7 @@
 // (sim/gate-check.js proves it): a plan for the body, the lineage it is making
 // for, how many regions to hold, the ways it lives, whether it heeds the
 // die-off warning, whether it braces for it, and which road it takes at a moment.
-import { TRAITS, JAWS, COVERS, MAX_REGIONS, MIN_VIABLE, WAY_SETTLE, LINEAGES } from '../data/world.data.js';
+import { TRAITS, JAWS, COVERS, MAX_REGIONS, MIN_VIABLE, WAY_SETTLE, LINEAGES, DIEOFFS } from '../data/world.data.js';
 import { body, capacity, held, canRaise, canShed, canTurn, closedBy, mouthOf, coverOf, waysOf, stanceWhy, sharedGround, pushShare } from './model.js';
 import { streamFor } from './rng.js';
 
@@ -17,6 +17,11 @@ const COUNTER = {
   greatDry: [['lungs', 2], ['skin', 2], ['egg', 2], ['skin', 3], ['egg', 3]],
   greatCold: [['fur', 1], ['warm', 1], ['burrow', 1], ['burrow', 2], ['warm', 2], ['size', 1]],
   greatWaste: [['omni', 1], ['scavenge', 1], ['brain', 1], ['omni', 2]],
+  heavy: [['burrow', 1], ['skin', 2], ['egg', 2]],
+  deadSeas: [['lungs', 2], ['skin', 2], ['airSacs', 1], ['lungs', 3]],
+  impactWinter: [['fur', 1], ['warm', 1], ['burrow', 1], ['burrow', 2], ['warm', 2]],
+  impactFire: [['lungs', 2], ['skin', 2], ['scales', 1], ['burrow', 1], ['burrow', 2]],
+  deccan: [['omni', 1], ['scavenge', 1], ['burrow', 1], ['brain', 1], ['omni', 2]],
 };
 // The order a body is built in when making for a lineage: each trait to step 1, then to 2, then to 3.
 const ORDER = ['lungs', 'limbs', 'jawInsects', 'jawFish', 'jawPlants', 'jawPrey', 'skin', 'egg', 'scales', 'fur', 'feathers', 'sail', 'burrow', 'brain', 'herd', 'gait', 'warm', 'size', 'armour', 'omni', 'scavenge', 'crush'];
@@ -33,11 +38,17 @@ export const POLICIES = {
   // A careful player with no animal in mind: tolerance first, then whatever feeds it, eyes open.
   careful: { plan: 'mixed', regions: 2, heed: true, brace: true, ways: ['tend'], act: true },
 };
-export const ROADS = Object.keys(LINEAGES).filter((id) => id !== 'beaked');
+export const ROADS = Object.keys(LINEAGES);
 for (const road of ROADS) {
   POLICIES[road + '.list'] = { plan: 'recipe', road, regions: 1, ways: LINEAGES[road].ways };
   POLICIES[road + '.plan'] = { plan: 'recipe', road, regions: 2, heed: true, brace: true, ways: LINEAGES[road].ways, act: true };
 }
+// A big dinosaur, made for with eyes open, which lets size go when a die-off that falls on size is named.
+// It is not on the ladder: it measures whether a big body has a road through the impact or meets a gate
+// (the author's decision 6, docs/FRAME-next.md).
+export const GIANT = { lungs: 3, airSacs: 1, limbs: 3, gait: 3, skin: 2, egg: 2, feathers: 1, warm: 1, size: 3, jawPrey: 3, scavenge: 1 };
+POLICIES['giant.plan'] = { plan: 'recipe', target: GIANT, regions: 2, heed: true, brace: true, ways: ['tend'], act: true };
+const targetOf = (p) => p.target || LINEAGES[p.road || 'bird'].traits;
 
 const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
 const worth = (s, l, traits) => sum(capacity(s, l, traits));
@@ -137,6 +148,8 @@ export function chooseStance(s, l, p) {
   return null;
 }
 
+const shrinking = (p, warn) => !!(p.heed && warn && warn.kinds.length === 1 && warn.sens && DIEOFFS[warn.kinds[0]]?.big);
+
 export function decide(s, l, offers, warn) {
   const p = l.plan || POLICIES.none;
   let d = {};
@@ -163,7 +176,8 @@ export function decide(s, l, offers, warn) {
     if (!d.watch) d.watch = g.watch;
     if (!d.press) { d.press = g.press; d.shed = g.shed; }
   } else if (p.plan === 'recipe') {
-    const target = LINEAGES[p.road || 'dinosaur'].traits;
+    // Size is not regrown while a die-off that falls on size is named; it is let go below.
+    const target = shrinking(p, warn) ? { ...targetOf(p), size: Math.min(1, targetOf(p).size || 0) } : targetOf(p);
     // On a road: never drop below what the lineage's body needs.
     allow = (t) => Object.entries(target).every(([id, n]) => lv(t, id) >= Math.min(n, lv(l.traits, id)));
     d = towards(s, l, offers, target, allow);
@@ -177,12 +191,14 @@ export function decide(s, l, offers, warn) {
     // A lineage making for an animal does not grow another animal's coat against one die-off, nor
     // warm blood that rests on one. (The amphibian's bot grew fur and warm blood against the Shore's
     // cold and carried them into the Coal Forests: 20% came through that era with them, 71% without.)
-    const coat = p.plan === 'recipe' ? COVERS.find((id) => lv(LINEAGES[p.road || 'dinosaur'].traits, id) > 0) : null;
+    const coat = p.plan === 'recipe' ? COVERS.find((id) => lv(targetOf(p), id) > 0) : null;
     const offRoad = (id) => p.plan === 'recipe' && ((TRAITS[id].cover && id !== coat) || (TRAITS[id].under && !TRAITS[id].under.includes(coat)));
     const c = follow(l, offers, COUNTER[warn.kinds[0]].filter(([id]) => !offRoad(id)), allow, 2);
     if (c.keep) d.keep = c.keep;
     if (c.watch) d.watch = c.watch;
     if (c.press && !d.turn) { d.press = c.press; delete d.shed; }
+    // A die-off that falls on size: let a step go at a time, down to the first, while there are turns.
+    if (shrinking(p, warn) && lv(l.traits, 'size') >= 2 && canShed(l.traits, 'size')) { d.shed = 'size'; delete d.press; }
     if (!p.fixedRange) wantRegions = MAX_REGIONS;
     // Lay down fat for what is coming, but only just before it comes: fat slows breeding. (A bot that
     // braced the moment the die-off was named came through less often with eight turns of warning than with five.)

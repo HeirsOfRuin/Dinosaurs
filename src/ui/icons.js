@@ -52,6 +52,15 @@ const ICONS = {
   venom:   ['#.......', '##......', '.##.....', '..##....', '...#....', '..###...', '..###...', '...#....'],
   camouflage: ['##..#.##', '#.##.##.', '.##..#.#', '#..##.##', '.##.#..#', '##.#.##.', '#.##..##', '.#..##.#'],
   display: ['#.#.#.#.', '.#####..', '#######.', '..###...', '...#....', '........', '........', '........'],
+  wings:   ['........', '#.......', '##......', '###...##', '.####.##', '..######', '...####.', '........'],
+  longNeck:['.....##.', '.....#..', '....#...', '....#...', '...#....', '.####...', '######..', '#....#..'],
+  airSacs: ['.##..##.', '#..##..#', '#..##..#', '.##..##.', '...##...', '...##...', '..####..', '........'],
+  milk:    ['..####..', '..#..#..', '.######.', '.#....#.', '.######.', '.######.', '.######.', '........'],
+  flippers:['........', '..##....', '.####...', '######..', '.#######', '...#####', '.....###', '........'],
+  battery: ['########', '#.#.#.#.', '########', '#.#.#.#.', '########', '........', '........', '........'],
+  heavy:   ['...##...', '..#..#..', '.######.', '.######.', '########', '########', '########', '........'],
+  deadSeas:['........', '#.#.#.#.', '.#.#.#.#', '........', '..##.#..', '.#.##...', '..##.#..', '........'],
+  impact:  ['#..#..#.', '.#.#.#..', '..###...', '###.####', '..###...', '.#.#.#..', '#..#..#.', '........'],
   // the tree's branches
   air:     ['......#.', '....#...', '.....##.', '..##....', '.#..#...', '.#..#...', '..##....', '........'],
   cover:   ['........', '.##.##..', '#..#..#.', '.##.##..', '#..#..#.', '.##.##..', '........', '........'],
@@ -62,8 +71,8 @@ const ICONS = {
 };
 
 // What each trait, way, stance and die-off is drawn with. A trait with no icon of its own takes its branch's.
-const TRAIT_ICON = { jawFish: 'fish', jawInsects: 'insects', jawPlants: 'plants', jawPrey: 'prey', omni: 'food', scavenge: 'carrion', crush: 'hard', tongue: 'insects', scales: 'cover' };
-const DIEOFF_ICON = { cold: 'cold', greatCold: 'cold', heat: 'heat', greatHot: 'heat', drought: 'drought', greatDry: 'drought', collapse: 'collapse', greatWaste: 'waste' };
+const TRAIT_ICON = { jawFish: 'fish', jawInsects: 'insects', jawPlants: 'plants', jawPrey: 'prey', omni: 'food', scavenge: 'carrion', crush: 'hard', tongue: 'insects', scales: 'cover' };   // the rest have their own
+const DIEOFF_ICON = { cold: 'cold', greatCold: 'cold', heat: 'heat', greatHot: 'heat', drought: 'drought', greatDry: 'drought', collapse: 'collapse', greatWaste: 'waste', heavy: 'heavy', deadSeas: 'deadSeas', impactWinter: 'impact', impactFire: 'impact', deccan: 'impact' };
 
 const cache = new Map();
 /** An icon as inline SVG, coloured by the text around it. Unknown names draw nothing. */

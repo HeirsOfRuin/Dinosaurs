@@ -282,6 +282,7 @@ function turnNote(rec) {
     if (m.starved >= 50) why.push(`hunger took ${n0(m.starved)}`);
     if (m.caught >= 50) why.push(`hunters took ${n0(m.caught)}`);
     if (m.rivals >= 50) why.push(`rivals took ${n0(m.rivals)}`);
+    if (m.heavy >= 50) why.push(`being big cost ${n0(m.heavy)}`);
     if (m.lost >= 50) why.push(`the last ${n0(m.lost)} somewhere died out`);
   }
   bits.push((Math.abs(d) < 50 ? 'Numbers held' : d > 0 ? `Numbers up ${n0(d)}` : `Numbers down ${n0(-d)}`) + (why.length ? `: ${why.join(', ')}.` : '.'));
@@ -418,7 +419,7 @@ function bodyTab(v) {
 
 function ladderSheet() {
   const v = view(state);
-  return `<h2>The ladder</h2><p>Seven lineages that were alive at the end of the Triassic, and yours as it stands now. All eight are scored the same way.</p>
+  return `<h2>The ladder</h2><p>Seven lineages that came through the impact, and yours as it stands now. All eight are scored the same way.</p>
     <table class="ledger ladder">${ladderRows(v)}</table>${standingLines(v)}
     ${v.ladder.filter((r) => !r.you).map((r) => `<p class="hint"><strong>${esc(LINEAGE_TEXT[r.id].name)}.</strong> ${esc(LINEAGE_TEXT[r.id].line)} ${esc(LINEAGE_TEXT[r.id].example)}</p>`).join('')}
     <button data-act="close">Close</button>`;

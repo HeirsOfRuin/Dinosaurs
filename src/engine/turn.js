@@ -43,7 +43,7 @@ function pressCheck(s, id) {
 }
 
 // Why a trait not yet held cannot be begun, for the tree: { state, why }. 'open' means it can turn up as a mutation.
-function nodeCheck(t, id) {
+function nodeCheck(t, id, era = Infinity) {
   const T = TRAITS[id], mouth = mouthOf(t), cover = coverOf(t);
   if (JAWS[id] && mouth) return { state: 'closed', why: `A lineage has one mouth. Yours can be turned to this from ${TRAIT_TEXT[mouth].name.toLowerCase()}.` };
   if (T.cover && cover) return { state: 'closed', why: `A lineage wears one covering. Yours can be turned to this from ${TRAIT_TEXT[cover].name.toLowerCase()}.` };
@@ -54,6 +54,8 @@ function nodeCheck(t, id) {
   if (lack) return { state: 'needs', why: `Rests on ${TRAIT_TEXT[lack[0]].name.toLowerCase()} at step ${lack[1]}.` };
   if (T.jaw && (!mouth || lv(t, mouth) < T.jaw)) return { state: 'needs', why: `Rests on the mouth at step ${T.jaw}.` };
   if (T.under && !T.under.some((o) => lv(t, o) > 0)) return { state: 'needs', why: `Needs ${T.under.map((o) => TRAIT_TEXT[o].name.toLowerCase()).join(' or ')} over it.` };
+  // A trait that arrives with its era (docs/FRAME-next.md 4.1) is shown from the start and turns up only then.
+  if ((T.from ?? 0) > era) return { state: 'needs', why: `It turns up from ${ERAS[T.from].name.replace(/^The /, 'the ')} on.` };
   return { state: 'open', why: null };
 }
 
@@ -112,7 +114,7 @@ export function setPlan(prev, patch) {
     if (patch.watch != null) {
       if (!TRAITS[patch.watch]) throw new Error('not allowed: no such trait');
       if (lv(me(s).traits, patch.watch)) throw new Error('not allowed: already held');
-      const n = nodeCheck(me(s).traits, patch.watch);
+      const n = nodeCheck(me(s).traits, patch.watch, s.era);
       if (n.state === 'closed') throw new Error(`not allowed: ${n.why}`);
     }
     g.plan.watch = patch.watch ?? null;
@@ -174,7 +176,7 @@ export function advance(prev, input = {}) {
     era: before.era, turn: before.turn, kept: keep,
     popBefore: sum(before.pop) * HEADS, popAfter: totalPop(now) * HEADS, met: due ? { id: due, road: s.lastMoment.pick } : null,
     // Why the numbers moved: what was bred, what hunger took, what the hunters took. From the turn itself.
-    moved: s.moved && s.era === before.era ? { bred: s.moved.bred * HEADS, starved: s.moved.starved * HEADS, caught: s.moved.caught * HEADS, lost: s.moved.lost * HEADS, rivals: s.moved.rivals * HEADS } : null,
+    moved: s.moved && s.era === before.era ? { bred: s.moved.bred * HEADS, starved: s.moved.starved * HEADS, caught: s.moved.caught * HEADS, lost: s.moved.lost * HEADS, rivals: s.moved.rivals * HEADS, heavy: (s.moved.heavy || 0) * HEADS } : null,
     turned: mouthOf(now.traits) !== mouthOf(before.traits) ? { from: mouthOf(before.traits), to: mouthOf(now.traits) } : null,
     recovered: recovered ? { from: coverOf(before.traits), to: coverOf(now.traits) } : null,
     gained: Object.keys(now.traits).filter((id) => lv(now.traits, id) > lv(before.traits, id) && id !== keep && !JAWS[id] && !(recovered && COVERS.includes(id))),
@@ -358,7 +360,7 @@ export function view(g) {
     // held is open (it can turn up), resting on something not yet grown, or closed off by something that is.
     tree: TREE.map((br) => ({ id: br.id, traits: br.traits.map((id) => {
       if (lv(t, id)) return { id, level: t[id], state: 'held', why: null, watching: false };
-      const n = nodeCheck(t, id);
+      const n = nodeCheck(t, id, s.era);
       return { id, level: 0, state: n.state, why: n.why, cost: TRAITS[id].cost, watching: g.plan.watch === id, feeds: n.state === 'open' ? (worth({ ...t, [id]: 1 }) - feeds) * H : null };
     }) })),
     // What is being watched for, and how long before it is among what a generation offers.
