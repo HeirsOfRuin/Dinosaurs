@@ -1,23 +1,24 @@
 # Kill gate: results
 
-**Where the build is (2026-11-25):** Stage 7. The game is built and has been
-played once by the author. After that run it was rebuilt on a changed design
-(`docs/FRAME-standing.md`): a lineage wins by coming through, is ranked by
-standing, has one mouth, chooses ways of living and meets moments. Round 6
-below is the measurement of that game. Rounds 5 to 1 measured an earlier
-design, in which a win needed one of four fixed bodies; they are kept as the
-record and their numbers no longer describe the game.
+**Where the build is (2026-11-28):** Stage 7, played by the author five
+times. After the fifth playtest it was rebuilt to `docs/FRAME-next.md`:
+clearer screens (two stances, each mouth refinement on its jaw, the Turn
+screen under 60 words), a look that moves, and three more eras to the end
+of the dinosaurs. Round F below is the measurement of that game: eight
+eras, 165 turns, ending at the impact. Rounds before it measured the game
+that ended at the Triassic; they are kept as the record.
 
 The gate measures the game's own engine (`src/engine/model.js`,
 `src/data/world.data.js`, `src/engine/policies.js`). Every number in the data
-table is tuned, not sourced. `npm run gate` reproduces balance round C
-(194,000 runs, about an hour and a half on one core); `npm run gate:check` proves the model is deterministic, that
+table is tuned, not sourced. `npm run gate` reproduces round F on four
+cores (`sim/gate-par.js`; `gate:serial` prints the same in one process); `npm run gate:check` proves the model is deterministic, that
 every run ended and moved its clock, that no lineage wears two coverings,
 holds warm blood without a coat or grew both halves of a closed pair, and
 that every policy part and world switch changes the end state (26 parts;
 watching changes 29 of 40 seeds, the rest 37 to 40).
 
-Balance round D is the current measurement: the game after the four
+Round F is the current measurement; round E measured phase 1 alone, on
+the five eras. Balance round D was: the game after the four
 balance rounds the author approved (`docs/FRAME-balance.md`, then "Go" on
 round D). Round 10 is their baseline, on the same seeds. Rounds 9 to 6 are
 earlier measurements of the same design, and their reading of ways of
