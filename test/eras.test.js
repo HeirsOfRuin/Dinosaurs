@@ -17,3 +17,10 @@ test('a saved game counts tries for every era, and a retry counts as a whole num
   assert.equal(again.tries[era], 1);
   assert.ok(again.tries.every(Number.isInteger));
 });
+
+import { deserialize, serialize } from '../src/engine/state.js';
+test('a save made with five counts of tries loads with one an era', () => {
+  const g = newGame({ seed: 9, setting: 'saved' });
+  const old = JSON.parse(serialize(g)); old.tries = [0, 0, 0, 0, 0];
+  assert.equal(deserialize(JSON.stringify(old)).tries.length, ERAS.length);
+});
