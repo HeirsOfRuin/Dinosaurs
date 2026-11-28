@@ -4,6 +4,7 @@
 // at a moment), the era saves and how many times each era has been tried.
 
 import { newGame as newWorld } from './model.js';
+import { ERAS } from '../data/world.data.js';
 
 export const SETTINGS = ['saved', 'oneLife'];
 
@@ -20,7 +21,7 @@ export function freshGame({ seed = 1, setting = 'saved' } = {}) {
     plan: { press: null, shed: null, turn: null, spread: null, ways: [], pick: null, watch: null, stance: null },
     // saves[e] is the world as era e opened. Kept only on the saved setting.
     saves: setting === 'saved' ? [structuredClone(s)] : [],
-    tries: [0, 0, 0, 0, 0],
+    tries: ERAS.map(() => 0),   // one count an era (five fixed zeros until 2026-11-28 broke retries past the Triassic)
     turns: 0,
     over: false,
     outcome: null,

@@ -135,9 +135,11 @@ MIGRATIONS[6] = (old) => {
 
 // v8 (2026-11-28, docs/FRAME-next.md section 4.1): the run goes on past the Triassic, through the
 // Jurassic and the Cretaceous to the impact, and the ladder is the lineages that came through it. A run
-// still going walks on into the Jurassic; one that has ended stays ended. Nothing stored changes shape.
+// still going walks on into the Jurassic; one that has ended stays ended. The tries are padded to an era each.
 MIGRATIONS[7] = (old) => {
   const g = structuredClone(old);
+  // One count of tries an era: a v7 save has five.
+  g.tries = [...(g.tries || []), ...Array(Math.max(0, 8 - (g.tries || []).length)).fill(0)];
   g.v = 8;
   g.note = old.note ? old.note : (old.over ? 'The game now runs on past the Triassic to the end of the dinosaurs. This lineage ended before that, and is ranked among the lineages that came through the impact.' : 'The game now runs on past the Triassic, through the Jurassic and the Cretaceous, to the end of the dinosaurs. This lineage walks on.');
   return g;

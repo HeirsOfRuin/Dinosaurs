@@ -2,6 +2,7 @@
 // src/engine/model.js; nothing here changes them.
 import { newGame, step, rerollEra } from '../src/engine/model.js';
 import { decide } from '../src/engine/policies.js';
+import { ERAS } from '../src/data/world.data.js';
 
 export function play(seed, opts = {}) {
   const s = newGame(seed, opts);
@@ -16,7 +17,7 @@ export function play(seed, opts = {}) {
 export function playSaved(seed, opts = {}, maxRetries = 5) {
   // A replayed era rolls a new die-off (the author, 2026-11-24: a replay is not a memory test).
   let s = newGame(seed, opts), save = structuredClone(s);
-  const retries = [0, 0, 0, 0, 0];
+  const retries = ERAS.map(() => 0);
   for (let guard = 0; guard < 5000; guard++) {
     const era = s.era;
     step(s, decide);
