@@ -24,7 +24,8 @@ const COUNTER = {
   deccan: [['omni', 1], ['scavenge', 1], ['burrow', 1], ['brain', 1], ['omni', 2]],
 };
 // The order a body is built in when making for a lineage: each trait to step 1, then to 2, then to 3.
-const ORDER = ['lungs', 'limbs', 'jawInsects', 'jawFish', 'jawPlants', 'jawPrey', 'skin', 'egg', 'scales', 'fur', 'feathers', 'sail', 'burrow', 'brain', 'herd', 'gait', 'warm', 'size', 'armour', 'omni', 'scavenge', 'crush'];
+// The traits that arrive with their era are in it too: a list without them never made for wings (2026-11-28).
+const ORDER = ['lungs', 'limbs', 'jawInsects', 'jawFish', 'jawPlants', 'jawPrey', 'skin', 'egg', 'scales', 'fur', 'feathers', 'sail', 'burrow', 'brain', 'herd', 'gait', 'warm', 'size', 'armour', 'omni', 'scavenge', 'crush', 'tongue', 'battery', 'airSacs', 'wings', 'longNeck', 'milk', 'flippers'];
 // The hungry traits come last: a bot that took warm blood and size as hints on the Shore starved
 // in the Coal Forests in 56 runs of 100.
 const HUNGRY = ['warm', 'size', 'armour', 'herd', 'brain'];
