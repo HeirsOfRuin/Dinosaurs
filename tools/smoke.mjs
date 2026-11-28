@@ -12,6 +12,9 @@ export const START = ['[data-act="new"]', '[data-act="start-saved"]', '.scrim [d
 export const CLOCK = '.hud .turn';                    // element whose text is the game clock
 export const TABS = ['[data-tab="play"]', '[data-tab="body"]', '[data-tab="rivals"]', '[data-tab="menu"]'];
 export const TURNS = Number(process.env.TURNS || 10);
+// The Turn screen's word budget before a tap (docs/FRAME-next.md, the author's "Go", 2026-11-28: "too much
+// writing in the screens at one time"). Counted in the panel, header and tabs left out.
+export const BUDGET = 60, PANEL = 'main.panel';
 
 /** Take one turn the way a player would; return true if the clock moved. */
 export async function advanceOnce(page) {
@@ -76,6 +79,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   flush('tabs');
 
   if (TABS[0]) await page.click(TABS[0]);
+  if (!(await page.locator('[data-act^="meet:"]').count()) && !(await page.locator('[data-act="new"]').count())) {
+    const words = (await page.locator(PANEL).innerText()).split(/\s+/).filter((w) => /[A-Za-z]/.test(w)).length;
+    check(`turn screen: at most ${BUDGET} words before a tap`, words <= BUDGET, `${words} words`);
+  }
   const clock = (await page.locator(CLOCK).textContent().catch(() => ''))?.trim();
   await page.reload({ waitUntil: 'networkidle' });
   if (await page.locator('[data-act="continue"]').count()) await page.click('[data-act="continue"]');

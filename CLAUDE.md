@@ -21,6 +21,13 @@
   `src/engine/turn.js`, and the screens show only what `view` gives them. A
   test holds that a policy driving those verbs ends exactly as it does
   driving the rules. Keep it true: what is measured must be what is played.
+- The Turn screen shows at most 60 words before a tap (the author: "too much
+  writing in the screens at one time"). `tools/smoke.mjs` counts them and
+  fails over. Explanations go in the sheet behind a tap, not on the screen.
+  The standing orders (growing, living, rivals) are three slots on it, marked
+  when they want a look; a mark never says what to do.
+- Each mouth refinement grows on its own jaw (`mouths` in the data table);
+  only the omnivore's teeth grow on any.
 - Words about the world go in `src/data/text.data.js`. No number is typed
   there, and none on a screen: a number shown comes from `view`.
 - When a result surprises, check the bot before the design. The first range
@@ -54,8 +61,8 @@
   the right answer. The gate measures the three roads against each other.
 - Animals are shown in heads: `HEADS` to one unit of the model, applied in
   `view` and nowhere else. The author asked for "500 instead of 5".
-- Acting on rivals is built (`docs/FRAME-rivals.md`): four stances, one
-  toward one rival at a time, resolved by `contact()` in `model.js` for the
+- Acting on rivals is built (`docs/FRAME-rivals.md`): two stances, push and
+  prey (four until 2026-11-28; `docs/FRAME-next.md`), one toward one rival at a time, resolved by `contact()` in `model.js` for the
   player and the rivals alike. A rival hunts a smaller player and pushes back
   against one that pushes or hunts it; rivals do not act on each other yet.
   Camouflage and display are built (`docs/FRAME-rivals.md` section 6). The

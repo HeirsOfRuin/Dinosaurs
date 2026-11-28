@@ -352,7 +352,8 @@ export function view(g) {
         }) : null,
       };
     }),
-    offers: offers.map((id) => ({ id, cost: TRAITS[id].cost, feeds: (worth({ ...t, [id]: 1 }) - feeds) * H, isMouth: !!JAWS[id], watched: g.plan.watch === id })),
+    // safer: how much less of the lineage is caught with the trait, for the offer's mark.
+    offers: offers.map((id) => ({ id, cost: TRAITS[id].cost, feeds: (worth({ ...t, [id]: 1 }) - feeds) * H, safer: body({ ...t, [id]: 1 }, waysOf(s, you)).defence - body(t, waysOf(s, you)).defence, isMouth: !!JAWS[id], watched: g.plan.watch === id })),
     // The tree: every trait there is, by branch, with where the lineage stands on each. A trait not
     // held is open (it can turn up), resting on something not yet grown, or closed off by something that is.
     tree: TREE.map((br) => ({ id: br.id, traits: br.traits.map((id) => {

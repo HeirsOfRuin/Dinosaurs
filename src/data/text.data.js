@@ -46,12 +46,12 @@ export const TREE_TEXT = {
 };
 // What can be done about a rival (docs/FRAME-rivals.md).
 export const STANCE_TEXT = {
-  push:   { name: 'Push them out', does: 'Contest the ground you share. Both sides lose numbers, each by the other\'s strength. If they are left with under a third of it, they are driven out. They will push back.', doing: 'Pushing' },
-  prey:   { name: 'Prey on them', does: 'Hunt them where you share ground. A hunter takes on what fights not much better than it does; what you take feeds you. They will push back.', doing: 'Preying on' },
+  push:   { name: 'Push them out', does: 'Contest the ground you share. Both sides lose numbers, each by the other\'s strength. If they are left with under a third of it, they are driven out. They will push back.', doing: 'Pushing', short: 'pushing' },
+  prey:   { name: 'Prey on them', does: 'Hunt them where you share ground. A hunter takes on what fights not much better than it does; what you take feeds you. They will push back.', doing: 'Preying on', short: 'preying' },
 };
 export const STEP_NAMES = ['not begun', 'a hint', 'developed', 'refined'];
 
-export const FOOD_TEXT = { insects: 'insects', fish: 'fish', plants: 'plants', prey: 'prey' };
+export const FOOD_TEXT = { insects: 'insects', fish: 'fish', plants: 'plants', prey: 'prey', carrion: 'the dead', hard: 'hard food' };
 
 export const REGION_TEXT = {
   shallows: 'Shallows', bank: 'River bank', floodplain: 'Floodplain', upland: 'Upland',
@@ -110,10 +110,10 @@ export const STANDING_TEXT = {
 };
 
 export const WAY_TEXT = {
-  night: { name: 'Active by night', gives: 'Fewer are caught, and the day\'s heat is slept through.', costs: 'Finds a tenth less of every food.' },
-  tend:  { name: 'Tending the young', gives: 'Numbers climb back faster after a loss.', costs: 'More upkeep, every turn.' },
-  roam:  { name: 'Moving with the seasons', gives: 'Bad ground harms you less.', costs: 'More upkeep, every turn: the walking has to be paid for.' },
-  fat:   { name: 'Laying down fat', gives: 'When food fails, numbers fall more slowly.', costs: 'In good times numbers climb more slowly.' },
+  night: { short: 'by night', name: 'Active by night', gives: 'Fewer are caught, and the day\'s heat is slept through.', costs: 'Finds a tenth less of every food.' },
+  tend:  { short: 'tending', name: 'Tending the young', gives: 'Numbers climb back faster after a loss.', costs: 'More upkeep, every turn.' },
+  roam:  { short: 'roaming', name: 'Moving with the seasons', gives: 'Bad ground harms you less.', costs: 'More upkeep, every turn: the walking has to be paid for.' },
+  fat:   { short: 'fat', name: 'Laying down fat', gives: 'When food fails, numbers fall more slowly.', costs: 'In good times numbers climb more slowly.' },
 };
 
 // Moments. Each is shown once in a run. Three roads; none is a refusal and none is the right answer.

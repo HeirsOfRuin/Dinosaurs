@@ -168,3 +168,39 @@ h2.branch + .hint { margin-bottom: .35rem; }
 textarea { width: 100%; font: 12px/1.3 ui-monospace, monospace; background: var(--bg); color: var(--ink); border: 2px solid var(--line); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* The Turn screen at a glance (docs/FRAME-next.md section 2): room, and one idea per block. */
+.alarm { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 8px; padding: 8px 12px; background: var(--alarm-bg); border: 2px solid var(--alarm-line); color: var(--ink); font-size: .9rem; }
+.alarm strong { color: var(--alarm); }
+.alarm.now { border-color: var(--alarm); }
+.orders { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.order { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px; min-height: 64px; text-align: left; font-size: .85rem; position: relative; }
+.order .sl { font-family: var(--block); text-transform: uppercase; font-size: .72rem; color: var(--ink-dim); }
+.order .sv { font-weight: 700; line-height: 1.2; width: 100%; overflow-wrap: anywhere; }
+.order .bar { display: block; margin-top: 4px; }
+.order.look { border-color: var(--alarm); }
+.order.look::after { content: ''; position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--alarm); }
+.cards { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.card { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name keep" "marks keep"; gap: 4px 12px; padding: 8px 8px 8px 12px; background: var(--panel); border: 2px solid var(--line); align-items: center; }
+.card .cname { grid-area: name; background: none; border: 0; padding: 0; text-align: left; color: var(--ink); font-size: .95rem; }
+.card .tag { margin-left: 6px; }
+.card .marks { grid-area: marks; display: flex; gap: 10px; font-size: .78rem; color: var(--ink-dim); }
+.card .mk.up { color: var(--accent); }
+.card .mk.down { color: var(--alarm); }
+.card > .primary { grid-area: keep; min-width: 72px; min-height: 48px; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.tile { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 8px 10px; min-height: 48px; font-size: .85rem; }
+.tile .rname { font-family: var(--block); text-transform: uppercase; font-size: .72rem; color: var(--ink-dim); }
+.tile .nums { display: flex; flex-direction: column; align-items: flex-end; }
+.tile .rv { font-style: normal; font-size: .75rem; color: var(--ink-dim); }
+.tile .rv::before { content: '× '; }
+.tile.mine { background: var(--panel-2); border-color: var(--accent); }
+.tile.mine .rname { color: var(--ink); }
+.tile.hard { border-style: dotted; }
+.tile.shut { border-style: dashed; opacity: .6; }
+.tile.hit { box-shadow: inset 4px 0 0 var(--alarm); }
+.tile.spared { box-shadow: inset 4px 0 0 var(--accent); }
+.tile.going { box-shadow: inset 0 -4px 0 var(--accent); }
+.delta { background: none; border: 0; padding: 0 4px; font-size: .85rem; min-height: 0; }
+.delta.up { color: var(--accent); }
+.delta.down { color: var(--alarm); }
