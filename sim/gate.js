@@ -112,20 +112,20 @@ for (const id of Object.keys(TRAITS).filter((id) => !JAWS[id])) {
 console.log(floor());
 
 console.log('\n14. Stances by body: none, each alone, and all (through, 1,000 seeds an arm)');
-console.log('policy          ' + ['none', 'push', 'prey', 'follow', 'avoid', 'all'].map((h) => h.padStart(8)).join(''));
+console.log('policy          ' + ['none', 'push', 'prey', 'all'].map((h) => h.padStart(8)).join(''));
 // Table 12 pools these same runs, and 'all' is table 1's own, so each arm is played once.
-const ARMS14 = { none: (p) => ({ ...p, act: false }), ...Object.fromEntries(['push', 'prey', 'shadow', 'avoid'].map((a) => [a, (p) => ({ ...p, only: a })])) };
+const ARMS14 = { none: (p) => ({ ...p, act: false }), ...Object.fromEntries(['push', 'prey'].map((a) => [a, (p) => ({ ...p, only: a })])) };
 const by14 = {};
 for (const name of CAREFUL) {
   by14[name] = { ...Object.fromEntries(Object.entries(ARMS14).map(([a, f]) => [a, runAll({ policy: f(POLICIES[name]) })])), all: base[name] };
-  console.log(name.padEnd(16) + ['none', 'push', 'prey', 'shadow', 'avoid', 'all'].map((a) => (100 * thr(by14[name][a]) / n).toFixed(1).padStart(8)).join(''));
+  console.log(name.padEnd(16) + ['none', 'push', 'prey', 'all'].map((a) => (100 * thr(by14[name][a]) / n).toFixed(1).padStart(8)).join(''));
 }
 console.log(floor());
 
 console.log('\n12. Rivals: stances, and rivals that answer (careful play pooled)');
 console.log('arm             ' + ['THROUGH', 'top three'].map((h) => h.padStart(10)).join(' '));
 const from14 = (a) => CAREFUL.flatMap((name) => by14[name][a]);
-for (const [label, rs] of [['as designed', allCareful], ['no stances', from14('none')], ...['push', 'prey', 'shadow', 'avoid'].map((a) => [a + ' only', from14(a)]), ['rivals passive', pooled((p) => ({ policy: p, passiveRivals: true }))]]) {
+for (const [label, rs] of [['as designed', allCareful], ['no stances', from14('none')], ...['push', 'prey'].map((a) => [a + ' only', from14(a)]), ['rivals passive', pooled((p) => ({ policy: p, passiveRivals: true }))]]) {
   console.log(label.padEnd(16) + rate(thr(rs), rs.length) + ' ' + rate(top3(rs), rs.length));
 }
 console.log(floor(m7));
