@@ -12,6 +12,7 @@ import { SAVE_KEY, SHELF_KEY, serialize, deserialize, toCode, fromCode } from '.
 import { STORAGE_OK, lsGet, lsSet } from './storage.js';
 import { registerSW, installPrompt } from './sw-register.js';
 import { animalSVG, sceneSVG } from './sprite.js';
+import { icon, traitIcon, dieoffIcon } from './icons.js';
 import { TITLE, TRAIT_TEXT, TREE_TEXT, STEP_NAMES, FOOD_TEXT, REGION_TEXT, STANCE_TEXT, DIEOFF_TEXT, LINEAGE_TEXT, RANK_TEXT, THROUGH_TEXT, STANDING_TEXT, WAY_TEXT, MOMENT_TEXT, SIZE_TEXT, LOOK_TEXT, OTHER_ENDINGS, SETTING_TEXT, PART_TEXT, NOTES } from '../data/text.data.js';
 
 const SHELF_MAX = 6;
@@ -23,7 +24,7 @@ let busy = false;
 let banner = null;
 let install = null;
 let choosing = false;
-let lastNote = null, lastDelta = 0;
+let lastNote = null, lastDelta = 0, flashNext = false, shownPop = null;
 let shownMa = null;   // the date the calendar last showed, so it can be seen to move
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -90,6 +91,22 @@ function render() {
     <nav class="tabs">${tabs.map(([id, label]) => `<button data-tab="${id}" class="${tab === id ? 'on' : ''}">${label}</button>`).join('')}</nav>
     ${modal ? `<div class="scrim"><div class="sheet">${modal}</div></div>` : ''}`;
   runCalendar(v.era.ma);
+  runAlive(v.over ? null : v.pop);
+}
+
+// The numbers count to where they now stand, so a turn's gain or loss is seen.
+function runAlive(to) {
+  const el = document.getElementById('alive'), from = shownPop ?? to;
+  shownPop = to;
+  if (!el || to == null || Math.abs(from - to) < 1 || matchMedia('(prefers-reduced-motion: reduce)').matches) { if (el && to != null) el.textContent = n0(to); return; }
+  const t0 = performance.now(), ms = 600;
+  const tick = (now) => {
+    const k = Math.min(1, (now - t0) / ms), node = document.getElementById('alive');
+    if (!node || node.dataset.to !== String(Math.round(to))) return;
+    node.textContent = n0(from + (to - from) * k);
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }
 
 // The date counts down to where it now stands, so the years are seen to pass.
@@ -110,7 +127,12 @@ function runCalendar(to) {
 
 const animalLabel = (v) => `Your animal: ${PART_TEXT.trunk[v.parts.trunk]} body, limbs ${PART_TEXT.limbs[v.parts.limbs]}, ${PART_TEXT.skin[v.parts.skin]} skin`;
 const eating = (v) => (v.mouth ? PART_TEXT.jaw[v.mouth] : 'no settled mouth');
-const others = (v) => v.rivals.filter((r) => r.near).map((r) => ({ parts: r.parts, ratio: r.length / v.length }));
+const others = (v) => v.rivals.filter((r) => r.near).map((r) => ({ parts: r.parts, ratio: r.length / v.length, heads: r.pop, toYou: r.toYou }));
+// What the picture shows besides the animals: how many there are, the die-off's weather, a trait just grown.
+const sceneOpts = (v) => {
+  const flash = flashNext; flashNext = false;
+  return { heads: v.pop, flash, weather: v.dieoff ? { kind: v.dieoff.kind, full: true } : v.warning?.named ? { kind: v.warning.kinds[0], full: false } : null };
+};
 
 function fitWord(r) {
   if (r.fit >= 0.85) return 'liveable';
@@ -142,13 +164,13 @@ function playTab(v) {
   if (v.over) return endTab(v);
   // One alarm line at most: the die-off that is here, or the one that is coming. Tap for the reckoning.
   const alarm = v.dieoff
-    ? `<button class="alarm now" data-act="slot:warn"><strong>${esc(cap(DIEOFF_TEXT[v.dieoff.kind].name))}</strong><span>${v.dieoff.left} ${plural(v.dieoff.left, 'turn', 'turns')} left</span></button>`
-    : v.warning ? `<button class="alarm" data-act="slot:warn"><strong>${v.warning.named ? esc(cap(DIEOFF_TEXT[v.warning.kinds[0]].name)) : 'Something is coming'}</strong><span>${v.warning.turns} ${plural(v.warning.turns, 'turn', 'turns')} out</span></button>` : '';
+    ? `<button class="alarm now" data-act="slot:warn">${dieoffIcon(v.dieoff.kind)}<strong>${esc(cap(DIEOFF_TEXT[v.dieoff.kind].name))}</strong><span>${v.dieoff.left} ${plural(v.dieoff.left, 'turn', 'turns')} left</span></button>`
+    : v.warning ? `<button class="alarm" data-act="slot:warn">${v.warning.named ? dieoffIcon(v.warning.kinds[0]) : icon('waste')}<strong>${v.warning.named ? esc(cap(DIEOFF_TEXT[v.warning.kinds[0]].name)) : 'Something is coming'}</strong><span>${v.warning.turns} ${plural(v.warning.turns, 'turn', 'turns')} out</span></button>` : '';
 
   if (v.moment && v.moment.picked == null) {
     const m = MOMENT_TEXT[v.moment.id];
     return `
-    <div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), false, others(v))}
+    <div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), false, others(v), sceneOpts(v))}
       <div class="strip"><span><strong>${n0(v.pop)}</strong> alive</span><span class="dim">${eating(v)}</span><span class="dim">${metres(v.length)} long</span></div>
     </div>
     <div class="moment"><h2>${esc(m.title)}</h2><p>${esc(m.text)}</p>
@@ -161,18 +183,18 @@ function playTab(v) {
   // stays under its word budget (tools/smoke.mjs counts it).
   const offers = v.offers.length ? v.offers.map((o) => `
     <div class="card">
-      <button class="cname" data-act="trait:${o.id}"><strong>${esc(TRAIT_TEXT[o.id].name)}</strong>${o.watched ? '<em class="tag">watched</em>' : ''}</button>
+      <button class="cname" data-act="trait:${o.id}">${traitIcon(o.id)}<strong>${esc(TRAIT_TEXT[o.id].name)}</strong>${o.watched ? '<em class="tag">watched</em>' : ''}</button>
       <span class="marks">${mark(o.feeds / Math.max(1, v.pop), 'food')}${mark(o.safer * 4, 'safe')}<span class="mk cost" title="upkeep">+${n2(o.cost)}</span></span>
       <button class="primary" data-action="keep:${o.id}">Keep</button>
     </div>`).join('') : '';
   const tiles = v.regions.map((r) => `
     <button class="tile${r.mine ? ' mine' : ''}${r.fit < 0.15 && !r.mine ? ' shut' : r.fit < 0.85 ? ' hard' : ''}${r.outlook ? ` ${r.outlook === 'spared' ? 'spared' : 'hit'}` : ''}${r.spread.queued ? ' going' : ''}" data-act="region:${r.id}">
       <span class="rname">${REGION_TEXT[r.id]}</span>
-      <span class="nums">${r.mine ? `<b>${n0(r.mine)}</b>` : ''}${r.rivals >= 1 ? `<i class="rv">${n0(r.rivals)}</i>` : ''}</span>
+      <span class="nums">${r.mine ? `<b>${n0(r.mine)}</b>` : ''}${r.rivals >= 1 ? `<i class="rv">${icon('rival')}${n0(r.rivals)}</i>` : ''}</span>
     </button>`).join('');
   return `
-    <div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), !!v.dieoff, others(v))}
-      <div class="strip"><span><strong>${n0(v.pop)}</strong> alive</span>${lastNote ? `<button class="delta ${lastDelta >= 0 ? 'up' : 'down'}" data-act="note">${lastDelta >= 0 ? '▲' : '▼'} ${n0(Math.abs(lastDelta))}</button>` : ''}<span class="dim">${metres(v.length)}</span></div>
+    <div class="stage">${sceneSVG(v.era.id, v.era.palette, v.parts, animalLabel(v), !!v.dieoff, others(v), sceneOpts(v))}
+      <div class="strip"><span><strong id="alive" data-to="${Math.round(v.pop)}">${n0(shownPop ?? v.pop)}</strong> alive</span>${lastNote ? `<button class="delta ${lastDelta >= 0 ? 'up' : 'down'}" data-act="note">${lastDelta >= 0 ? '▲' : '▼'} ${n0(Math.abs(lastDelta))}</button>` : ''}<span class="dim">${metres(v.length)}</span></div>
     </div>
     ${alarm}
     <div class="orders">${slots(v)}</div>
@@ -184,7 +206,7 @@ function playTab(v) {
 // One mark on an offer: up, down or level, for food or for safety. `x` is the change as a share.
 function mark(x, kind) {
   const dir = x > 0.02 ? 'up' : x < -0.02 ? 'down' : 'level';
-  return `<span class="mk ${kind} ${dir}" title="${kind === 'food' ? 'food' : 'fewer caught'}">${kind === 'food' ? 'food' : 'safe'} ${dir === 'up' ? '▲' : dir === 'down' ? '▼' : '–'}</span>`;
+  return `<span class="mk ${kind} ${dir}" title="${kind === 'food' ? 'food' : 'fewer caught'}">${icon(kind)}${dir === 'up' ? '▲' : dir === 'down' ? '▼' : '–'}</span>`;
 }
 
 // The three standing orders: what grows, how you live, what you do about rivals. A slot is marked
@@ -194,11 +216,11 @@ function slots(v) {
   const p = v.pressure, living = v.ways.filter((w) => w.on), acting = v.rivals.filter((r) => r.toYou);
   const growLook = !p, liveLook = !!(v.warning?.named && !living.some((w) => w.id === 'fat')), rivalLook = acting.length > 0 && !v.stance;
   const st = v.stance ? STANCE_TEXT[v.stance.act].short : 'none';
-  const grow = p ? `${esc(TRAIT_TEXT[p.id].name)}<span class="bar"><b style="width:${p.kind === 'shed' ? 100 : Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : 'nothing';
+  const grow = p ? `${traitIcon(p.id)}${esc(TRAIT_TEXT[p.id].name)}<span class="bar"><b style="width:${p.kind === 'shed' ? 100 : Math.round(100 * (p.of - p.left) / p.of)}%"></b></span>` : 'nothing';
   return `
-    <button class="order${growLook ? ' look' : ''}" data-act="slot:grow"><span class="sl">Growing</span><span class="sv">${grow}</span></button>
-    <button class="order${liveLook ? ' look' : ''}" data-act="slot:live"><span class="sl">Living</span><span class="sv">${living.length ? living.map((w) => WAY_TEXT[w.id].short).join(', ') : 'nothing'}</span></button>
-    <button class="order${rivalLook ? ' look' : ''}" data-act="slot:rivals"><span class="sl">Rivals</span><span class="sv">${acting.length && !v.stance ? (acting.some((r) => r.toYou === 'prey') ? 'hunted' : 'pushed') : st}</span></button>`;
+    <button class="order${growLook ? ' look' : ''}" data-act="slot:grow"><span class="sl">${icon('grow')}Growing</span><span class="sv">${grow}</span></button>
+    <button class="order${liveLook ? ' look' : ''}" data-act="slot:live"><span class="sl">Living</span><span class="sv">${living.length ? living.map((w) => `<span class="wi">${icon(w.id)}${WAY_TEXT[w.id].short}</span>`).join('') : 'nothing'}</span></button>
+    <button class="order${rivalLook ? ' look' : ''}" data-act="slot:rivals"><span class="sl">${icon('rival')}Rivals</span><span class="sv">${acting.length && !v.stance ? `${icon(acting.some((r) => r.toYou === 'prey') ? 'hunt' : 'push')}${acting.some((r) => r.toYou === 'prey') ? 'hunted' : 'pushed'}` : v.stance ? `${icon(v.stance.act === 'prey' ? 'hunt' : 'push')}${st}` : st}</span></button>`;
 }
 
 function slotSheet(id) {
@@ -210,7 +232,7 @@ function slotSheet(id) {
   }
   if (id === 'live') {
     const living = v.ways.filter((w) => w.on);
-    const rows = living.map((w) => `<p><strong>${WAY_TEXT[w.id].name}</strong>${w.settling ? ' (taking hold)' : ''}. ${WAY_TEXT[w.id].gives} ${WAY_TEXT[w.id].costs}</p>`).join('') || '<p><strong>No way of living chosen.</strong></p>';
+    const rows = living.map((w) => `<p><strong>${icon(w.id)}${WAY_TEXT[w.id].name}</strong>${w.settling ? ' (taking hold)' : ''}. ${WAY_TEXT[w.id].gives} ${WAY_TEXT[w.id].costs}</p>`).join('') || '<p><strong>No way of living chosen.</strong></p>';
     const warn = v.warning?.named ? `<p class="omen">${esc(cap(DIEOFF_TEXT[v.warning.kinds[0]].name))} is coming. Laying down fat slows the fall when food fails.</p>` : '';
     return `<h2>Living</h2>${rows}${v.fatSlows ? '<p class="hint">The fat is slowing your climb back: the ground would feed many more than there are.</p>' : ''}${warn}<p class="hint">Up to ${v.maxWays} at once. A new one takes a few turns to take hold.</p><button class="primary" data-tab="body">Choose on the Body screen</button><button data-act="close">Close</button>`;
   }
@@ -336,8 +358,8 @@ function rivalsTab(v) {
         : x.act === 'prey' ? `About ${n0(x.takes)} of them taken a turn; ${signed(x.feeds)}.`
           : `${cap(signed(x.feeds))} as things stand.`;
       return x.on
-        ? `<button class="way on" data-act="stance:none:${r.id}"><strong>${STANCE_TEXT[x.act].name}</strong><small>${esc(what)}</small><small class="state">Doing this now. Tap to stop.</small></button>`
-        : `<button class="way" data-act="stance:${x.act}:${r.id}"><strong>${STANCE_TEXT[x.act].name}</strong><small>${STANCE_TEXT[x.act].does}</small><small class="state">${esc(what)}</small></button>`;
+        ? `<button class="way on" data-act="stance:none:${r.id}"><strong>${icon(x.act === 'prey' ? 'hunt' : 'push')}${STANCE_TEXT[x.act].name}</strong><small>${esc(what)}</small><small class="state">Doing this now. Tap to stop.</small></button>`
+        : `<button class="way" data-act="stance:${x.act}:${r.id}"><strong>${icon(x.act === 'prey' ? 'hunt' : 'push')}${STANCE_TEXT[x.act].name}</strong><small>${STANCE_TEXT[x.act].does}</small><small class="state">${esc(what)}</small></button>`;
     }).join('');
     return `<div class="rival">
       <h2 class="branch">Most like the ${esc(LINEAGE_TEXT[r.like].name.toLowerCase())}</h2>
@@ -356,13 +378,13 @@ function bodyTab(v) {
   const pips = (n, growing) => `<span class="pips">${[1, 2, 3].map((i) => `<i class="${i <= n ? 'on' : growing && i === n + 1 ? 'grow' : ''}"></i>`).join('')}</span>`;
   const heldRow = (t) => `
     <button class="trait${t.pressing ? ' on' : ''}${t.shedding ? ' fade' : ''}" data-act="trait:${t.id}">
-      <span>${esc(TRAIT_TEXT[t.id].name)}${t.isMouth ? ' <em class="tag">mouth</em>' : t.isCover ? ' <em class="tag">covering</em>' : ''}</span>
+      <span>${traitIcon(t.id)}${esc(TRAIT_TEXT[t.id].name)}${t.isMouth ? ' <em class="tag">mouth</em>' : t.isCover ? ' <em class="tag">covering</em>' : ''}</span>
       <span class="dim">${t.pressing ? 'under pressure' : t.shedding ? 'letting go' : t.turns && t.turns.some((o) => o.turning) ? 'turning' : STEP_NAMES[t.level]}</span>${pips(t.level, t.pressing)}
     </button>`;
   // A trait not held: open to turn up, resting on something, or closed off. Tapping says which, and lets it be watched for.
   const nodeRow = (n) => `
     <button class="trait node ${n.state}${n.watching ? ' watch' : ''}" data-act="node:${n.id}">
-      <span>${esc(TRAIT_TEXT[n.id].name)}${n.watching ? ' <em class="tag">watching</em>' : ''}</span>
+      <span>${traitIcon(n.id)}${esc(TRAIT_TEXT[n.id].name)}${n.watching ? ' <em class="tag">watching</em>' : ''}</span>
       <span class="dim">${n.state === 'open' ? 'can turn up' : n.state === 'needs' ? 'not yet' : 'closed off'}</span>${pips(0, false)}
     </button>`;
   const tree = v.tree.map((br) => `
@@ -371,27 +393,27 @@ function bodyTab(v) {
     <div class="traits">${br.traits.map((n) => (n.state === 'held' ? heldRow(v.traits.find((t) => t.id === n.id)) : nodeRow(n))).join('')}</div>`).join('');
   const ways = v.ways.map((w) => `
     <button class="way${w.on ? ' on' : ''}" data-act="way:${w.id}" ${w.full || v.over ? 'disabled' : ''}>
-      <strong>${WAY_TEXT[w.id].name}</strong>
+      <strong>${icon(w.id)}${WAY_TEXT[w.id].name}</strong>
       <small>${WAY_TEXT[w.id].gives} ${WAY_TEXT[w.id].costs}</small>
       <small class="state">${w.on ? (w.settling ? `Taking hold: ${w.settling} more ${plural(w.settling, 'turn', 'turns')} before it does anything. Tap to give it up.` : 'This is how you live. Tap to give it up.') : w.full ? `A lineage lives ${v.maxWays} ways at most. Give one up first.` : `Tap to take it up. It takes hold after ${v.waySettle} turns. As things stand: ${signed(w.feeds)}.`}</small>
     </button>`).join('');
   const st = v.standing, like = LINEAGE_TEXT[st.like], pic = animalSVG(v.parts, 9, animalLabel(v), v.length);
   return `
     <div class="stage plain">${pic.svg}</div>
-    <p class="hint">About ${metres(v.length)} from snout to tail, ${SIZE_TEXT[[0.4, 0.9, 2, 4].indexOf(v.length)] || ''}. The bar under it is ${metres(pic.unit)}. ${colourLine(v)}</p>
+    <p class="hint">About ${metres(v.length)}, ${SIZE_TEXT[[0.4, 0.9, 2, 4].indexOf(v.length)] || ''}. The bar is ${metres(pic.unit)}. ${colourLine(v)}</p>
     <div class="slots">${slots}</div>
     <h2>What this mouth makes of each food</h2>
     <div class="eats">${Object.entries(v.eats).filter(([, e]) => e > 0.05).sort((a, b) => b[1] - a[1]).map(([f, e]) => `<span class="eat"><i style="width:${Math.round(Math.min(1, e) * 100)}%"></i><em>${FOOD_TEXT[f] || f}</em></span>`).join('')}</div>
     <p class="hint">Upkeep ${n2(v.upkeep)} food a head. ${v.regionsHeld > 1 ? `Holding ${v.regionsHeld} regions, a trait grows at ${Math.round(v.speed * 100)}% of full speed.` : `A trait grows at ${Math.round(v.speed * 100)}% of full speed.`}</p>
     <h2>The tree</h2>
-    <p class="hint">Everything this lineage could become. A new trait turns up as a mutation; mark one to watch for and it will be among what is offered within ${v.watchTurns} turns of when it can be grown. ${v.watch ? `Watching for <strong>${esc(TRAIT_TEXT[v.watch.id].name.toLowerCase())}</strong>.` : 'Nothing is being watched for.'}</p>
+    <p class="hint">Tap a trait to grow it, or to watch for it. ${v.watch ? `Watching for <strong>${esc(TRAIT_TEXT[v.watch.id].name.toLowerCase())}</strong>.` : ''}</p>
     ${tree}
     <h2>How you live</h2>
     <p class="hint">Ways of living are chosen, not grown. Up to ${v.maxWays} at once.</p>
     <div class="ways">${ways}</div>
     <h2>Where you would stand</h2>
     <button class="row" data-act="ladder"><span>If it ended now: <strong>${RANK_TEXT[st.rank - 1]} of ${st.of}</strong></span><span class="dim">standing ${n0(st.score)}</span></button>
-    <p class="hint">Whoever is alive after the last die-off has come through. Most like the ${esc(like.name.toLowerCase())}: ${esc(like.line.toLowerCase())} One that lived: ${esc(like.example)}</p>`;
+    <p class="hint">Most like the ${esc(like.name.toLowerCase())}.</p>`;
 }
 
 function ladderSheet() {
@@ -474,7 +496,7 @@ function start(setting) {
 function turn(keep) {
   const { state: next, record } = advance(state, { keep });
   state = next; save();
-  lastNote = turnNote(record); lastDelta = record.popAfter - record.popBefore;
+  lastNote = turnNote(record); lastDelta = record.popAfter - record.popBefore; flashNext = record.gained.length > 0;
   const sheets = [];
   if (record.dieoffBegan) sheets.push(`<h2>${esc(cap(DIEOFF_TEXT[record.dieoffBegan].name))}</h2><p>${DIEOFF_TEXT[record.dieoffBegan].did} It will run to the end of the era. What you have built is what you have.</p><button class="primary" data-act="close">Go on</button>`);
   if (record.eraEnded) sheets.push(eraSheet(record));

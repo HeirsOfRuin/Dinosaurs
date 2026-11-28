@@ -135,23 +135,56 @@ const SCENES = {
   triassic: [[0, 0, 64, 30, 0], [0, 0, 64, 8, 1], [48, 2, 6, 6, 2], [0, 15, 24, 7, 1], [34, 13, 30, 9, 1], [0, 22, 64, 8, 3], [0, 22, 64, 1, 2]],
 };
 
-// One animal placed in the scene: feet on the ground line (row 24), at `k` times the player's size.
-function placed(p, x, k, fade) {
-  return `<g transform="translate(${x} ${24 - 18 * k}) scale(${k})"${fade ? ` opacity="${fade}"` : ''}>${animalRects(p).map(rect).join('')}</g>`;
+// One animal placed in the scene: feet on the ground line (row 24, raised by `dy` for one further
+// back), at `k` times the player's size, facing left when `flip`.
+function placed(p, x, k, fade, flip = false, dy = 0, cls = '') {
+  const w = 32 * k, at = flip ? `translate(${x + w} ${24 - dy - 18 * k}) scale(${-k} ${k})` : `translate(${x} ${24 - dy - 18 * k}) scale(${k})`;
+  const g = `<g transform="${at}"${fade ? ` opacity="${fade}"` : ''}>${animalRects(p).map(rect).join('')}</g>`;
+  return cls ? `<g class="${cls}">${g}</g>` : g;   // a class animates the wrapper, so it never overrides the placing
+}
+
+// How many of an animal are drawn for its numbers in heads: one for a few hundred, five for tens of thousands.
+const drawnFor = (heads) => (heads >= 30000 ? 5 : heads >= 10000 ? 4 : heads >= 3000 ? 3 : heads >= 800 ? 2 : 1);
+
+// Weather for a die-off: snow, shimmer, dust or ash, falling or drifting in a fixed pattern (no chance:
+// the same turn draws the same picture). Light while it is only coming; full once it is here.
+const WEATHER = { cold: 'snow', greatCold: 'snow', heat: 'heat', greatHot: 'heat', drought: 'dust', greatDry: 'dust', collapse: 'ash', greatWaste: 'ash' };
+const SPECK = { snow: '#eef3f6', heat: '#f6d27a', dust: '#c9a46a', ash: '#9a958c' };
+function weatherSVG(w) {
+  if (!w) return '';
+  const kind = WEATHER[w.kind] || 'ash', n = w.full ? 36 : 12, col = SPECK[kind];
+  let dots = '';
+  for (let i = 0; i < n; i++) {
+    const x = (i * 37 + 11) % 64, y = ((i * 23 + 5) % 36) - 10;
+    dots += kind === 'heat' ? `<rect x="${x}" y="${(i * 7) % 20}" width="3" height="1" fill="${col}" opacity=".35"/>` : `<rect x="${x}" y="${y}" width="1" height="1" fill="${col}"/>`;
+  }
+  // Two copies, one above the other, so the fall can loop without a seam.
+  return `<g class="wx wx-${kind}${w.full ? ' full' : ''}" aria-hidden="true"><g class="f">${dots}<g transform="translate(0 -36)">${dots}</g></g></g>`;
 }
 
 /**
  * The animal on its era's ground, for the Turn screen. Fills its container's width.
- * `others` are the rival animals that share ground with it: [{ parts, ratio }], ratio being their
- * length over the player's, so a rival twice as long is drawn twice as long.
+ * `others` are the rival animals that share ground with it: [{ parts, ratio, heads, toYou }], ratio
+ * being their length over the player's, so a rival twice as long is drawn twice as long; one acting on
+ * the player is turned toward it. `opts`: the player's numbers in heads (more are drawn for more), the
+ * weather ({ kind, full }), and `flash` when a trait has just grown.
  */
-export function sceneSVG(eraId, palette, p, label, dim, others = []) {
-  const bg = (SCENES[eraId] || SCENES.shore).map(([x, y, w, h, i]) => rect([x, y, w, h, palette[i]])).join('');
+export function sceneSVG(eraId, palette, p, label, dim, others = [], opts = {}) {
+  const bg = [[0, -10, 64, 10, 1], ...(SCENES[eraId] || SCENES.shore)].map(([x, y, w, h, i]) => rect([x, y, w, h, palette[i]])).join('');
   // Rivals stand behind and to the side, fainter, so they are not taken for the player's own animal.
-  const spots = [[45, 0.75], [-6, 0.6]];
-  const rivals = others.slice(0, 2).map((o, i) => placed(o.parts, spots[i][0] + (o.ratio > 1.4 ? -6 : 0), Math.max(0.45, Math.min(1.7, o.ratio)), 0.55)).join('');
-  // Its own kind beside it: one for a herd beginning, two for a herd.
+  // The one on the right faces away unless it is acting on you; the one on the left faces you only then.
+  const spots = [[44, 0.75, false], [-6, 0.6, true]];
+  const rivals = others.slice(0, 2).map((o, i) => {
+    const [x, fade, left] = spots[i], k = Math.max(0.45, Math.min(1.7, o.ratio)), toward = !!o.toYou;
+    const flip = left ? !toward : toward, many = drawnFor(o.heads || 0) - 1;
+    const back = Array.from({ length: Math.min(2, many) }, (_, j) => placed(o.parts, x + (left ? -5 : 5) * (j + 1), k * 0.7, fade * 0.6, flip, 3 + j)).join('');
+    return back + placed(o.parts, x + (o.ratio > 1.4 ? -6 : 0), k, fade, flip, 0, toward ? 'rival acting' : 'rival');
+  }).join('');
+  // Its own kind: more of them drawn for more numbers, further back and smaller; with a herd, close beside it.
+  const many = drawnFor(opts.heads || 0) - 1;
+  const crowd = [[30, 0.6, 4], [4, 0.55, 5], [36, 0.5, 6], [10, 0.45, 7]].slice(0, many).map(([x, k, dy]) => placed(p, x, k, 0.7, false, dy)).join('');
   const kin = [[8, 0.8], [27, 0.7]].slice(0, Math.min(2, p.herd || 0)).map(([x, k]) => placed(p, x, k, 0.9)).join('')
     + (p.young ? placed(p, 33, 0.4, 1) + placed(p, 39, 0.35, 1) : '');   // young at heel, where they are tended
-  return `<svg class="scene${dim ? ' dim' : ''}" viewBox="0 0 64 30" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" role="img" aria-label="${label}">${bg}${rivals}${kin}${placed(p, 16, 1)}</svg>`;
+  const me = `<g class="me${opts.flash ? ' flash' : ''}">${placed(p, 16, 1)}</g>`;
+  return `<svg class="scene${dim ? ' dim' : ''}" viewBox="0 -10 64 40" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" role="img" aria-label="${label}">${bg}${crowd}${rivals}${kin}${me}${weatherSVG(opts.weather)}</svg>`;
 }
